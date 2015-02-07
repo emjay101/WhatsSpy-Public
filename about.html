@@ -1,0 +1,53 @@
+<div class="row">
+	<div class="col-md-12">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="well whatsspy-header-box">
+					<div class="row">
+						<div class="col-md-8">
+							<p>
+								WhatsSpy Public is a Proof of Concept to show how broken Whatsapp privacy settings are. With this tool you can basicly follow anyone's behaviour with only the knowledge of their phone number. This tool is for Proof of Concept purposes only!
+							</p>
+							<br />
+							<p>
+								If you would like to support my fabulous work, you can with bitcoins! <br />
+								<strong>Bitcoin donations:</strong> 1KjZRyFKcMRu89zLUzeCoLBWuAss4PeWbc
+							</p>
+							<br />
+							<br />
+							<p>
+								<table class="table">
+									<tbody>
+										<tr>
+											<td><strong>Latest available version:</strong></td>
+											<td>{{newestVersion}} <strong class="update-behind" data-ng-show="version != newestVersion"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Your version is behind.</strong><strong class="update-current" data-ng-show="version == newestVersion"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Your version is up to date.</strong></td>
+										</tr>
+										<tr>
+											<td><strong>Wiki page:</strong></td>
+											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/" target="_blank">Gitlab Wiki</a></td>
+										</tr>
+									</tbody>
+								</table>
+							</p>
+						</div>
+						<div class="col-md-4 about-icon-container">
+							<span class="glyphicon glyphicon-question-sign about-icon" aria-hidden="true"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<h3>Question and Awnsers</h3>
+				<br />
+				<div data-ng-repeat="qa in help">
+					<h4>{{qa.question}}</h4>
+					<div class="awnser">
+						{{qa.awnser}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,437 @@
+/* 
+  Allow angular.js to be loaded in body, hiding cloaked elements until 
+  templates compile.  The !important is important given that there may be 
+  other selectors that are more specific or come later and might alter display.  
+ */
+.ng-cloak {
+  display: none !important;
+}
+
+body {
+	color: black;
+	font-family: "open sans","Segoe UI","Segoe WP","Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
+	line-height: 20px;
+	background-color: #232323;
+}
+
+.red {
+	color: #d9534f;
+}
+
+.green {
+	color: #5cb85c;
+}
+
+/**
+  *	Header
+  */
+
+header {
+	margin-bottom: 50px;
+	margin-top: 15px;
+	color: white;
+}
+
+.icon-container {
+
+}
+
+.app-icon {
+	margin-top: 15px;
+	margin-left: 5px;
+	height: 120px;
+}
+/**
+  *	Menu Large
+  */
+.options-large {
+	font-size: 13px;
+	margin-top: 20px;
+}
+
+.options-large li {
+	list-style-type: none;
+	display: inline-block;
+}
+
+.options-large li a {
+	border-radius: 6px;
+	display: inline-block;
+	color:white;
+	padding: 15px;
+	width: 115px;
+	cursor: pointer;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.options-large li a:hover {
+	background-color: #555555;
+	color: white;
+	font-style: normal;
+}
+
+.options-large .setting-icon {
+	font-size: 45px;
+	margin-bottom: 10px;
+}
+
+#status {
+	position: absolute;
+	right: 15px;
+	height: 105px;
+	margin-top: 25px;
+	border-radius: 6px;
+	display: inline-block;
+	color:white;
+	padding: 15px;
+	width: 130px;
+	text-align: center;
+	white-space: nowrap;
+	background-color: #2B2B2B;
+	color: white;
+	font-style: normal;
+}
+
+#status .glyphicon {
+	margin-right: 5px;
+}
+
+#status .label {
+	display: block;
+	margin-top: 2px;
+}
+
+/**
+  * Menu Small
+  */
+.app-icon-small {
+	height: 45px;
+	float: left;
+}
+
+.visible-xs.icon-container {
+	text-align: center;
+	margin-bottom: 5px;
+}
+
+.visible-xs.icon-container span {
+	line-height: 65px;
+	vertical-align: middle;
+	margin-top: 5px;
+	font-size: 25px;
+}
+
+.visible-xs.icon-container strong {
+	color: gray;
+}
+
+.active-option {
+	background-color: #3B3B3B;
+}
+
+
+/**
+  *	Page content
+  */
+
+#page {
+	background-color: #ffffff;
+	color: #444444;
+	-webkit-box-shadow: 0 0 10px 1px #C51919;
+	-moz-box-shadow: 0 0 10px 1px #aaa;
+	box-shadow: 0 0 10px 1px #aaa;
+	-webkit-background-clip: padding-box;
+	-moz-background-clip: padding;
+	background-clip: padding-box;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	padding: 20px;
+}
+
+.downloading {
+	background-color: #D9EAFC;
+}
+
+.title {
+	margin-top: 0;
+	font-size: 25px;
+	line-height: 30px;
+}
+.sub-title {
+	margin-top: 0;
+	font-size: 15px;
+	color: #5E5E5E;
+}
+
+/**
+  *  Whatsspy
+  */
+.whatsspy-header-box {
+	min-height:200px;
+}
+.whatsspy-analytics-th {
+	width: 75%;
+}
+.whatsspy-analytics-th-privacy {
+	width: 100px;
+}
+.whatsspy-tab-info-logs {
+	height: 225px;
+	overflow-y: scroll;
+}
+.whatsspy-tab-info-pic {
+	height: 225px;
+	overflow-x: scroll;
+}
+.whatsspy-img-big {
+	height: 175px;
+}
+.whatsspy-img-container {
+	display: inline-block;
+	width: 175px;
+	margin: 5px;
+	text-align: center;
+}
+.whatsspy-no-information-data {
+	text-align: center;
+	padding-top: 20px;
+}
+.whatsspy-contact {
+	padding-bottom: 20px;
+	margin-top: 10px;
+	border-bottom: 1px solid #707070;
+}
+.panel-body {
+	position: relative;
+	overflow: hidden;
+}
+.whatsspy-panel-body-lazy-load {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 99;
+	width: 100%;
+	height: 100%;
+	opacity: 0.4;
+	background-color: gray;
+}
+.whatsspy-lazy-load-warning {
+	height: 100px;
+	padding-top: 40px;
+	text-align: center;
+	font-size: 20px;
+	cursor: pointer;
+}
+
+.whatsspy-contact-head h3 {
+	margin-top: 0;
+	margin-bottom: 0;
+	padding-bottom: 5px;
+}
+
+.whatsspy-contact-options {
+	text-align: right;
+}
+
+.whatsspy-number-timeline-load {
+	text-align: center;
+	color: black;
+	font-style:italic;
+	display: block;
+	height: 50px;
+	padding: 15px;
+	background-color: gray;
+	cursor: pointer;
+}
+
+.whatsspy-contact-title {
+
+}
+.whatsspy-contact-phone {
+
+}
+
+.whatsspy-number-timeline {
+	width: 100%;
+	height: 400px;
+}
+
+.whatsspy-passive-timeline {
+	width: 100%;
+	text-align: center;
+	padding: 15px;
+	background-color: #BDBDBD;
+}
+
+.whatsspy-data-management {
+	cursor: pointer;
+}
+
+
+/**
+  *  Whatsspy Compare page
+  */
+
+.compare-loading {
+	text-align: center;
+	padding-top: 50px;
+}
+
+.whatsspy-header-box h4 {
+	margin-top: 0;
+}
+
+/**
+  *  Comparison timeline classes
+  */
+
+.vis.timeline .item0 {
+
+}
+
+.vis.timeline .item1 {
+  background-color: #90A437 !important;
+  border-color: #435200 !important;
+}
+
+.vis.timeline .item2 {
+  background-color: #D46F6A !important;
+  border-color: #801A15 !important;
+}
+
+.vis.timeline .item3 {
+  background-color: #7F7CB0 !important;
+  border-color: #1A1A59 !important;
+}
+
+.vis.timeline .item4 {
+  background-color: #9C4E89 !important;
+  border-color: #3F002F !important;
+}
+
+.whatsspy-compare-panel {
+	height: 350px !important;
+	overflow: hidden;
+}
+
+.whatsspy-compare-panel-add {
+	text-align: center;
+}
+
+.whatsspy-scrollable-table-compare {
+	overflow-y: scroll;
+	height: 280px;
+}
+
+.table-align-left {
+	text-align: left;
+}
+
+
+.label-full-width {
+	display: block;
+}
+
+.label-as-badge {
+    border-radius: 1em;
+}
+
+.clear {
+	clear: both;
+}
+
+.whatsspy-compare-timeline {
+	width: 100%;
+	height: 1000px;
+}
+
+.update-behind {
+	color: red;
+}
+
+.update-current {
+	color: green;
+}
+
+/**
+  *	Footer
+  */
+footer {
+	margin-top: 25px;
+}
+
+.float-right {
+	float: right;
+}
+
+.version {
+	color: #999999;
+}
+
+.about-icon-container {
+	text-align: center;
+	padding-top: 20px;
+}
+
+.about-icon {
+	font-size: 90px;
+}
+
+/**
+  *   Misc
+  */
+#loader {
+	position: absolute;
+	right: 20px;
+	bottom: 15px;
+	width: 30px;
+	height: 30px;
+	margin: 0 0 0 -15px;
+	border: 8px solid #fff;
+	border-right-color: transparent;
+	border-radius: 50%;
+	box-shadow: 0 0 25px 2px #eee;
+	-webkit-animation: spin 1s linear infinite;
+	-moz-animation: spin 1s linear infinite;
+	-ms-animation: spin 1s linear infinite;
+	-o-animation: spin 1s linear infinite;
+	animation: spin 1s linear infinite;
+}
+
+@-webkit-keyframes spin
+{
+	from { -webkit-transform: rotate(0deg); opacity: 0.4; }
+	50%  { -webkit-transform: rotate(180deg); opacity: 1; }
+	to   { -webkit-transform: rotate(360deg); opacity: 0.4; }
+}
+
+@-moz-keyframes spin
+{
+	from { -moz-transform: rotate(0deg); opacity: 0.4; }
+	50%  { -moz-transform: rotate(180deg); opacity: 1; }
+	to   { -moz-transform: rotate(360deg); opacity: 0.4; }
+}
+
+@-ms-keyframes spin
+{
+	from { -ms-transform: rotate(0deg); opacity: 0.4; }
+	50%  { -ms-transform: rotate(180deg); opacity: 1; }
+	to   { -ms-transform: rotate(360deg); opacity: 0.4; }
+}
+
+@-o-keyframes spin
+{
+	from { -o-transform: rotate(0deg); opacity: 0.4; }
+	50%  { -o-transform: rotate(180deg); opacity: 1; }
+	to   { -o-transform: rotate(360deg); opacity: 0.4; }
+}
+
+@keyframes spin
+{
+	from { transform: rotate(0deg); opacity: 0.2; }
+	50%  { transform: rotate(180deg); opacity: 1; }
+	to   { transform: rotate(360deg); opacity: 0.2; }
+}
