@@ -53,6 +53,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         deferred.resolve(null);
       }).
       error(function(data, status, headers, config) {
+        alertify.error('An error occured, please check your configuration.');
         deferred.reject(null);
       });
     return deferred.promise;
@@ -60,7 +61,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 
   $rootScope.trackerStatus = function() {
     if($rootScope.tracker == null || $rootScope.tracker[0] == undefined) {
-      return 'unknown';
+      return 'offline';
     } else if($rootScope.tracker[0].end == null) {
       return 'online';
     } else {
@@ -99,7 +100,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 
 
   // Get all the required information
-  $scope.refreshContent = function() {
+  $rootScope.refreshContent = function() {
     $rootScope.showLoader = true;
     var promises = [];
     promises[0] = $rootScope.getAccounts();
