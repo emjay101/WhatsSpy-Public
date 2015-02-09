@@ -29,11 +29,15 @@ $token = '39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa';
 
 /** Allows listeners to Ctrl+C to terminate this script. */
 function signal_handler($signal) {
-	global $DBH, $wa;
+	global $DBH, $wa, $tracking_numbers;
     switch($signal) {
         case SIGTERM:
         case SIGKILL:
         case SIGINT:
+        	// Kill any event listeners
+	        foreach ($tracking_numbers as $number) {
+				$wa->sendPresenceUnsubscription($number);
+			}
         	// Update tracker session
 			$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW() WHERE "end" IS NULL;');
 			$end_tracker_session->execute();
@@ -427,7 +431,9 @@ function track() {
 		// Check status message (every 2 hours)
 		if($pollCount % calculateTick(60*60*2) == 0) {
 			echo '[status-msg #'.$statusMsgCount.'] Checking '. count($tracking_numbers) . ' users.'."\n";
-			$wa->sendGetStatuses($tracking_numbers);
+			if(count($tracking_numbers) > 0) {
+				$wa->sendGetStatuses($tracking_numbers);
+			}
 			$statusMsgCount++;
 		}
 
@@ -480,6 +486,14 @@ do {
 		// Start the tracker
 		track();
 	} catch (Exception $e) {
+		try {
+			// Kill any event listeners
+	        foreach ($tracking_numbers as $number) {
+				$wa->sendPresenceUnsubscription($number);
+			}
+		} catch(Exception $e) {
+			// Connection closed, nevermind
+		}
 		// Update tracker session
 		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW() WHERE "end" IS NULL;');
 		$end_tracker_session->execute();

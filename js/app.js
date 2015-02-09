@@ -22,7 +22,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   .otherwise({redirectTo: '/overview'});;
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
-  $rootScope.version = '1.0.1';
+  $rootScope.version = '1.0.2';
 
   $('[data-toggle="tooltip"]').tooltip();
   // Set active buttons according to the current page

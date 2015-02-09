@@ -21,7 +21,7 @@ switch($_GET['whatsspy']) {
 			$number = cutZeroPrefix($_GET['number']);
 			$countrycode = cutZeroPrefix($_GET['countrycode']);
 			
-			$account = $countrycode.$number;
+			$account = preg_replace('/\D/', '', $countrycode.$number);
 			echo json_encode(addAccount($name, $account, true));
 		} else {
 			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
