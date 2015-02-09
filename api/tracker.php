@@ -213,7 +213,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
   *		Callback Function to check if user actually exists
   */
 function onSyncResultNumberCheck($result) {
-	global $DBH, $tracking_numbers;
+	global $DBH, $tracking_numbers, $wa;
 	// Set whatsapp users verified=true
 	foreach ($result->existing as $number) {
 		$number = explode("@", $number)[0];
@@ -222,6 +222,8 @@ function onSyncResultNumberCheck($result) {
 		$update->execute(array(':number' => $number));
 		// Add user to the current tracking system
 		array_push($tracking_numbers, $number);
+		// Add call for event listener
+		$wa->SendPresenceSubscription($number);
 		echo '  -[verified] Added verified '.$number.' to the tracking system.'."\n";
 		checkLastSeen($number);
 		checkProfilePicture($number);
@@ -390,7 +392,7 @@ function calculateTick($time) {
 function track() {
 	global $DBH, $wa, $tracking_numbers, $whatsspyNMAKey, $crawl_time, $whatsappAuth;
 
-	$pollCount = 1;
+	$pollCount = 0;
 	$lastseenCount = 0;
 	$statusMsgCount = 0;
 	$picCount = 0;
