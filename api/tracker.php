@@ -199,10 +199,10 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	$privacy_status = $DBH->prepare('SELECT "statusmessage_privacy" FROM accounts WHERE "id"=:number');
 	$privacy_status -> execute(array(':number' => $number));
 	$row  = $privacy_status -> fetch();
-	if($privacy_enabled != $row['statusmessage_privacy']) {
+	if($privacy_enabled != (boolean)$row['statusmessage_privacy']) {
 		$update = $DBH->prepare('UPDATE accounts
 								SET "statusmessage_privacy" = :privacy WHERE "id" = :number;');
-		$update->execute(array(':number' => $number, ':privacy' => $privacy_enabled));
+		$update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled));
 		if($privacy_enabled) {
 			echo '  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! '."\n";
 		} else {
