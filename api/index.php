@@ -3,8 +3,6 @@
 //	Whatsspy tracker, developed by Maikel Zweerink
 //	Index.php - contains the webservice supplying information to the webUI.
 // -----------------------------------------------------------------------
-alskjdf
-
 require_once 'config.php';
 require_once 'functions.php';
 
