@@ -79,4 +79,11 @@ function addAccount($name, $account_id, $array_result = false) {
 	}
 }
 
+function fixTimezone($timestamp) {
+	if($timestamp != null) {
+		return $timestamp.'00';
+	}
+	return $timestamp;
+}
+
 ?>

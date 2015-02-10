@@ -84,7 +84,17 @@ switch($_GET['whatsspy']) {
 								WHERE n.active = true AND n.verified=true
 								ORDER BY n.name ASC');
 		$select -> execute();
-		$result = $select->fetchAll(PDO::FETCH_ASSOC);
+		$result = array();
+
+		// Quick fix, need better solution
+		foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $account) {
+			$account['profilepic_updated'] = fixTimezone($account['profilepic_updated']);
+			$account['lastseen_changed_privacy_updated'] = fixTimezone($account['lastseen_changed_privacy_updated']);
+			$account['profilepic_changed_privacy_updated'] = fixTimezone($account['profilepic_changed_privacy_updated']);
+			$account['statusmessage_changed_privacy_updated'] = fixTimezone($account['statusmessage_changed_privacy_updated']);
+			$account['since'] = fixTimezone($account['since']);			
+			array_push($result, $account);
+		}
 
 		$select_pending = $DBH->prepare('SELECT n.id, n.name FROM accounts n WHERE n.active = true AND n.verified = false');
 		$select_pending -> execute();
@@ -109,15 +119,34 @@ switch($_GET['whatsspy']) {
 			foreach($numbers as $number) {
 				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - \'7 day\'::INTERVAL ORDER BY start DESC');
 				$select->execute(array(':number'=> $number));
-				$result_status = $select->fetchAll(PDO::FETCH_ASSOC);
+				$result_status = array();
+
+				// Quick fix, need better solution
+				foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $status) {
+					$status['start'] = fixTimezone($status['start']);			
+					$status['end'] = fixTimezone($status['end']);			
+					array_push($result_status, $status);
+				}
 
 				$select = $DBH->prepare('SELECT hash, changed_at FROM profilepicture_history WHERE number = :number ORDER BY changed_at DESC');
 				$select->execute(array(':number'=> $number));
-				$result_picture = $select->fetchAll(PDO::FETCH_ASSOC);
+				$result_picture = array();
+
+				// Quick fix, need better solution
+				foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $status) {
+					$status['changed_at'] = fixTimezone($status['changed_at']);				
+					array_push($result_picture, $status);
+				}
 
 				$select = $DBH->prepare('SELECT status, changed_at FROM statusmessage_history WHERE number = :number ORDER BY changed_at DESC');
 				$select->execute(array(':number'=> $number));
-				$result_statusmsg = $select->fetchAll(PDO::FETCH_ASSOC);
+				$result_statusmsg = array();
+
+				// Quick fix, need better solution
+				foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $status) {
+					$status['changed_at'] = fixTimezone($status['changed_at']);				
+					array_push($result_statusmsg, $status);
+				}
 
 				if(count($result_status) != 0) {
 					array_push($accounts, array('id' => $number, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture));
