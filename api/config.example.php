@@ -15,6 +15,9 @@ $dbAuth = 			['host' => 'localhost',
 		   			 'password' => ''];
 
 // Whatsapp login number & secret.
+// 'number' may only contain:
+// - Digits (no spaces, special characters like +)
+// - Needs to be without any prefix 0's. 0031 06 xxx becomes 31 6 xxx (no 0's prefix for both the country code and phonenumber itself).
 $whatsappAuth = 	['number' => '',
 				 	 'secret' => ''];
 
@@ -26,6 +29,7 @@ $whatsappAuth = 	['number' => '',
 $whatsspyProfilePath = '/var/www/whatsspy/images/profilepicture/';
 
 // Relative or absolute path for the web-user.
+// THIS PATH IS FOR USERS ACCESSING THE PROFILE PICTURES FROM THE WEB.
 // include the last / in the path!
 $whatsspyWebProfilePath = 'images/profilepicture/';
 

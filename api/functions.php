@@ -85,5 +85,12 @@ function fixTimezone($timestamp) {
 	}
 	return $timestamp;
 }
+// TODO implement and check in the tracker
+function checkDB($DBH) {
+	$check = false;
+
+
+	return $check;
+}
 
 ?>
