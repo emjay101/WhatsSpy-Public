@@ -22,7 +22,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   .otherwise({redirectTo: '/overview'});;
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
-  $rootScope.version = '1.0.2';
+  $rootScope.version = '1.0.3';
 
   $('[data-toggle="tooltip"]').tooltip();
   // Set active buttons according to the current page
@@ -39,6 +39,8 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   $rootScope.accounts = [];
   $rootScope.tracker = [];
 
+  $rootScope.error = false;
+
   $rootScope.getAccounts = function() {
     var deferred = $q.defer();
     $http({method: 'GET', url: 'api/?whatsspy=getStats'}).
@@ -54,6 +56,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
       }).
       error(function(data, status, headers, config) {
         alertify.error('An error occured, please check your configuration.');
+        $rootScope.error = true;
         deferred.reject(null);
       });
     return deferred.promise;

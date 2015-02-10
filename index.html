@@ -72,6 +72,9 @@
                     </div>
                 </div> 
             </header>
+            <div data-ng-show="error == true" class="alert alert-danger" role="alert">
+                <strong>It seems like WhatsSpy is not working correctly.</strong> Please take a look at <a target="_blank" href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/troubleshooting">the troubleshooting page</a>.
+            </div>
             <div id="page" >
                 <div data-ng-view></div>
             </div>
