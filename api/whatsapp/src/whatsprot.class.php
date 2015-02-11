@@ -3713,7 +3713,10 @@ class WhatsProt
     {
         if($this->socket != null)
         {
-            socket_write($this->socket, $data, strlen($data));
+            $socket_status = socket_write($this->socket, $data, strlen($data));
+            if ($socket_status === FALSE) {
+                throw new Exception('Socket error: '. socket_strerror(socket_last_error()). "\n");
+            }
         }
     }
 

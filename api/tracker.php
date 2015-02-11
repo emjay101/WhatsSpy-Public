@@ -504,6 +504,7 @@ do {
 		sendNMAMessage($whatsspyNMAKey, 'WhatsSpy', 'Tracker Exception!', $e->getMessage(), '2');
 	}
 	// Wait 15 seconds before reconnecting.
+	echo '[retry] Connection lost to WhatsApp. Retrying in 15 seconds.'."\n";
 	sleep(15);
 } while(true);
 
