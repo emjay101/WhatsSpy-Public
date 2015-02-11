@@ -15,6 +15,7 @@
 declare(ticks = 5);
 
 require_once 'config.php';
+require_once 'data.php';
 require_once 'functions.php';
 require_once 'whatsapp/src/whatsprot.class.php';
 
@@ -482,6 +483,11 @@ function track() {
 }
 
 do {
+	// Check database
+	if(!checkDB($DBH, $dbTables)) {
+		echo '[DB-check] Table\'s do not exist in database "'.$dbAuth['dbname'].'". Check the troubleshooting page.'."\n";
+		exit();
+	}
 	try {
 		// Start the tracker
 		track();

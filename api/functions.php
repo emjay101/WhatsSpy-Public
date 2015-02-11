@@ -85,12 +85,29 @@ function fixTimezone($timestamp) {
 	}
 	return $timestamp;
 }
-// TODO implement and check in the tracker
-function checkDB($DBH) {
-	$check = false;
 
+function checkDB($DBH, $dbTables) {
+	$where_query = '';
+	foreach ($dbTables as $table) {
+		$where_query .= ' table_name = :'.$table;
+		if(end($dbTables) != $table) {
+			$where_query .= ' OR ';
+		}
+	}
+	$select = $DBH->prepare('SELECT COUNT(1) as "table_count"
+								FROM   information_schema.tables
+								WHERE table_schema = \'public\' AND '.$where_query.';');
 
-	return $check;
+	$arguments = array();
+	foreach ($dbTables as $table) {
+		$arguments[':'.$table] = $table;
+	}
+	$select->execute($arguments);
+	$row  = $select -> fetch();
+	if($row['table_count'] == count($dbTables)) {
+		return true;
+	}
+	return false;
 }
 
 ?>
