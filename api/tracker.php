@@ -147,7 +147,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			        fclose($fp);
 			    } else {
 			    	echo '  -[profile-pic] Could not write '. $filename .' to disk!'."\n";
-			    	sendNMAMessage($whatsspyNMAKey, 'WhatsSpy', 'Tracker Exception!', 'Could not write '. $filename .' to disk!', '2');
+			    	sendMessage('Tracker Exception!', 'Could not write '. $filename .' to disk!', $whatsspyNMAKey, $whatsspyLNKey);
 			    }
 			}
 			// Update database
@@ -395,7 +395,7 @@ function calculateTick($time) {
 
 
 function track() {
-	global $DBH, $wa, $tracking_numbers, $whatsspyNMAKey, $crawl_time, $whatsappAuth;
+	global $DBH, $wa, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth;
 
 	$pollCount = 0;
 	$lastseenCount = 0;
@@ -407,7 +407,7 @@ function track() {
 	retrieveTrackingUsers();
 	echo '[init] Started tracking with phonenumber ' . $whatsappAuth['number']."\n";
 	startTrackerHistory();
-	sendNMAMessage($whatsspyNMAKey, 'WhatsSpy', 'Tracker started.', 'Whatsspy tracker has started tracking '.count($tracking_numbers). ' users.', '1');
+	sendMessage('WhatsSpy Public has started tracking!', 'tracker has started tracking '.count($tracking_numbers). ' users.', $whatsspyNMAKey, $whatsspyLNKey);
 	while(true){
 		$crawl_time = time();
 		// Socket read
@@ -507,10 +507,11 @@ do {
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
 		$end_user_session->execute();
-		sendNMAMessage($whatsspyNMAKey, 'WhatsSpy', 'Tracker Exception!', $e->getMessage(), '2');
+		echo '[error] Tracker exception! '.$e->getMessage()."\n";
+		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
 	}
 	// Wait 15 seconds before reconnecting.
-	echo '[retry] Connection lost to WhatsApp. Retrying in 15 seconds.'."\n";
+	echo '[retry] Reconnectiong to WhatsApp in 15 seconds.'."\n";
 	sleep(15);
 } while(true);
 

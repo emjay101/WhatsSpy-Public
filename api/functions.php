@@ -4,8 +4,16 @@
 //	Functions.php - some general functions used in both the webservice and tracker.
 // -----------------------------------------------------------------------
 
+function sendMessage($title, $message, $NMAKey = null, $LNKey = null, $priority = '2', $image = null) {
+	if($NMAKey != null && $NMAKey != '') {
+		sendNMAMessage($NMAKey, 'WhatsSpy Public', $title, $message, $priority);
+	}
+	if($LNKey != null && $LNKey != '') {
+		sendLNMessage($LNKey, $title, $message, $image);
+	}
+}
 
-/** Send Error to NMA */
+/** Send Msg to NMA */
 function sendNMAMessage($NMAKey, $application, $event, $desc, $priority) {
 	if($NMAKey == null || $NMAKey == '') {
 		return false;
@@ -24,6 +32,22 @@ function sendNMAMessage($NMAKey, $application, $event, $desc, $priority) {
 	curl_close ($ch);
 	return true;
 }
+/** Send Msg to Livenotifier */
+function sendLNMessage($LNKey, $title, $message, $imgurl) { 
+	if($LNKey == null || $LNKey == '') { 
+		return false; 
+	} 
+	$post = array('apikey' => $LNKey, 
+				  'title' => $title, 
+				  'message' => $message, 
+				  'imgurl' => $imgurl); 
+	$ch = curl_init(); 
+	curl_setopt($ch, CURLOPT_URL,"http://api.livenotifier.net/notify" . "?" . http_build_query($post)); 
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); 
+	$response = curl_exec($ch); 
+	curl_close ($ch); 
+	return true; 
+} 
 
 /** Cut any prefix 0's of an string */
 function cutZeroPrefix($string) {

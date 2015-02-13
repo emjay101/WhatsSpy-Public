@@ -38,6 +38,9 @@ $whatsspyWebProfilePath = 'images/profilepicture/';
 // OPTIONAL
 $whatsspyNMAKey = 	'';
 
+// You can also set an key for LiveNotifier
+// OPTIONAL
+$whatsspyLNKey = '';
 
 // -------------------------------------------------
 // You don't need to edit beyond this point
