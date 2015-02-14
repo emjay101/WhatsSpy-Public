@@ -47,7 +47,7 @@ switch($_GET['whatsspy']) {
 	case 'updateName':
 		if(isset($_GET['number']) && isset($_GET['name'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
-			$name = htmlentities($_GET['name']);
+			$name = $_GET['name']; // do not use htmlentities, AngularJS will protect us
 			$update = $DBH->prepare('UPDATE accounts
 										SET name = :name WHERE id = :id;');
 			$update->execute(array(':id' => $number, ':name' => $name));
