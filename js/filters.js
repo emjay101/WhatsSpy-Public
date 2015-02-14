@@ -95,6 +95,9 @@ angular.module('whatsspyFilters', [])
 })
 .filter('numberFilter', function () {
 	return function (contacts, phoneNumber, name) {
+		if(contacts == undefined) {
+			return null;
+		}
 		return contacts.filter(function(contact) {
 			var result = true;
 			if(phoneNumber != null) {

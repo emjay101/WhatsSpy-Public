@@ -1,7 +1,7 @@
 <?php
 // -----------------------------------------------------------------------
-//	Whatsspy tracker, developed by Maikel Zweerink
-//
+// Whatsspy tracker
+// @Author Maikel Zweerink
 //
 //  This tracker requires read/write rights in it's own directory.
 //	
@@ -20,7 +20,7 @@ require_once 'functions.php';
 require_once 'whatsapp/src/whatsprot.class.php';
 
 
-$DBH  = new PDO("pgsql:host=".$dbAuth['host'].";port=".$dbAuth['port'].";dbname=".$dbAuth['dbname'].";user=".$dbAuth['user'].";password=".$dbAuth['password']);
+$DBH  = setupDB($dbAuth);
 
 // Global infromation
 $wa = null;
@@ -192,7 +192,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 			$insert->execute(array(':status' => $data,
 								   ':number' => $number,
 								   ':time' => (string)$time));
-			echo '  -[status-msg] Inserted new status message for '.$number.' ('.htmlentities($data).').'."\n";
+			echo '  -[status-msg] Inserted new status message for '.$number.' ('.$data.').'."\n";
 		}
 	}
 
@@ -482,6 +482,13 @@ function track() {
 	}
 }
 
+// Starting the tracker
+echo '------------------------------------------------------------------'."\n";
+echo '|                    WhatsSpy Public Tracker                     |'."\n";
+echo '|                        Proof of Concept                        |'."\n";
+echo '|              Check gitlab.maikel.pro for more info             |'."\n";
+echo '------------------------------------------------------------------'."\n";
+sleep(2);
 do {
 	// Check database
 	if(!checkDB($DBH, $dbTables)) {
@@ -512,7 +519,7 @@ do {
 	}
 	// Wait 15 seconds before reconnecting.
 	echo '[retry] Reconnectiong to WhatsApp in 15 seconds.'."\n";
-	sleep(15);
+	sleep(30);
 } while(true);
 
 

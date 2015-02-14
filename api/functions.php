@@ -1,8 +1,17 @@
 <?php
 // -----------------------------------------------------------------------
-//	Whatsspy tracker, developed by Maikel Zweerink
+//Whatsspy tracker
+// @Maikel Zweerink
 //	Functions.php - some general functions used in both the webservice and tracker.
 // -----------------------------------------------------------------------
+
+function setupDB($dbAuth) {
+	$DBH  = new PDO("pgsql:host=".$dbAuth['host'].";port=".$dbAuth['port'].";dbname=".$dbAuth['dbname'].";user=".$dbAuth['user'].";password=".$dbAuth['password']);
+	// Set UTF8
+	$DBH->query('SET NAMES \'UTF8\';');
+	return $DBH;
+}
+
 
 function sendMessage($title, $message, $NMAKey = null, $LNKey = null, $priority = '2', $image = null) {
 	if($NMAKey != null && $NMAKey != '') {

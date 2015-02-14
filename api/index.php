@@ -1,13 +1,16 @@
 <?php
 // -----------------------------------------------------------------------
-//	Whatsspy tracker, developed by Maikel Zweerink
+// Whatsspy tracker
+// @Author Maikel Zweerink
 //	Index.php - contains the webservice supplying information to the webUI.
 // -----------------------------------------------------------------------
 require_once 'config.php';
 require_once 'functions.php';
 
-$DBH  = new PDO("pgsql:host=".$dbAuth['host'].";port=".$dbAuth['port'].";dbname=".$dbAuth['dbname'].";user=".$dbAuth['user'].";password=".$dbAuth['password']);
+$DBH  = setupDB($dbAuth);
 
+
+header("Content-type: application/json; charset=utf-8");
 // Process requests
 switch($_GET['whatsspy']) {
 	// Add an new contact to the whatsspy database (39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa)
@@ -64,6 +67,7 @@ switch($_GET['whatsspy']) {
 										smph.privacy as "statusmessage_changed_privacy", smph.changed_at as "statusmessage_changed_privacy_updated",
 								(SELECT start FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
 								(SELECT COUNT(1) as "records" FROM status_history WHERE number = n.id) "records",
+								(SELECT start FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online",
 								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'1 day\'::INTERVAL AND "end" IS NOT NULL) "result1",
 								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "result7",
 								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'14 day\'::INTERVAL AND "end" IS NOT NULL) "result14",
@@ -98,7 +102,7 @@ switch($_GET['whatsspy']) {
 		$select_pending -> execute();
 		$result_pending = $select_pending->fetchAll(PDO::FETCH_ASSOC);
 
-		$tracker_select = $DBH->prepare('SELECT * FROM tracker_history WHERE "start" >= NOW() - \'7 day\'::INTERVAL ORDER BY "start" DESC');
+		$tracker_select = $DBH->prepare('SELECT * FROM tracker_history WHERE "start" >= NOW() - \'14 day\'::INTERVAL ORDER BY "start" DESC');
 		$tracker_select -> execute();
 		$tracker = $tracker_select->fetchAll(PDO::FETCH_ASSOC);
 
@@ -107,7 +111,9 @@ switch($_GET['whatsspy']) {
 			$start_tracker = $tracker[count($tracker)-1]['start'];
 		}
 
+
 		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'profilePicPath' => $whatsspyWebProfilePath]);
+
 		break;
 	// Get specific analytics and information of an given contact.
 	case 'getContactStats':
@@ -115,7 +121,7 @@ switch($_GET['whatsspy']) {
 			$numbers = explode(',', $_GET['number']);
 			$accounts = array();
 			foreach($numbers as $number) {
-				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - \'7 day\'::INTERVAL ORDER BY start DESC');
+				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - \'14 day\'::INTERVAL ORDER BY start DESC');
 				$select->execute(array(':number'=> $number));
 				$result_status = array();
 
@@ -145,10 +151,8 @@ switch($_GET['whatsspy']) {
 					$status['changed_at'] = fixTimezone($status['changed_at']);				
 					array_push($result_statusmsg, $status);
 				}
-
-				if(count($result_status) != 0) {
-					array_push($accounts, array('id' => $number, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture));
-				}
+				// It might not be an existing number but just add this because of the 7-day limit.
+				array_push($accounts, array('id' => $number, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture));
 			}
 			echo json_encode($accounts);
 		} else {

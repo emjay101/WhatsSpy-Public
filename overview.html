@@ -21,10 +21,10 @@
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The system is checking all statuses <span data-ng-show="accounts.length > 0">from {{accounts.length}} contacts</span> continuously from {{trackerStart | staticDatetime}}
 					</p>
 					<p>
-						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Contacts that have "last seen" or "status" private will be tracked anyway.
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Contacts that have "last seen" set to "nobody" will be <a href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/" target="_blank">tracked anyway</a>.
 					</p>
 					<p>
-						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> This page contains data from now to 7 days ago. This information does not update (press F5 to reload).
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> This page contains data from now to 14 days ago. This information does not update (press F5 to reload).
 					</p>
 					<p data-ng-show="pendingAccounts.length > 0">
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> {{pendingAccounts.length}} contacts will be verified within 5-10 minutes, <a data-ng-click="refreshContent()">reload data</a> to check again.
@@ -44,14 +44,14 @@
 							<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{profilePicPath}}{{number.profilepic}}.jpg" />
 							<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="number.profilepic == null" src="https://placehold.it/50x50" />
 						</div>
-						<div class="col-md-5">
+						<div class="col-md-6">
 							<h3>{{number.name | emptyName}} <small>{{number.last_statusmessage}}</small></h3>
 							<span data-ng-show="number.since != null" class="label label-info">tracking since {{number.since | staticDatetime}}</span>
 							<span data-ng-show="number.records != null" class="label label-info">{{number.records}} status records</span>
+							<span data-ng-show="number.latest_online != null" class="label label-info">Last seen <span am-time-ago="number.latest_online"></span></span>
 						</div>
-						<div class="col-md-4 whatsspy-contact-options">
-<!-- 								<a class="btn" data-ng-class="{true:'btn-success', false:'btn-danger'}[number.data != null]" data-ng-disabled="number.data != null" data-ng-click="loadDataFromNumber(number);"><span class="glyphicon glyphicon-list-alt" title="Load data"></span> load records <span data-ng-show="number.data != null" class="glyphicon glyphicon-ok" aria-hidden="true"></span></a> -->
-								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Change name</a>
+						<div class="col-md-3 whatsspy-contact-options">
+								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
 								<a class="btn btn-default" data-ng-click="removeNumber(number.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a>
 						</div>
 						<div class="col-md-2 whatsspy-contact-phone">
