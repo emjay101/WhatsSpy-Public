@@ -112,9 +112,30 @@ function addAccount($name, $account_id, $array_result = false) {
 	}
 }
 
+$global_timezone_digits = null;
+
 function fixTimezone($timestamp) {
+	global $global_timezone_digits;
 	if($timestamp != null) {
-		return $timestamp.'00';
+		// Set global setter to improve performance
+		if($global_timezone_digits == null) {
+			$split = explode('+', $timestamp);
+			if(strlen($split[1]) == 2) {
+				// contains format +05
+				$global_timezone_digits = 2;
+			} else {
+				// contains the format +05:30
+				$global_timezone_digits = 4;
+			}
+		}
+		// Return requested time.
+		if($global_timezone_digits == 2) {
+			// contains format +05
+			return $timestamp.'00';
+		} else {
+			// contains the format +05:30
+			return $timestamp;
+		}
 	}
 	return $timestamp;
 }
