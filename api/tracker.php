@@ -12,7 +12,7 @@
 // -----------------------------------------------------------------------
 
 
-declare(ticks = 5);
+declare(ticks = 10);
 
 require_once 'config.php';
 require_once 'data.php';
@@ -232,6 +232,7 @@ function onSyncResultNumberCheck($result) {
 		echo '  -[verified] Added verified '.$number.' to the tracking system.'."\n";
 		checkLastSeen($number);
 		checkProfilePicture($number);
+		checkStatusMessage($number);
 	}
 	// Set non-whatsapp users inactive
 	foreach ($result->nonExisting as $number) {
@@ -374,6 +375,7 @@ function startTrackerHistory() {
   *		- User status changes to track if a user is online/offline
   *		- User lastseen (privacy options)
   *		- User profile pictures (and changes)
+  *     - User status message (and changes)
   */
 function checkLastSeen($number) {
 	global $wa;
@@ -385,6 +387,12 @@ function checkProfilePicture($number) {
 	global $wa;
 	echo '  -[user-profile-pic] Checking profile picture for '. $number . '.'."\n";
 	$wa->sendGetProfilePicture($number, true);
+}
+
+function checkStatusMessage($number) {
+	global $wa;
+	echo '  -[user-status-msg] Checking status message for '. $number . '.'."\n";
+	$wa->sendGetStatuses([$number]);
 }
 
 function calculateTick($time) {
