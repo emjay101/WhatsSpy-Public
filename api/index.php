@@ -94,6 +94,7 @@ switch($_GET['whatsspy']) {
 			$account['lastseen_changed_privacy_updated'] = fixTimezone($account['lastseen_changed_privacy_updated']);
 			$account['profilepic_changed_privacy_updated'] = fixTimezone($account['profilepic_changed_privacy_updated']);
 			$account['statusmessage_changed_privacy_updated'] = fixTimezone($account['statusmessage_changed_privacy_updated']);
+			$account['latest_online'] = fixTimezone($account['latest_online']);			
 			$account['since'] = fixTimezone($account['since']);			
 			array_push($result, $account);
 		}

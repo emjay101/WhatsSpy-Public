@@ -180,11 +180,13 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	$privacy_enabled = ($time == null ? true : false);
 
 	if(!$privacy_enabled) {
-		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND "changed_at" = to_timestamp(:time)');
+		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND ("changed_at" = to_timestamp(:time) OR "status" = :status)');
 		$latest_statusmsg -> execute(array(':number' => $number,
+										   ':status' => $data,
 										   ':time' => (string)$time));
 
 		if($latest_statusmsg -> rowCount() == 0) {
+			// Check last message
 			// Update database
 		    $insert = $DBH->prepare('INSERT INTO statusmessage_history (
 			            			"number", status, changed_at)
@@ -488,6 +490,12 @@ function track() {
 			sleep(2);
 		}
 	}
+}
+
+
+// DO NOT START THIS SCRIPT FROM THE CGI.
+if (PHP_SAPI !== 'cli'){ 
+	exit();
 }
 
 // Starting the tracker
