@@ -214,7 +214,8 @@ switch($_GET['whatsspy']) {
 										FROM status_history x 
 										LEFT JOIN accounts a ON a.id = x.number
 										WHERE status = true AND "end" IS NOT NULL AND "end" >= :since AND "end" <= :till 
-										ORDER BY x.start DESC;');
+										ORDER BY x.start DESC
+										LIMIT 200;');
 			$select->execute(array(':since'=> date('c', $since_users), ':till'=> date('c', $till)));
 
 			$result_user_status = array();
