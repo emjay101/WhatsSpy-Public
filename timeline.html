@@ -1,0 +1,163 @@
+<div class="row">
+	<div class="col-md-12">
+		<div class="row">
+			<div class="col-md-3">
+				<div class="well whatsspy-header-box">
+					<strong><span class="glyphicon glyphicon-filter" aria-hidden="true"></span> Filters</strong>
+					<br />
+					<br />
+					<p>
+						<input type="text" class="form-control" id="filterPhonenumber"data-ng-model="filterPhonenumber" ng-model-options="{debounce: 1000}" placeholder="Search by phone number ...">
+					</p>
+					<p>
+						<input type="text" class="form-control" id="filterName" data-ng-model="filterName"  ng-model-options="{debounce: 1000}" placeholder="Search by name ...">
+						<small><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Use <strong>&lt;name&gt;|&lt;name&gt;</strong> to filter on multiple names.</small>
+					</p>
+				</div>
+			</div>	
+			<div class="col-md-9">
+				<div class="well whatsspy-header-box">
+					<p>
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The system is checking all statuses <span data-ng-show="accounts.length > 0">from {{accounts.length}} contacts</span> continuously from {{trackerStart | staticDatetime}}
+					</p>
+					<p>
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Contacts that have "last seen" set to "nobody" will be <a href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/" target="_blank">tracked anyway</a>.
+					</p>
+					<p>
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Unlike the overview and comparison page, this information is live.
+					</p>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-8">
+				<h3>Activity timeline</h3>
+				<div data-ng-repeat="item in timelineData.activity | numberFilter:filterPhonenumber:filterName">
+					<!-- ACTIVITY: TRACKER START -->
+					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'tracker_start'">
+					  <div class="panel-heading">
+					  	<div class="col-md-1">
+					  		<span class="glyphicon glyphicon-list-alt whatsspy-timeline-activity-icon" aria-hidden="true"></span>
+					  	</div>
+					  	<div class="col-md-7">
+					  		<h3 class="panel-title">Tracker is now online</h3>
+					  	</div>
+					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  		{{item.changed_at | staticDatetime}}
+					  	</div>
+					  	<div class="clear"></div>
+					  	</div>
+					  <div class="panel-body">
+					    started at <strong>{{item.start | staticDatetime}}</strong>.
+					  </div>
+					</div>	
+					<!-- ACTIVITY: TRACKER STOP -->
+					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'tracker_end'">
+					  <div class="panel-heading">
+					  	<div class="col-md-1">
+					  		<span class="glyphicon glyphicon-list-alt whatsspy-timeline-activity-icon" aria-hidden="true"></span>
+					  	</div>
+					  	<div class="col-md-7">
+					  		<h3 class="panel-title">Tracker is now offline</h3>
+					  	</div>
+					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  		{{item.changed_at | staticDatetime}}
+					  	</div>
+					  	<div class="clear"></div>
+					  	</div>
+					  <div class="panel-body">
+					    this session lasted from <strong>{{item.start | staticDatetime}}</strong> till <strong>{{item.end | staticDatetime}}</strong>.
+					  </div>
+					</div>	
+					<!-- ACTIVITY: STATUS MSG CHANGE -->
+					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'statusmsg'">
+					  <div class="panel-heading">
+					  	<div class="col-md-1">
+					  		<span class="glyphicon glyphicon-comment whatsspy-timeline-activity-icon " aria-hidden="true"></span>
+					  	</div>
+					  	<div class="col-md-7">
+					  		<h3 class="panel-title">New status message for {{item.name | emptyName}}</h3> ({{item.id}})
+					  	</div>
+					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  		{{item.changed_at | staticDatetime}}
+					  	</div>
+					  	<div class="clear"></div>
+					  	</div>
+					  <div class="panel-body">
+					    changed to "<strong>{{item.msg_status}}</strong>".
+					  </div>
+					</div>	
+					<!-- ACTIVITY: STATUS PROFILE PICTURE CHANGE -->
+					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'profilepic'">
+					  <div class="panel-heading">
+					  	<div class="col-md-1">
+					  		<span class="glyphicon glyphicon-picture whatsspy-timeline-activity-icon " aria-hidden="true"></span>
+					  	</div>
+					  	<div class="col-md-7">
+					  		<h3 class="panel-title">New profile photo for {{item.name | emptyName}}</h3> ({{item.id}})
+					  	</div>
+					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  		{{item.changed_at | staticDatetime}}
+					  	</div>
+					  	<div class="clear"></div>
+					  	</div>
+					  <div class="panel-body whatsspy-timeline-photo">
+					    <img data-ng-cloak class="img-responsive img-rounded whatsspy-timeline-photo-thumb" data-ng-src="{{profilePicPath}}{{item.hash}}.jpg" />
+					  </div>
+					</div>	
+					<!-- ACTIVITY: STATUS LAST SEEN PRIVACY -->
+					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'lastseen_privacy' || item.type == 'profilepic_privacy' || item.type == 'statusmsg_privacy'">
+					  <div class="panel-heading">
+					  	<div class="col-md-1">
+					  		<span class="glyphicon glyphicon-pencil whatsspy-timeline-activity-icon " aria-hidden="true"></span>
+					  	</div>
+					  	<div class="col-md-7">
+					  		<h3 class="panel-title">{{item.name | emptyName}} changed his privacy setting</h3> ({{item.id}})
+					  	</div>
+					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  		{{item.changed_at | staticDatetime}}
+					  	</div>
+					  	<div class="clear"></div>
+					  	</div>
+					  <div class="panel-body">
+					  	<div data-ng-show="item.type == 'lastseen_privacy'">
+							Privacy option <strong>last seen</strong> is now set to 
+							<span data-ng-show="item.lastseen_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">contacts*</span>
+							<span data-ng-show="item.lastseen_privacy == false" class="label label-success ">everyone</span>.
+						</div>
+						<div data-ng-show="item.type == 'profilepic_privacy'">
+							Privacy option <strong>profile picture</strong> is now set to 
+							<span data-ng-show="item.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">contacts*</span>
+							<span data-ng-show="item.profilepic_privacy == false" class="label label-success ">everyone</span>.
+						</div>
+						<div data-ng-show="item.type == 'statusmsg_privacy'">
+							Privacy option <strong>status messages</strong> is now set to 
+							<span data-ng-show="item.statusmsg_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">contacts*</span>
+							<span data-ng-show="item.statusmsg_privacy == false" class="label label-success ">everyone</span>.
+						</div>
+					  </div>
+					</div>
+				</div>
+				<div data-ng-show="timelineData.activity.length == 0">
+					<center>No information available ..</center>
+				</div>
+				<div class="whatsspy-passive-timeline" data-ng-click="requestOlderData();">
+					<center>Click to load older entries ..</center>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<h3>Status timeline</h3>
+				<!-- userstatus -->
+				<div data-ng-repeat="item in timelineData.userstatus | numberFilter:filterPhonenumber:filterName">
+					<div class="whatsspy-timeline-animate-status whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}">
+						<h4><span class="glyphicon glyphicon-user" data-ng-class="" aria-hidden="true"></span> {{item.name | emptyName}} <small>({{item.id}})</small></h4> 
+						Online from <span class="label label-success">{{item.start | staticTime}}</span> <span data-ng-show="item.end != null">till <span class="label label-success">{{item.end | staticTime}}</span></span><span data-ng-show="item.end == null">till now.</span>
+					</div>
+				</div>
+				<div data-ng-show="timelineData.activity.length == 0">
+					<center>No information available ..</center>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

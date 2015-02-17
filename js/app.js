@@ -15,6 +15,10 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     templateUrl: 'compare.html',
     controller: 'CompareController'
   })
+  .when('/timeline', {
+    templateUrl: 'timeline.html',
+    controller: 'TimelineController'
+  })
   .when('/about', {
     templateUrl: 'about.html',
     controller: 'AboutController'
@@ -22,7 +26,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   .otherwise({redirectTo: '/overview'});;
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
-  $rootScope.version = '1.0.9';
+  $rootScope.version = '1.1.0';
 
   $('[data-toggle="tooltip"]').tooltip();
   // Set active buttons according to the current page
@@ -64,6 +68,20 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         deferred.reject(null);
       });
     return deferred.promise;
+  }
+
+  $rootScope.getAbout = function() {
+  var deferred = $q.defer();
+  $http({method: 'GET', url: 'api/?whatsspy=getAbout'}).
+    success(function(data, status, headers, config) {
+      $rootScope.newestVersion = data.version;
+      $rootScope.help = data.help;
+      deferred.resolve(null);
+    }).
+    error(function(data, status, headers, config) {
+      deferred.reject(null);
+    });
+  return deferred.promise;
   }
 
   $rootScope.trackerStatus = function() {
@@ -111,6 +129,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     $rootScope.showLoader = true;
     var promises = [];
     promises[0] = $rootScope.getAccounts();
+    promises[1] = $rootScope.getAbout();
 
     $q.all(promises).then(function(greeting) {
       $rootScope.showLoader = false;

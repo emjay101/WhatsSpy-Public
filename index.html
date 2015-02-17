@@ -5,6 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="author" content="Maikel Zweerink@gitlab.maikel.pro">
         <title>WhatsSpy Public</title>
         <link rel="stylesheet" href="css/vendor/bootstrap.min.css">
         <link rel="stylesheet" href="css/app.css">
@@ -51,6 +52,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a href="#/timeline" data-ng-class="getActivePageClass('timeline')">
+                                    <span class="setting-icon glyphicon glyphicon-time"></span><br />
+                                    Timeline
+                                </a>
+                            </li>
+                            <li>
                                 <a href="#/about" data-ng-class="getActivePageClass('about')">
                                     <span class="setting-icon glyphicon glyphicon-blackboard"></span><br />
                                     About / Help
@@ -80,8 +87,8 @@
             </div>
             <footer class="row">
                 <div class="col-xs-12 version">
-                    WhatsSpy Public - <a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/" target="_blank">Proof of Concept</a>
-                    <span class="float-right">Version <a href="https://gitlab.maikel.pro/maikeldus/whatsspy/wikis/home" target="_blank">{{version}}</a></span> 
+                    WhatsSpy Public - <a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/home" target="_blank">Proof of Concept</a>
+                    <span class="float-right">Version <a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/updates" target="_blank">{{version}}</a> <strong class="update-behind" data-ng-show="version != newestVersion"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Behind.</strong></span> 
                 </div>
             </footer>
         </div>

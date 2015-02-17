@@ -140,6 +140,16 @@ function fixTimezone($timestamp) {
 	return $timestamp;
 }
 
+function tracker_log($msg, $date = true, $newline = true) {
+	if($date) {
+		echo '('.date('Y-m-d H:i:s').') ';
+	}
+	echo $msg;
+	if($newline) {
+		echo "\n";
+	}
+}
+
 function checkDB($DBH, $dbTables) {
 	$where_query = '';
 	foreach ($dbTables as $table) {

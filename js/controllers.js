@@ -330,45 +330,6 @@ angular.module('whatsspyControllers', [])
 		onload: $scope.onLoaded
 	};
 })
-.controller('AboutController', function($rootScope, $q, $scope, $http) {
-	$rootScope.newestVersion = null;
-	$rootScope.help = null;
-
-	$scope.getAbout = function() {
-	var deferred = $q.defer();
-	$http({method: 'GET', url: 'api/?whatsspy=getAbout'}).
-	  success(function(data, status, headers, config) {
-	    $rootScope.newestVersion = data.version;
-	    $rootScope.help = data.help;
-	    deferred.resolve(null);
-	  }).
-	  error(function(data, status, headers, config) {
-	    deferred.reject(null);
-	  });
-	return deferred.promise;
-	}
-
-
-	// Get all the required information
-	$scope.refreshContent = function() {
-		$rootScope.showLoader = true;
-		var promises = [];
-		promises[0] = $scope.getAbout();
-
-		$q.all(promises).then(function(greeting) {
-		  $rootScope.showLoader = false;
-		}, function(reason) {
-		  $rootScope.showLoader = false;
-		}, function(update) {
-		// nothing to do
-		});
-	}
-
-	// Call the setup
-	if($rootScope.about == null) {
-		$scope.refreshContent();
-	}
-})
 .controller('CompareController', function($scope, $rootScope, $q, $http, $timeout, VisDataSet) {
 
 	$scope.comparedAccounts = [];
@@ -673,7 +634,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	// create visualization
-		$scope.timelineOptions = {
+	$scope.timelineOptions = {
 		height:"100%",
 		orientation: 'top',
 		groupOrder: 'content'  // groupOrder can be a property name or a sorting function
@@ -687,9 +648,126 @@ angular.module('whatsspyControllers', [])
 
 
 	$rootScope.$watch('tracker', function() {
-		if($rootScope.tracker != null) {
+		if($rootScope.tracker != null && $scope.timelineLoaded != true) {
 			$scope.setupTimeline();
 		}
 	});
 	
+})
+.controller('TimelineController', function($scope, $rootScope, $q, $http, $timeout) {
+	$scope.timelineData = null;
+	$rootScope.liveFeed = null;
+
+	$scope.setStatusToDefault = function($item) {
+		$item.new = false;
+	}
+
+	$scope.appendToTimelineFront = function($data) {
+		// Activities
+		for(var i = 0; i < $data.activity.length; i++) {
+			// Add UI feedback
+			$data.activity[i].new = true;
+			var refActivity = $data.activity[i];
+			$timeout(function(){$scope.setStatusToDefault(refActivity);}, 2000);
+
+			$scope.timelineData.activity.unshift($data.activity[i]);
+		}
+		// Userstatus
+		for(var i = 0; i < $data.userstatus.length; i++) {
+			// Add UI feedback
+			$data.userstatus[i].new = true;
+			var refUser = $data.userstatus[i];
+			$timeout(function(){$scope.setStatusToDefault(refUser);}, 2000);
+
+			$scope.timelineData.userstatus.unshift(refUser);
+		}
+
+		$scope.timelineData.till = $data.till;
+	}
+
+	$scope.appendToTimelineBack = function($data) {
+		// Activities
+		for(var i = 0; i < $data.activity.length; i++) {
+			$scope.timelineData.activity.push($data.activity[i]);
+		}
+		// Userstatus
+		for(var i = 0; i < $data.userstatus.length; i++) {
+			$scope.timelineData.userstatus.push($data.userstatus[i]);
+		}
+
+		$scope.timelineData.since = $data.since;
+	}
+
+	$scope.requestOlderData = function() {
+		if($scope.timelineData != null) {
+			$scope.refreshContent('&till='+$scope.timelineData.since);
+		}
+	}
+
+	$scope.$on('$routeChangeStart', function(next, current) { 
+		// Cancel timer
+		if($rootScope.liveFeed != null) {
+			$timeout.cancel($rootScope.liveFeed);
+		}
+	});
+
+	$scope.loadDataTimeLine = function(query, insertBefore) {
+		var deferred = $q.defer();
+		if($scope.timelineData != null && query == null) {
+			query = '&since='+$scope.timelineData.till;
+		}
+		if(query === null) {
+			query = '';
+		}
+		if(insertBefore == null) {
+			insertBefore = true;
+		}
+		$http({method: 'GET', url: 'api/?whatsspy=getTimelineStats' + query}).
+		success(function(data, status, headers, config) {
+			if($scope.timelineData == null) {
+				$scope.timelineData = data;
+			} else {
+				if(data.till == undefined) {
+					$scope.appendToTimelineBack(data);
+				} else {
+					$scope.appendToTimelineFront(data);
+				}
+				
+			}
+			
+			deferred.resolve(null);
+		}).
+		error(function(data, status, headers, config) {
+			deferred.reject(null);
+		});
+		return deferred.promise;
+	}
+
+	// Get all the required information
+	$scope.refreshContent = function(query) {
+		$rootScope.showLoader = true;
+		var promises = [];
+		promises[0] = $scope.loadDataTimeLine(query);
+
+		$q.all(promises).then(function(greeting) {
+		$rootScope.showLoader = false;
+		}, function(reason) {
+			$rootScope.showLoader = false;
+		}, function(update) {
+		// nothing to do
+		});
+	}
+
+	// Call the setup
+	$scope.refreshContent(null);
+
+	$scope.liveTimeline = function() {
+		$scope.refreshContent(null);
+		$rootScope.liveFeed = $timeout($scope.liveTimeline, 8000);
+	}
+
+	$rootScope.liveFeed = $timeout($scope.liveTimeline, 8000);
+})
+.controller('AboutController', function($rootScope, $q, $scope, $http) {
+
 });

@@ -65,7 +65,7 @@ switch($_GET['whatsspy']) {
 										lsph.privacy as "lastseen_changed_privacy", lsph.changed_at as "lastseen_changed_privacy_updated",
 										pcph.privacy as "profilepic_changed_privacy", pcph.changed_at as "profilepic_changed_privacy_updated",
 										smph.privacy as "statusmessage_changed_privacy", smph.changed_at as "statusmessage_changed_privacy_updated",
-								(SELECT start FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
+								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
 								(SELECT COUNT(1) as "records" FROM status_history WHERE number = n.id) "records",
 								(SELECT start FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online",
 								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'1 day\'::INTERVAL AND "end" IS NOT NULL) "result1",
@@ -159,6 +159,80 @@ switch($_GET['whatsspy']) {
 		} else {
 			echo json_encode(['error' => 'No number supplied!', 'code' => 400]);
 		}
+		break;
+	// Get timeline statistics
+	case 'getTimelineStats':
+		$data = array();
+		$timespan = 60*60*12;
+		$since_activity = (time() - ($timespan*8)); // 4 days
+		$since_users = (time() - $timespan); // 12 hours
+		$till = time(); // Until now
+
+		if(isset($_GET['since']) && is_numeric($_GET['since'])) {
+			$since_activity = $_GET['since'];
+			$since_users = $_GET['since'];
+		}
+		// Till only works for Activities, NOT STATUS
+		// till overrules since.
+		if(isset($_GET['till']) && is_numeric($_GET['till'])) {
+			$till = $_GET['till'];
+			$since_activity = ($till - ($timespan*8)); // 4 days
+		}
+		// Get general stats
+		$select = $DBH->prepare('(
+									(SELECT null as "type", null as "start", null as "end", null as "id", null as "name", null as "msg_status", null as "hash", false as "lastseen_privacy", false as "profilepic_privacy", false as "statusmsg_privacy", null as "changed_at")
+									UNION ALL
+									(SELECT \'tracker_start\', x.start, x."end", null, null, null, null, null, null, null, x.start FROM tracker_history x WHERE start >= :since AND start <= :till)
+									UNION ALL
+									(SELECT \'tracker_end\', x.start, x."end", null, null, null, null, null, null, null, x."end" FROM tracker_history x WHERE "end" IS NOT NULL AND start >= :since AND start <= :till)
+									UNION ALL
+									(SELECT  \'statusmsg\', null, null, x.number, a.name, x.status, null, null, null, null, x.changed_at FROM statusmessage_history x LEFT JOIN accounts a ON a.id = x.number WHERE changed_at >= :since AND changed_at <= :till)
+									UNION ALL
+									(SELECT  \'profilepic\', null, null, x.number, a.name, null, x.hash, null, null, null, x.changed_at FROM profilepicture_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									UNION ALL
+									(SELECT  \'lastseen_privacy\', null, null, x.number, a.name, null, null, x.privacy, null, null, x.changed_at FROM lastseen_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									UNION ALL
+									(SELECT  \'profilepic_privacy\', null, null, x.number, a.name, null, null, null, x.privacy, null, x.changed_at FROM profilepic_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									UNION ALL
+									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+								 ) ORDER BY changed_at DESC;');
+		$select->execute(array(':since'=> date('c', $since_activity), ':till'=> date('c', $till)));
+		
+		$result_activity = array();
+		// Quick fix, need better solution
+		foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $activity) {	
+			$activity['changed_at'] = fixTimezone($activity['changed_at']);			
+			array_push($result_activity, $activity);
+		}
+		// Shift first record: its just a placeholder in the PostGreSQL UNION
+		array_shift($result_activity);
+
+		// Ignore user status
+		if(!isset($_GET['till'])) {
+			// Get user stats
+			$select = $DBH->prepare('SELECT  x.start, x."end", a.id, a.name, x.status, x.start 
+										FROM status_history x 
+										LEFT JOIN accounts a ON a.id = x.number
+										WHERE status = true AND "end" IS NOT NULL AND "end" >= :since AND "end" <= :till 
+										ORDER BY x.start DESC;');
+			$select->execute(array(':since'=> date('c', $since_users), ':till'=> date('c', $till)));
+
+			$result_user_status = array();
+			// Quick fix, need better solution
+			foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $userstatus) {	
+				$userstatus['start'] = fixTimezone($userstatus['start']);			
+				$userstatus['end'] = fixTimezone($userstatus['end']);			
+				array_push($result_user_status, $userstatus);
+			}
+
+		}
+
+		if(isset($_GET['till'])) {
+			echo json_encode(array('activity' => $result_activity, 'userstatus' => array(), 'since' => $since_activity));
+		} else {
+			echo json_encode(array('activity' => $result_activity, 'userstatus' => $result_user_status, 'since' => (int)$since_activity, 'till' => $till));
+		}
+
 		break;
 	case 'getAbout':
 		echo file_get_contents($whatsspyAboutQAUrl);

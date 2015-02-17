@@ -1,8 +1,10 @@
 <?php
-// -----------------------------------------------------------------------
-//	Whatsspy tracker, developed by Maikel Zweerink
-//	Config.php - edit this to your needs.
-// -----------------------------------------------------------------------
+/* -----------------------------------------------------------------------
+*	WhatsSpy Public
+*   @Author Maikel Zweerink
+*	Config.php - edit this to your needs.
+* -----------------------------------------------------------------------
+*/
 
 
 /** General authentication info **/
@@ -10,7 +12,7 @@
 // Postgres database user & password.
 $dbAuth = 			['host' => 'localhost',
 					 'port' => '5432',
-					 'dbname' => 'whatsspy',
+					 'dbname' => 'whatsspy',	// Make sure you understand the difference between schema and database in PostgreSQL.
 					 'user' => 'whatsspy', 
 		   			 'password' => ''];
 
@@ -46,7 +48,7 @@ $whatsspyLNKey = '';
 // You don't need to edit beyond this point
 // -------------------------------------------------
 
-// Default URL to request Q&A information for Whatsspy.
+// Default URL to request Q&A information and version for WhatsSpy Public.
 // Don't change this URL unless you know what you are doing.
 $whatsspyAboutQAUrl = 'https://maikel.pro/service/whatsspy/';
 

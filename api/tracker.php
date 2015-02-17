@@ -47,7 +47,7 @@ function signal_handler($signal) {
 												SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
 			$end_user_session->execute();
 			$wa -> disconnect();
-            echo '[exit] Shutting down tracker'."\n";
+            tracker_log('[exit] Shutting down tracker');
             exit;
     }
 }
@@ -73,7 +73,7 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 		$update = $DBH->prepare('UPDATE accounts
 								SET "lastseen_privacy" = false WHERE "id" = :number;');
 		$update->execute(array(':number' => $number));
-		echo '  -[lastseen] '.$number.' has the lastseen privacy option DISABLED! '."\n";
+		tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option DISABLED! ');
 	}
 }
 
@@ -94,7 +94,7 @@ function onPresenceReceived($mynumber, $from, $type) {
 		$insert->execute(array(':status' => (int)$status,
 							   ':number' => $number,
 							   ':start' => date('c', $crawl_time)));
-		echo '  -[poll] '.$number.' is now '.$type.'.'."\n";
+		tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 	} else {
 		$row  = $latest_status -> fetch();
 		# Latest status is the same as the current status       : Do nothing
@@ -114,7 +114,7 @@ function onPresenceReceived($mynumber, $from, $type) {
 			$insert->execute(array(':status' => (int)$status,
 									':number' => $number,
 									':start' => date('c', $crawl_time)));
-			echo '  -[poll] '.$number.' is now '.$type.'.'."\n";
+			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 		}
 	}
 }
@@ -123,7 +123,7 @@ function onPresenceReceived($mynumber, $from, $type) {
 function onGetProfilePicture($mynumber, $from, $type, $data) {
 	global $DBH, $whatsspyProfilePath;
 	$number = explode("@", $from)[0];
-	echo '  -[profile-pic] Processing profile picture of '.$number.'.'."\n";
+	tracker_log('  -[profile-pic] Processing profile picture of '.$number.'.');
 	if($type == 'image') {
 		// Check if image is already in DB
 		$latest_profilepic = $DBH->prepare('SELECT hash FROM profilepicture_history WHERE "number"=:number ORDER BY changed_at DESC LIMIT 1');
@@ -146,7 +146,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			        fwrite($fp, $data);
 			        fclose($fp);
 			    } else {
-			    	echo '  -[profile-pic] Could not write '. $filename .' to disk!'."\n";
+			    	tracker_log('  -[profile-pic] Could not write '. $filename .' to disk!');
 			    	sendMessage('Tracker Exception!', 'Could not write '. $filename .' to disk!', $whatsspyNMAKey, $whatsspyLNKey);
 			    }
 			}
@@ -156,7 +156,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			   						 VALUES (:number, :hash, NOW());');
 			$insert->execute(array(':hash' => $hash,
 								   ':number' => $number));
-			echo '  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').'."\n";
+			tracker_log('  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').');
 		}
 		// Update privacy
 		$privacy_status = $DBH->prepare('SELECT "profilepic_privacy" FROM accounts WHERE "id"=:number');
@@ -166,10 +166,10 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			$update = $DBH->prepare('UPDATE accounts
 									SET "profilepic_privacy" = false WHERE "id" = :number;');
 			$update->execute(array(':number' => $number));
-			echo '  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED! '."\n";
+			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED! ');
 		}
 	} else {
-		echo '  -[profile-pic] Previews not implemented.'."\n";
+		tracker_log('  -[profile-pic] Previews not implemented.');
 	}
 }
 
@@ -180,7 +180,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	$privacy_enabled = ($time == null ? true : false);
 
 	if(!$privacy_enabled) {
-		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND ("changed_at" = to_timestamp(:time) OR "status" = :status)');
+		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND ("changed_at" = to_timestamp(:time) AND "status" = :status)');
 		$latest_statusmsg -> execute(array(':number' => $number,
 										   ':status' => $data,
 										   ':time' => (string)$time));
@@ -194,7 +194,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 			$insert->execute(array(':status' => $data,
 								   ':number' => $number,
 								   ':time' => (string)$time));
-			echo '  -[status-msg] Inserted new status message for '.$number.' ('.$data.').'."\n";
+			tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
 		}
 	}
 
@@ -207,9 +207,9 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 								SET "statusmessage_privacy" = :privacy WHERE "id" = :number;');
 		$update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled));
 		if($privacy_enabled) {
-			echo '  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! '."\n";
+			tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! ');
 		} else {
-			echo '  -[status-msg] '.$number.' has the statusmessage privacy option DISABLED! '."\n";
+			tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option DISABLED! ');
 		}
 	}
 
@@ -231,7 +231,7 @@ function onSyncResultNumberCheck($result) {
 		array_push($tracking_numbers, $number);
 		// Add call for event listener
 		$wa->SendPresenceSubscription($number);
-		echo '  -[verified] Added verified '.$number.' to the tracking system.'."\n";
+		tracker_log('  -[verified] Added verified '.$number.' to the tracking system.');
 		checkLastSeen($number);
 		checkProfilePicture($number);
 		checkStatusMessage($number);
@@ -256,7 +256,7 @@ function onGetError($mynumber, $from, $id, $data ) {
 			$update = $DBH->prepare('UPDATE accounts
 										SET "lastseen_privacy" = true WHERE "id" = :number;');
 			$update->execute(array(':number' => $number));
-			echo '  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! '."\n";
+			tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! ');
         } else {
         	print_r($data);
         }
@@ -269,7 +269,7 @@ function onGetError($mynumber, $from, $id, $data ) {
 			$update = $DBH->prepare('UPDATE accounts
 										SET "profilepic_privacy" = true WHERE "id" = :number;');
 			$update->execute(array(':number' => $number));
-			echo '  -[profile-pic] '.$number.' has the profilepic privacy option ENABLED! '."\n";
+			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option ENABLED! ');
         } else if($data->getAttribute("code") == '404') {
         	// No profile picture
         } else {
@@ -280,11 +280,11 @@ function onGetError($mynumber, $from, $id, $data ) {
 }
 
 function onDisconnect($mynumber, $socket) {
-	echo '[disconnect] Whatsapp service disconnected.'."\n";
+	tracker_log('[disconnect] Whatsapp service disconnected.');
 }
 
 function onSendPong($mynumber, $msgid) {
-	echo '[keep-alive] Pong received'."\n";
+	tracker_log('[keep-alive] Pong received');
 }
 
 /** 	------------------------------------------------------------------------------
@@ -308,7 +308,7 @@ function verifyTrackingUsers() {
 
 function retrieveTrackingUsers($clear = false) {
 	global $DBH, $wa, $tracking_numbers;
-	echo '[accounts] Syncing accounts with database. '."\n";
+	tracker_log('[accounts] Syncing accounts with database. ');
 	// Clear subscriptions
 	if($clear) {
 		foreach ($tracking_numbers as $number) {
@@ -330,7 +330,7 @@ function retrieveTrackingUsers($clear = false) {
 
 function setupWhatsappHandler() {
 	global $wa, $whatsappAuth;
-	//bind event handler & login
+	//bind event handler & tracker_login
 	// Setup new Whatsapp session
 	$wa = new WhatsProt($whatsappAuth['number'], "", "WhatsApp", false);
 	$wa->eventManager()->bind('onGetRequestLastSeen', 'onGetRequestLastSeen');
@@ -352,7 +352,7 @@ function startTrackerHistory() {
 	$tracker_session_check -> execute();
 
 	if($tracker_session_check -> rowCount() > 0) {
-		echo '[warning] Tracker was not properly stopped last time, fixing database issues. ' . $user."\n";
+		tracker_log('[warning] Tracker was not properly stopped last time, fixing database issues. ' . $user);
 		// Get last known status
 		$last_status = $DBH->prepare('SELECT "end" FROM status_history WHERE "end" IS NOT NULL ORDER BY "end" DESC LIMIT 1');
 		$last_status -> execute();
@@ -381,19 +381,19 @@ function startTrackerHistory() {
   */
 function checkLastSeen($number) {
 	global $wa;
-	echo '  -[user-lastseen] Checking last seen for '. $number . '.'."\n";
+	tracker_log('  -[user-lastseen] Checking last seen for '. $number . '.');
 	$wa->sendGetRequestLastSeen($number);
 }
 
 function checkProfilePicture($number) {
 	global $wa;
-	echo '  -[user-profile-pic] Checking profile picture for '. $number . '.'."\n";
+	tracker_log('  -[user-profile-pic] Checking profile picture for '. $number . '.');
 	$wa->sendGetProfilePicture($number, true);
 }
 
 function checkStatusMessage($number) {
 	global $wa;
-	echo '  -[user-status-msg] Checking status message for '. $number . '.'."\n";
+	tracker_log('  -[user-status-msg] Checking status message for '. $number . '.');
 	$wa->sendGetStatuses([$number]);
 }
 
@@ -415,7 +415,7 @@ function track() {
 	$crawl_time = time();
 	setupWhatsappHandler();
 	retrieveTrackingUsers();
-	echo '[init] Started tracking with phonenumber ' . $whatsappAuth['number']."\n";
+	tracker_log('[init] Started tracking with phonenumber ' . $whatsappAuth['number']);
 	startTrackerHistory();
 	sendMessage('WhatsSpy Public has started tracking!', 'tracker has started tracking '.count($tracking_numbers). ' users.', $whatsspyNMAKey, $whatsspyLNKey);
 	while(true){
@@ -424,13 +424,13 @@ function track() {
 		$tick_start = microtime(true);
 		$wa->pollMessage();
 		$tick_end = microtime(true);
-		echo '[poll #'.$pollCount.'] Tracking '. count($tracking_numbers) . ' users.'."\n";
+		tracker_log('[poll #'.$pollCount.'] Tracking '. count($tracking_numbers) . ' users.');
 
 		//	1) LAST SEEN PRIVACY
 		//
 		// Check lastseen (every 2 hours)
 		if($pollCount % calculateTick(60*60*2) == 0) {
-			echo '[lastseen #'.$lastseenCount.'] Checking '. count($tracking_numbers) . ' users.'."\n";
+			tracker_log('[lastseen #'.$lastseenCount.'] Checking '. count($tracking_numbers) . ' users.');
 			foreach ($tracking_numbers as $number) {
 				$wa->sendGetRequestLastSeen($number);
 			}
@@ -441,7 +441,7 @@ function track() {
 		//
 		// Check status message (every 2 hours)
 		if($pollCount % calculateTick(60*60*2) == 0) {
-			echo '[status-msg #'.$statusMsgCount.'] Checking '. count($tracking_numbers) . ' users.'."\n";
+			tracker_log('[status-msg #'.$statusMsgCount.'] Checking '. count($tracking_numbers) . ' users.');
 			if(count($tracking_numbers) > 0) {
 				$wa->sendGetStatuses($tracking_numbers);
 			}
@@ -450,9 +450,9 @@ function track() {
 
 		//	3) PROFILE PICTURE (and privacy)
 		//
-		// Check profile picture (every 6 hours)
-		if($pollCount % calculateTick(60*60*6) == 0) {
-			echo '[profile-pic #'.$picCount.'] Checking '. count($tracking_numbers) . ' users.'."\n";
+		// Check profile picture (every 3 hours)
+		if($pollCount % calculateTick(60*60*3) == 0) {
+			tracker_log('[profile-pic #'.$picCount.'] Checking '. count($tracking_numbers) . ' users.');
 			foreach ($tracking_numbers as $number) {
 				$wa->sendGetProfilePicture($number, true);
 			}
@@ -480,7 +480,7 @@ function track() {
 		//
 		// Keep connection alive (<300s)
 		if($pollCount % calculateTick(60*2) == 0) {
-			echo '[keep-alive] Ping sent'."\n";
+			tracker_log('[keep-alive] Ping sent');
 			$wa->sendPing();
 		}
 		// usage of 39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa
@@ -499,16 +499,16 @@ if (PHP_SAPI !== 'cli'){
 }
 
 // Starting the tracker
-echo '------------------------------------------------------------------'."\n";
-echo '|                    WhatsSpy Public Tracker                     |'."\n";
-echo '|                        Proof of Concept                        |'."\n";
-echo '|              Check gitlab.maikel.pro for more info             |'."\n";
-echo '------------------------------------------------------------------'."\n";
+tracker_log('------------------------------------------------------------------', false);
+tracker_log('|                    WhatsSpy Public Tracker                     |', false);
+tracker_log('|                        Proof of Concept                        |', false);
+tracker_log('|              Check gitlab.maikel.pro for more info             |', false);
+tracker_log('------------------------------------------------------------------', false);
 sleep(2);
 do {
 	// Check database
 	if(!checkDB($DBH, $dbTables)) {
-		echo '[DB-check] Table\'s do not exist in database "'.$dbAuth['dbname'].'". Check the troubleshooting page.'."\n";
+		tracker_log('[DB-check] Table\'s do not exist in database "'.$dbAuth['dbname'].'". Check the troubleshooting page.');
 		exit();
 	}
 	try {
@@ -530,11 +530,11 @@ do {
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
 		$end_user_session->execute();
-		echo '[error] Tracker exception! '.$e->getMessage()."\n";
+		tracker_log('[error] Tracker exception! '.$e->getMessage());
 		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
 	}
 	// Wait 15 seconds before reconnecting.
-	echo '[retry] Reconnectiong to WhatsApp in 15 seconds.'."\n";
+	tracker_log('[retry] Reconnectiong to WhatsApp in 15 seconds.');
 	sleep(30);
 } while(true);
 
