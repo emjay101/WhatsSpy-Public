@@ -32,8 +32,9 @@ $whatsspyProfilePath = '/var/www/whatsspy/images/profilepicture/';
 
 // Relative or absolute path for the web-user.
 // THIS PATH IS FOR USERS ACCESSING THE PROFILE PICTURES FROM THE WEB.
+// NOTE: usually it is enough to use $whatsspyProfilePath and remove the /var/www
 // include the last / in the path!
-$whatsspyWebProfilePath = 'images/profilepicture/';
+$whatsspyWebProfilePath = '/whatsspy/images/profilepicture/';
 
 // Set NMA key for notifications about the tracker,
 // Check notifymyandroid.com for more information.
