@@ -533,8 +533,8 @@ do {
 		tracker_log('[error] Tracker exception! '.$e->getMessage());
 		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
 	}
-	// Wait 15 seconds before reconnecting.
-	tracker_log('[retry] Reconnectiong to WhatsApp in 15 seconds.');
+	// Wait 30 seconds before reconnecting.
+	tracker_log('[retry] Reconnectiong to WhatsApp in 30 seconds.');
 	sleep(30);
 } while(true);
 
