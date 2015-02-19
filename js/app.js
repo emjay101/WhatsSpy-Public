@@ -26,7 +26,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   .otherwise({redirectTo: '/overview'});;
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
-  $rootScope.version = '1.1.2';
+  $rootScope.version = '1.1.3';
 
   $('[data-toggle="tooltip"]').tooltip();
   // Set active buttons according to the current page
