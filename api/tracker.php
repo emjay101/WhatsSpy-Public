@@ -523,10 +523,8 @@ do {
 		track();
 	} catch (Exception $e) {
 		try {
-			// Kill any event listeners
-	        foreach ($tracking_numbers as $number) {
-				$wa->sendPresenceUnsubscription($number);
-			}
+			// Kill the connection
+			$wa->disconnect();
 		} catch(Exception $e) {
 			// Connection closed, nevermind
 		}
