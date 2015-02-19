@@ -662,13 +662,16 @@ angular.module('whatsspyControllers', [])
 		$item.new = false;
 	}
 
+	$scope.setStatusTimeout = function($item) {
+		$timeout(function(){$scope.setStatusToDefault($item);}, 4000);
+	}
+
 	$scope.appendToTimelineFront = function($data) {
 		// Activities
 		for(var i = 0; i < $data.activity.length; i++) {
 			// Add UI feedback
 			$data.activity[i].new = true;
-			var refActivity = $data.activity[i];
-			$timeout(function(){$scope.setStatusToDefault(refActivity);}, 2000);
+			$scope.setStatusTimeout($data.activity[i]);
 
 			$scope.timelineData.activity.unshift($data.activity[i]);
 		}
@@ -676,10 +679,9 @@ angular.module('whatsspyControllers', [])
 		for(var i = 0; i < $data.userstatus.length; i++) {
 			// Add UI feedback
 			$data.userstatus[i].new = true;
-			var refUser = $data.userstatus[i];
-			$timeout(function(){$scope.setStatusToDefault(refUser);}, 2000);
+			$scope.setStatusTimeout($data.userstatus[i]);
 
-			$scope.timelineData.userstatus.unshift(refUser);
+			$scope.timelineData.userstatus.unshift($data.userstatus[i]);
 		}
 
 		$scope.timelineData.till = $data.till;
