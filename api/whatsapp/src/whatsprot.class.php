@@ -48,7 +48,7 @@ class WhatsProt
     const WHATSAPP_UPLOAD_HOST = 'https://mms.whatsapp.net/client/iphone/upload.php'; // The upload host.
     const WHATSAPP_DEVICE = 'iPhone';                      // The device name.
     const WHATSAPP_VER = '2.11.14';                // The WhatsApp version.
-    const WHATSAPP_USER_AGENT = 'WhatsApp/2.12.60 S40Version/14.26 Device/Nokia302'; // User agent used in request/registration code.
+    const WHATSAPP_USER_AGENT = 'WhatsApp/2.12.61 S40Version/14.26 Device/Nokia302'; // User agent used in request/registration code.
     const WHATSAPP_VER_CHECKER = 'https://coderus.openrepos.net/whitesoft/whatsapp_version'; // Check WhatsApp version
 
     /**
@@ -274,9 +274,9 @@ class WhatsProt
             'in' => $phone['phone'],
             'id' => $this->identity,
             'code' => $code,
-            'lg' => $langCode,
-            'lc' => $countryCode,
-            'network_radio_type' => "1"
+            //'lg' => $langCode,
+            //'lc' => $countryCode,
+            //'network_radio_type' => "1"
         );
 
         $response = $this->getResponse($host, $query);
@@ -370,14 +370,14 @@ class WhatsProt
             'id' => $this->identity,
             'lg' => $langCode,
             'lc' => $countryCode,
-            'mcc' => '000',
-            'mnc' => '000',
+          //'mcc' => '000',
+          //'mnc' => '000',
             'sim_mcc' => $phone['mcc'],
             'sim_mnc' => $mnc,
             'method' => $method,
-            'reason' => "self-send-jailbroken",
+          //'reason' => "self-send-jailbroken",
             'token' => $token,
-            'network_radio_type' => "1"
+          //'network_radio_type' => "1"
         );
 
         if ($this->debug) {
@@ -451,6 +451,7 @@ class WhatsProt
 
     /**
      * Connect (create a socket) to the WhatsApp network.
+     * @return bool
      */
     public function connect()
     {
@@ -460,8 +461,7 @@ class WhatsProt
         //http://ie2.php.net/manual/en/function.socket-read.php#115903
         //https://bugs.php.net/bug.php?id=47918
         //http://stackoverflow.com/questions/20334366/php-fsockopen-how-to-know-if-connection-is-alive
-        if ($this->isConnected())
-        {
+        if ($this->isConnected()) {
             return true;
         }
 
@@ -499,7 +499,7 @@ class WhatsProt
                     $this->socket
                 )
             );
-
+            return true;
         } else {
             if ($this->debug) {
                 print_r("Firing onConnectError\n");
@@ -510,6 +510,7 @@ class WhatsProt
                     $this->socket
                 )
             );
+            return false;
         }
     }
 
@@ -935,11 +936,10 @@ class WhatsProt
         $child = new ProtocolNode("list", array(
             "name" => "default"
                 ), null, null);
-        $child2 = new ProtocolNode("query", array(
-            "xmlns" => "jabber:iq:privacy"
-                ), array($child), null);
+        $child2 = new ProtocolNode("query", array(), array($child), null);
         $node = new ProtocolNode("iq", array(
             "id" => $msgId,
+            "xmlns" => "jabber:iq:privacy",
             "type" => "get"
                 ), array($child2), null);
         $this->sendNode($node);
@@ -1038,7 +1038,7 @@ class WhatsProt
         $i = 0;
         for($i; $i<count($numbers); $i++)
         {
-            $userNode[$i] = new ProtocolNode("user", array("jid" => $this->getJID($numbers[$i])), null, $null);
+            $userNode[$i] = new ProtocolNode("user", array("jid" => $this->getJID($numbers[$i])), null, null);
         }
 
         $listNode = new ProtocolNode("list", null, $userNode, null);
@@ -1606,6 +1606,7 @@ class WhatsProt
      */
     public function sendMessageImage($to, $filepath, $storeURLmedia = false, $fsize = 0, $fhash = "", $caption = "")
     {
+      $caption = $this->parseMessageForEmojis($caption);
     	if ($fsize==0 || $fhash == "")
     	{
         	$allowedExtensions = array('jpg', 'jpeg', 'gif', 'png');
@@ -1683,6 +1684,7 @@ class WhatsProt
      */
     public function sendMessageVideo($to, $filepath, $storeURLmedia = false, $fsize = 0, $fhash = "", $caption = "")
     {
+      $caption = $this->parseMessageForEmojis($caption);
     	if ($fsize==0 || $fhash == "")
     	{
         	$allowedExtensions = array('3gp', 'mp4', 'mov', 'avi');
@@ -2622,10 +2624,22 @@ class WhatsProt
 
 		}
         elseif ($node->getTag() == "success") {
-            $this->loginStatus = static::CONNECTED_STATUS;
-            $challengeData = $node->getData();
-            file_put_contents($this->challengeFilename, $challengeData);
-            $this->writer->setKey($this->outputKey);
+	    	if ($node->getAttribute("status") == "active") {
+	            $this->loginStatus = static::CONNECTED_STATUS;
+	            $challengeData = $node->getData();
+	            file_put_contents($this->challengeFilename, $challengeData);
+	            $this->writer->setKey($this->outputKey);
+	   		} elseif ($node->getAttribute("status") == "expired")
+	   		{
+            	$this->eventManager()->fire("onAccountExpired",
+                	array(
+                    	$this->phoneNumber,
+                    	$node->getAttribute("kind"),
+                    	$node->getAttribute("status"),
+                    	$node->getAttribute("creation"),
+                    	$node->getAttribute("expiration")
+                	));
+	    	}
         } elseif($node->getTag() == "failure")
         {
             $this->eventManager()->fire("onLoginFailed",
@@ -2647,6 +2661,19 @@ class WhatsProt
         }
         elseif($node->getTag() == 'receipt')
         {
+            if ($node->hasChild("list")) {
+              foreach ($node->getChild("list")->getChildren() as $child) {
+                $this->eventManager()->fire("onMessageReceivedClient",
+                  array(
+                    $this->phoneNumber,
+                    $node->getAttribute('from'),
+                    $child->getAttribute('id'),
+                    $node->getAttribute('type'),
+                    $node->getAttribute('t')
+                  ));
+              }
+            }
+
             $this->eventManager()->fire("onMessageReceivedClient",
                 array(
                     $this->phoneNumber,
@@ -2712,7 +2739,7 @@ class WhatsProt
 
                 if($autoReceipt)
                 {
-                    $this->sendMessageReceived($node, $type);
+                    $this->sendMessageReceived($node, $type, $author);
                 }
             }
             if ($node->getAttribute("type") == "text" && $node->getChild(0)->getTag() == 'enc') {
@@ -2724,45 +2751,94 @@ class WhatsProt
             }
             if ($node->getAttribute("type") == "media" && $node->getChild('media') != null) {
                 if ($node->getChild("media")->getAttribute('type') == 'image') {
-                    $this->eventManager()->fire("onGetImage",
-                        array(
-                            $this->phoneNumber,
-                            $node->getAttribute('from'),
-                            $node->getAttribute('id'),
-                            $node->getAttribute('type'),
-                            $node->getAttribute('t'),
-                            $node->getAttribute('notify'),
-                            $node->getChild("media")->getAttribute('size'),
-                            $node->getChild("media")->getAttribute('url'),
-                            $node->getChild("media")->getAttribute('file'),
-                            $node->getChild("media")->getAttribute('mimetype'),
-                            $node->getChild("media")->getAttribute('filehash'),
-                            $node->getChild("media")->getAttribute('width'),
-                            $node->getChild("media")->getAttribute('height'),
-                            $node->getChild("media")->getData(),
-                            $node->getChild("media")->getAttribute('caption')
-                        ));
+
+                    if ($node->getAttribute("participant") == null) {
+                        $this->eventManager()->fire("onGetImage",
+                            array(
+                                $this->phoneNumber,
+                                $node->getAttribute('from'),
+                                $node->getAttribute('id'),
+                                $node->getAttribute('type'),
+                                $node->getAttribute('t'),
+                                $node->getAttribute('notify'),
+                                $node->getChild("media")->getAttribute('size'),
+                                $node->getChild("media")->getAttribute('url'),
+                                $node->getChild("media")->getAttribute('file'),
+                                $node->getChild("media")->getAttribute('mimetype'),
+                                $node->getChild("media")->getAttribute('filehash'),
+                                $node->getChild("media")->getAttribute('width'),
+                                $node->getChild("media")->getAttribute('height'),
+                                $node->getChild("media")->getData(),
+                                $node->getChild("media")->getAttribute('caption')
+                            ));
+                    } else {
+                        $this->eventManager()->fire("onGetGroupImage",
+                            array(
+                                $this->phoneNumber,
+                                $node->getAttribute('from'),
+                                $node->getAttribute('participant'),
+                                $node->getAttribute('id'),
+                                $node->getAttribute('type'),
+                                $node->getAttribute('t'),
+                                $node->getAttribute('notify'),
+                                $node->getChild("media")->getAttribute('size'),
+                                $node->getChild("media")->getAttribute('url'),
+                                $node->getChild("media")->getAttribute('file'),
+                                $node->getChild("media")->getAttribute('mimetype'),
+                                $node->getChild("media")->getAttribute('filehash'),
+                                $node->getChild("media")->getAttribute('width'),
+                                $node->getChild("media")->getAttribute('height'),
+                                $node->getChild("media")->getData(),
+                                $node->getChild("media")->getAttribute('caption')
+                            ));
+                    }
+
                 } elseif ($node->getChild("media")->getAttribute('type') == 'video') {
-                    $this->eventManager()->fire("onGetVideo",
-                        array(
-                            $this->phoneNumber,
-                            $node->getAttribute('from'),
-                            $node->getAttribute('id'),
-                            $node->getAttribute('type'),
-                            $node->getAttribute('t'),
-                            $node->getAttribute('notify'),
-                            $node->getChild("media")->getAttribute('url'),
-                            $node->getChild("media")->getAttribute('file'),
-                            $node->getChild("media")->getAttribute('size'),
-                            $node->getChild("media")->getAttribute('mimetype'),
-                            $node->getChild("media")->getAttribute('filehash'),
-                            $node->getChild("media")->getAttribute('duration'),
-                            $node->getChild("media")->getAttribute('vcodec'),
-                            $node->getChild("media")->getAttribute('acodec'),
-                            $node->getChild("media")->getData(),
-                            $node->getChild("media")->getAttribute('caption')
-                        ));
+
+                    if ($node->getAttribute("participant") == null) {
+                        $this->eventManager()->fire("onGetVideo",
+                            array(
+                                $this->phoneNumber,
+                                $node->getAttribute('from'),
+                                $node->getAttribute('id'),
+                                $node->getAttribute('type'),
+                                $node->getAttribute('t'),
+                                $node->getAttribute('notify'),
+                                $node->getChild("media")->getAttribute('url'),
+                                $node->getChild("media")->getAttribute('file'),
+                                $node->getChild("media")->getAttribute('size'),
+                                $node->getChild("media")->getAttribute('mimetype'),
+                                $node->getChild("media")->getAttribute('filehash'),
+                                $node->getChild("media")->getAttribute('duration'),
+                                $node->getChild("media")->getAttribute('vcodec'),
+                                $node->getChild("media")->getAttribute('acodec'),
+                                $node->getChild("media")->getData(),
+                                $node->getChild("media")->getAttribute('caption')
+                            ));
+                    } else {
+                        $this->eventManager()->fire("onGetGroupVideo",
+                            array(
+                                $this->phoneNumber,
+                                $node->getAttribute('from'),
+                                $node->getAttribute('participant'),
+                                $node->getAttribute('id'),
+                                $node->getAttribute('type'),
+                                $node->getAttribute('t'),
+                                $node->getAttribute('notify'),
+                                $node->getChild("media")->getAttribute('url'),
+                                $node->getChild("media")->getAttribute('file'),
+                                $node->getChild("media")->getAttribute('size'),
+                                $node->getChild("media")->getAttribute('mimetype'),
+                                $node->getChild("media")->getAttribute('filehash'),
+                                $node->getChild("media")->getAttribute('duration'),
+                                $node->getChild("media")->getAttribute('vcodec'),
+                                $node->getChild("media")->getAttribute('acodec'),
+                                $node->getChild("media")->getData(),
+                                $node->getChild("media")->getAttribute('caption')
+                            ));
+                    }
                 } elseif ($node->getChild("media")->getAttribute('type') == 'audio') {
+                    $author = $node->getAttribute("participant");
                     $this->eventManager()->fire("onGetAudio",
                         array(
                             $this->phoneNumber,
@@ -2777,7 +2853,8 @@ class WhatsProt
                             $node->getChild("media")->getAttribute('mimetype'),
                             $node->getChild("media")->getAttribute('filehash'),
                             $node->getChild("media")->getAttribute('seconds'),
-                            $node->getChild("media")->getAttribute('acodec')
+                            $node->getChild("media")->getAttribute('acodec'),
+                            $author,
                         ));
                 } elseif ($node->getChild("media")->getAttribute('type') == 'vcard') {
                     if($node->getChild("media")->hasChild('vcard')) {
@@ -2787,6 +2864,7 @@ class WhatsProt
                         $name = "NO_NAME";
                         $data = $node->getChild("media")->getData();
                     }
+                    $author = $node->getAttribute("participant");
 
                     $this->eventManager()->fire("onGetvCard",
                         array(
@@ -2797,11 +2875,13 @@ class WhatsProt
                             $node->getAttribute('t'),
                             $node->getAttribute('notify'),
                             $name,
-                            $data
+                            $data,
+                            $author
                         ));
                 } elseif ($node->getChild("media")->getAttribute('type') == 'location') {
                     $url = $node->getChild("media")->getAttribute('url');
                     $name = $node->getChild("media")->getAttribute('name');
+                    $author = $node->getAttribute("participant");
 
                     $this->eventManager()->fire("onGetLocation",
                         array(
@@ -2815,7 +2895,8 @@ class WhatsProt
                             $node->getChild("media")->getAttribute('longitude'),
                             $node->getChild("media")->getAttribute('latitude'),
                             $url,
-                            $node->getChild("media")->getData()
+                            $node->getChild("media")->getData(),
+                            $author
                         ));
                 }
 
@@ -2948,7 +3029,7 @@ class WhatsProt
 
             $index = $sync->getAttribute("index");
 
-            $result = new SyncResult($index, $sync->getAttribute("sync"), $existingUsers, $failedNumbers);
+            $result = new SyncResult($index, $sync->getAttribute("sid"), $existingUsers, $failedNumbers);
 
             $this->eventManager()->fire("onGetSyncResult",
                 array(
@@ -3060,27 +3141,32 @@ class WhatsProt
                 }
             }
             if($node->nodeIdContains('get_groupv2_info')){
-		$groupId = self::parseJID($node->getAttribute('from'));
+                $groupId = self::parseJID($node->getAttribute('from'));
 
-		$type = "";
-		$groupList = array();
-		$groupChild = $node->getChild(0);
-		if ($groupChild != null) {
-			$type = $groupChild->getAttribute('type');
+                $groupList = array();
+                $groupChild = $node->getChild(0);
+                if ($groupChild != null) {
+                     $creator = $groupChild->getAttribute('creator');
+                     $creation = $groupChild->getAttribute('creation');
+                     $subject = $groupChild->getAttribute('subject');
+                     if ($groupChild->getChild(0) != null) {
+                          foreach ($groupChild->getChildren() as $child) {
+                                $participants[] = $child->getAttribute('jid');
+                                    if($child->getAttribute('type') != null)
+                                        $admin = $child->getAttribute('jid');
+				                   }
+			               }
+		            }
 
-			if ($groupChild->getChild(0) != null) {
-				foreach ($groupChild->getChildren() as $child) {
-					$groupList[] = $child->getAttributes();
-				}
-			}
-		}
-
-		$this->eventManager()->fire("onGetGroupV2Info",
-			array(
-			$this->phoneNumber,
-			$type,
-			$groupList
-		));
+		            $this->eventManager()->fire("onGetGroupV2Info",
+			          array(
+                     $this->phoneNumber,
+                     $creator,
+                     $creation,
+                     $subject,
+                     $participants,
+                     $admin
+		            ));
             }
             if ($node->nodeIdContains("get_lists")) {
                 $broadcastLists = array();
@@ -3270,6 +3356,10 @@ class WhatsProt
                             ));
                   }
                     else if ($node->hasChild('create')) {
+                        $groupMembers = array();
+                        foreach ($node->getChild(0)->getChild(0)->getChildren() AS $cn) {
+                            $groupMembers[] = $cn->getAttribute('jid');
+                        }
                         $this->eventManager()->fire("onGroupisCreated",
                             array(
                                 $this->phoneNumber,
@@ -3277,7 +3367,8 @@ class WhatsProt
                                 $node->getChild(0)->getChild(0)->getAttribute('id'),
                                 $node->getChild(0)->getChild(0)->getAttribute('subject'),
                                 $node->getAttribute('participant'),
-                                $node->getChild(0)->getChild(0)->getAttribute('creation')
+                                $node->getChild(0)->getChild(0)->getAttribute('creation'),
+                                $groupMembers
                             ));
                   }
                     else if ($node->hasChild('subject')) {
@@ -3800,6 +3891,8 @@ class WhatsProt
                 $messageHash["id"],
                 $node
             ));
+        $this->waitForServer($messageHash["id"]);
+
         return $messageHash["id"];
     }
 
@@ -3809,14 +3902,14 @@ class WhatsProt
      * @param ProtocolNode $msg The ProtocolTreeNode that contains the message.
      * @param null         $type
      */
-    protected function sendMessageReceived($msg, $type = "read")
+    protected function sendMessageReceived($msg, $type = "read", $participant = null)
     {
 
         $messageHash = array();
         if($type == "read")
-        {
             $messageHash["type"] = $type;
-        }
+        if($participant != null)
+            $messageHash["participant"] = $participant;
         $messageHash["to"] = $msg->getAttribute("from");
         $messageHash["id"] = $msg->getAttribute("id");
         $messageHash["t"] = time();

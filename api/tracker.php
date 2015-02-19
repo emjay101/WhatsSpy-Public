@@ -12,7 +12,7 @@
 // -----------------------------------------------------------------------
 
 
-declare(ticks = 10);
+declare(ticks = 20);
 
 require_once 'config.php';
 require_once 'data.php';
@@ -26,7 +26,13 @@ $DBH  = setupDB($dbAuth);
 $wa = null;
 $crawl_time = null;
 $tracking_numbers = [];
-$token = '39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa';
+$token = 'c1a2e762238d8ed5e14ef20c5809a32ace32797e47aca70ef6ff451aa01b5748';
+
+// Global Poll timers
+$pollCount = 0;
+$lastseenCount = 0;
+$statusMsgCount = 0;
+$picCount = 0;
 
 /** Allows listeners to Ctrl+C to terminate this script. */
 function signal_handler($signal) {
@@ -242,11 +248,12 @@ function onSyncResultNumberCheck($result) {
 		$update = $DBH->prepare('UPDATE accounts
 										SET "active" = false WHERE "id" = :number;');
 		$update->execute(array(':number' => $number));
+		tracker_log('  -[verified] Number '.$number.' is NOT a WhatsApp user.');
 	}
 }
 
 function onGetError($mynumber, $from, $id, $data ) {
-	global $DBH;
+	global $DBH, $pollCount;
 	if (preg_match("/^lastseen-/", $id)) {
         if ($data->getAttribute("code") == '405' || 
         	$data->getAttribute("code") == '403' || 
@@ -257,7 +264,10 @@ function onGetError($mynumber, $from, $id, $data ) {
 										SET "lastseen_privacy" = true WHERE "id" = :number;');
 			$update->execute(array(':number' => $number));
 			tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! ');
+        } else if($data->getAttribute("code") == '404') {
+        	tracker_log('  -[lastseen] cannot determine lastseen, ignoring request.');
         } else {
+        	tracker_log('  -[lastseen] unknown error for '.$number.'. ');
         	print_r($data);
         }
     } else if (preg_match("/^getpicture-/", $id)) {
@@ -273,6 +283,7 @@ function onGetError($mynumber, $from, $id, $data ) {
         } else if($data->getAttribute("code") == '404') {
         	// No profile picture
         } else {
+        	tracker_log('  -[profile-pic] unknown error for '.$number.'. ');
         	print_r($data);
         }
     }
@@ -302,7 +313,9 @@ function verifyTrackingUsers() {
 			array_push($numbers, $number['id']);
 		}
 		// Send sync
-		$wa->sendSync($numbers);
+		if(count($numbers) > 0) {		
+			$wa->sendSync($numbers);
+		}
 	}
 }
 
@@ -405,12 +418,7 @@ function calculateTick($time) {
 
 
 function track() {
-	global $DBH, $wa, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth;
-
-	$pollCount = 0;
-	$lastseenCount = 0;
-	$statusMsgCount = 0;
-	$picCount = 0;
+	global $DBH, $wa, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
 
 	$crawl_time = time();
 	setupWhatsappHandler();
@@ -461,9 +469,8 @@ function track() {
 
 		//	4) DATABASE ACCOUNT REFRESH
 		//
-		// Check user database and refresh user set every hour.
-		// Check this at the end
-		if($pollCount % calculateTick(60*60*1) == calculateTick(60*60*1-1)) {
+		// Check user database and refresh user set every hour but with a offset of 12 minutes
+		if($pollCount % calculateTick(60*60*1) == calculateTick(60*12)) {
 			retrieveTrackingUsers(true);
 		}
 

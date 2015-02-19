@@ -23,6 +23,10 @@ $dbAuth = 			['host' => 'localhost',
 $whatsappAuth = 	['number' => '',
 				 	 'secret' => ''];
 
+// Set your timezone
+// Check for all timezones: http://php.net/manual/en/timezones.php
+date_default_timezone_set('Europe/Amsterdam');
+
 
 
 // Location to store the profile pictures.

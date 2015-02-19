@@ -54,6 +54,7 @@ class MyEvents extends AllEvents
 //        'onGroupsParticipantsRemove',
 //        'onLogin',
 //        'onLoginFailed',
+//        'onAccountExpired',
 //        'onMediaMessageSent',
 //        'onMediaUploadFailed',
 //        'onMessageComposing',

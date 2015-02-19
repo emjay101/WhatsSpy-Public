@@ -54,7 +54,7 @@ abstract class AllEvents
     public function onDisconnect( $mynumber, $socket ) {}
     public function onDissectPhone( $mynumber, $phonecountry, $phonecc, $phone, $phonemcc, $phoneISO3166, $phoneISO639, $phonemnc ) {}
     public function onDissectPhoneFailed( $mynumber ){}
-    public function onGetAudio( $mynumber, $from, $id, $type, $time, $name, $size, $url, $file, $mimeType, $fileHash, $duration, $acodec ){}
+    public function onGetAudio( $mynumber, $from, $id, $type, $time, $name, $size, $url, $file, $mimeType, $fileHash, $duration, $acodec, $fromJID_ifGroup = null){}
     public function onGetBroadcastLists( $mynumber, $broadcastLists ){}
     public function onGetError( $mynumber, $from, $id, $data ){}
     public function onGetExtendAccount( $mynumber, $kind, $status, $creation, $expiration ){}
@@ -63,11 +63,13 @@ abstract class AllEvents
     public function onGetGroupParticipants( $mynumber, $groupId, $groupList ){}
     public function onGetGroups( $mynumber, $groupList ){}
     public function onGetGroupsInfo( $mynumber, $groupList ){}
-    public function onGetGroupV2Info( $mynumber, $type, $groupList ){}
+    public function onGetGroupV2Info( $mynumber, $creator, $creation, $subject, $participants, $admin ){}
     public function onGetGroupsSubject( $mynumber, $group_jid, $time, $author, $name, $subject ){}
     public function onGetImage( $mynumber, $from, $id, $type, $time, $name, $size, $url, $file, $mimeType, $fileHash, $width, $height, $preview, $caption ){}
+    public function onGetGroupImage( $mynumber, $from_group_jid, $from_user_jid, $id, $type, $time, $name, $size, $url, $file, $mimeType, $fileHash, $width, $height, $preview, $caption ){}
+    public function onGetGroupVideo( $mynumber, $from_group_jid, $from_user_jid, $id, $type, $time, $name, $url, $file, $size, $mimeType, $fileHash, $duration, $vcodec, $acodec, $preview, $caption ){}
     public function onGetKeysLeft( $mynumber, $keysLeft){}
-    public function onGetLocation( $mynumber, $from, $id, $type, $time, $name, $name, $longitude, $latitude, $url, $preview ){}
+    public function onGetLocation( $mynumber, $from, $id, $type, $time, $name, $name, $longitude, $latitude, $url, $preview, $fromJID_ifGroup = null){}
     public function onGetMessage( $mynumber, $from, $id, $type, $time, $name, $body ){}
     public function onGetNormalizedJid( $mynumber, $data ){}
     public function onGetPrivacyBlockedList( $mynumber, $data ){}
@@ -79,15 +81,16 @@ abstract class AllEvents
     public function onGetStatus( $mynumber, $from, $requested, $id, $time, $data ){}
     public function onGetSyncResult( $result ){}
     public function onGetVideo( $mynumber, $from, $id, $type, $time, $name, $url, $file, $size, $mimeType, $fileHash, $duration, $vcodec, $acodec, $preview, $caption ){}
-    public function onGetvCard( $mynumber, $from, $id, $type, $time, $name, $vcardname, $vcard ){}
+    public function onGetvCard( $mynumber, $from, $id, $type, $time, $name, $vcardname, $vcard, $fromJID_ifGroup = null){}
     public function onGroupCreate( $mynumber, $groupId ){}
-    public function onGroupisCreated( $mynumber, $creator, $gid, $subject, $admin, $creation ){}
+    public function onGroupisCreated( $mynumber, $creator, $gid, $subject, $admin, $creation, $members = array()){}
     public function onGroupsChatCreate( $mynumber, $gid ){}
     public function onGroupsChatEnd( $mynumber, $gid ){}
     public function onGroupsParticipantsAdd( $mynumber, $groupId, $jid ){}
     public function onGroupsParticipantsRemove( $mynumber, $groupId, $jid){}
     public function onLogin( $mynumber ){}
     public function onLoginFailed( $mynumber, $data ){}
+    public function onAccountExpired( $mynumber, $kind, $status, $creation, $expiration ){}
     public function onMediaMessageSent( $mynumber, $to, $id, $filetype, $url, $filename, $filesize, $filehash, $caption, $icon ){}
     public function onMediaUploadFailed( $mynumber, $id, $node, $messageNode, $statusMessage ){}
     public function onMessageComposing( $mynumber, $from, $id, $type, $time ){}
