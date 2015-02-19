@@ -22,11 +22,27 @@ angular.module('whatsspyControllers', [])
 	$scope.editName = null;
 
 	// Functions
-	$scope.removeNumber = function(number) {
-		$http({method: 'GET', url: 'api/?whatsspy=removeContact&number=' + number}).
+	$scope.setNumberInactive = function(number) {
+		$http({method: 'GET', url: 'api/?whatsspy=setContactInactive&number=' + number}).
+			success(function(data, status, headers, config) {
+				if(data.success == true) {
+					alertify.success("+" + data.number + " set inactive!");
+					$scope.refreshContent();
+				} else {
+					alertify.error(data.error);
+				}
+			}).
+			error(function(data, status, headers, config) {
+				alertify.error("Could not contact the server.");
+			});
+	}
+
+	$scope.deleteNumber = function(number) {
+		$http({method: 'GET', url: 'api/?whatsspy=deleteContact&number=' + number}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("+" + data.number + " removed!");
+					$('#editName').modal('hide');
 					$scope.refreshContent();
 				} else {
 					alertify.error(data.error);

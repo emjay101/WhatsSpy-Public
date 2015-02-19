@@ -52,7 +52,7 @@
 						</div>
 						<div class="col-md-3 whatsspy-contact-options">
 								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
-								<a class="btn btn-default" data-ng-click="removeNumber(number.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a>
+								<a class="btn btn-default" data-ng-click="setNumberInactive(number.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a>
 						</div>
 						<div class="col-md-2 whatsspy-contact-phone">
 							<div class="input-group">
@@ -278,8 +278,8 @@
       <div class="modal-body">
       	<form class="form-horizontal">
 		  <div class="form-group">
-		    <label for="phoneNumber" class="col-sm-2 control-label">Phone number</label>
-		    <div class="col-sm-10">
+		    <label for="phoneNumber" class="col-sm-3 control-label">Phone number</label>
+		    <div class="col-sm-5">
 		    	<div class="row">
 	    			<div class="input-group ">
         				<span class="input-group-addon">+</span>  
@@ -289,14 +289,18 @@
 		    </div>
 		  </div>
 		  <div class="form-group">
-		    <label for="name" class="col-sm-2 control-label">Contact name</label>
-		    <div class="col-sm-10">
-		      <input type="text" class="form-control" id="name" data-ng-model="editName" placeholder="(optional) name of contact">
+		    <label for="name" class="col-sm-3 control-label">Contact name</label>
+		    <div class="col-sm-5">
+		    	<div class="row">
+	    			<div class="input-group">
+				      <input type="text" class="form-control" id="name" data-ng-model="editName" placeholder="(optional) name of contact" style="min-width: 400px;">
+				    </div>
+		    	</div>
 		    </div>
 		  </div>
 		  <div class="form-group">
-		    <div class="col-sm-offset-2 col-sm-10">
-		      <button type="submit" data-ng-click="submitNameEdit();" class="btn btn-default">Save contact</button>
+		    <div class="col-sm-offset-3 col-sm-10" style="padding-left: 0px;">
+		      <button type="submit" data-ng-click="submitNameEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save contact</button> <a class="btn btn-danger" data-ng-click="deleteNumber(editNameNumber);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact and all it's history</a>
 		    </div>
 		  </div>
 		</form>

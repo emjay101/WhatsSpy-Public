@@ -30,13 +30,55 @@ switch($_GET['whatsspy']) {
 		break;
 	// Set the status of an contact to inactive.
 	// This means the information stays in the database but the user won't be tracked.
-	case 'removeContact':
+	case 'setContactInactive':
 		// We need the exact ID: this means no 003106 (only 316...)
 		if(isset($_GET['number'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
 			$update = $DBH->prepare('UPDATE accounts
 										SET "active" = false WHERE id = :id;');
 			$update->execute(array(':id' => $number));
+			$result = ['success' => true, 'number' => $number];
+			echo json_encode($result);
+		} else {
+			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
+		}
+		break;
+	// Delete account.
+	// REMOVE ALL TRACES OF A USER
+	case 'deleteContact':
+		// We need the exact ID: this means no 003106 (only 316...)
+		if(isset($_GET['number'])) {
+			$number = preg_replace('/\D/', '', $_GET['number']);
+
+			// Delete any statusses
+			$delete = $DBH->prepare('DELETE FROM lastseen_privacy_history
+										WHERE "number" = :id;');
+			$delete->execute(array(':id' => $number));
+
+			$delete = $DBH->prepare('DELETE FROM profilepic_privacy_history
+										WHERE "number" = :id;');
+			$delete->execute(array(':id' => $number));
+
+			$delete = $DBH->prepare('DELETE FROM profilepicture_history
+										WHERE "number" = :id;');
+			$delete->execute(array(':id' => $number));
+
+			$delete = $DBH->prepare('DELETE FROM status_history
+										WHERE "number" = :id;');
+			$delete->execute(array(':id' => $number));
+
+			$delete = $DBH->prepare('DELETE FROM statusmessage_history
+										WHERE "number" = :id;');
+			$delete->execute(array(':id' => $number));
+
+			$delete = $DBH->prepare('DELETE FROM statusmessage_privacy_history
+										WHERE "number" = :id;');
+			$delete->execute(array(':id' => $number));
+			// Delete final record of accounts
+			$delete = $DBH->prepare('DELETE FROM accounts
+										WHERE id = :id;');
+			$delete->execute(array(':id' => $number));
+
 			$result = ['success' => true, 'number' => $number];
 			echo json_encode($result);
 		} else {
@@ -213,7 +255,11 @@ switch($_GET['whatsspy']) {
 			$select = $DBH->prepare('SELECT  x.start, x."end", a.id, a.name, x.status, x.start 
 										FROM status_history x 
 										LEFT JOIN accounts a ON a.id = x.number
-										WHERE status = true AND "end" IS NOT NULL AND "end" >= :since AND "end" <= :till 
+										WHERE x.status = true 
+											AND x."end" IS NOT NULL 
+											AND x."end" >= :since 
+											AND x."end" <= :till 
+											AND a."active" = true
 										ORDER BY x.start DESC
 										LIMIT 200;');
 			$select->execute(array(':since'=> date('c', $since_users), ':till'=> date('c', $till)));
