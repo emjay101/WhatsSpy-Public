@@ -126,6 +126,9 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     var deferred = $q.defer();
     $http({method: 'GET', url: 'api/?whatsspy=getContactStats&number='+$number.id}).
       success(function(data, status, headers, config) {
+        if($rootScope.accountData[$number.id] == undefined) {
+          $rootScope.accountData[$number.id] = {};
+        }
         $rootScope.accountData[$number.id].status = data[0].status;
         $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
         $rootScope.accountData[$number.id].pictures = data[0].pictures;
