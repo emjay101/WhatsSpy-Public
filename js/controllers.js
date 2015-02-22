@@ -1,6 +1,7 @@
 'use strict'
 // -----------------------------------------------------------------------
-//  Whatsspy tracker, developed by Maikel Zweerink
+//  Whatsspy tracker
+//	@Author Maikel Zweerink
 //  controllers.js - Controllers for the AngularJS application
 //
 //  Yes, this setup is not very clean. It's suiteable for it's purpose.
@@ -8,22 +9,19 @@
 
 angular.module('whatsspyControllers', [])
 .controller('OverviewController', function($rootScope, $q, $scope, $http, $route, $routeParams, $location, $timeout, VisDataSet) {
-
-	$scope.filterPhonenumber = null;
-	$scope.filterName = null;
-
 	// Add new number
-	$scope.newCountryCode = '0031';
-	$scope.newPhoneNumber = null;
-	$scope.newName = null;
+	$scope.newContact = {'countryCode': '0031', 'number': null, 'name': null};
 
 	// Edit name
-	$scope.editNameNumber = null;
-	$scope.editName = null;
+	$scope.editContact = {'id': null, 'name': null};
+
+	// Javascript page setup call
+	$('[data-toggle="tooltip"]').tooltip();
+
 
 	// Functions
-	$scope.setNumberInactive = function(number) {
-		$http({method: 'GET', url: 'api/?whatsspy=setContactInactive&number=' + number}).
+	$scope.setNumberInactive = function(contactId) {
+		$http({method: 'GET', url: 'api/?whatsspy=setContactInactive&number=' + contactId}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("+" + data.number + " set inactive!");
@@ -37,8 +35,8 @@ angular.module('whatsspyControllers', [])
 			});
 	}
 
-	$scope.deleteNumber = function(number) {
-		$http({method: 'GET', url: 'api/?whatsspy=deleteContact&number=' + number}).
+	$scope.deleteNumber = function(contactId) {
+		$http({method: 'GET', url: 'api/?whatsspy=deleteContact&number=' + contactId}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("+" + data.number + " removed!");
@@ -53,20 +51,39 @@ angular.module('whatsspyControllers', [])
 			});
 	}
 
-	$scope.editNameModal = function(numberObj) {
-		$scope.editNameNumber = numberObj.id;
-		$scope.editName = numberObj.name;
+	$scope.toggleContactPanel = function($number) {
+		if($rootScope.accountData[$number.id] == undefined) {
+			$rootScope.loadDataFromNumber($number);
+			$rootScope.accountData[$number.id] = {'showPanel': true};
+		} else if($rootScope.accountData[$number.id] != undefined && $rootScope.accountData[$number.id].showPanel == false) {
+			$rootScope.accountData[$number.id].showPanel = true;
+		} else {
+			$rootScope.accountData[$number.id].showPanel = false;
+		}
+	}
+
+	$scope.setEditContact = function($contact) {
+		$scope.editContact.id = $contact.id;
+		$scope.editContact.name = $contact.name;
+	}
+
+	$scope.resetEditContact = function() {
+		$scope.editContact.id = null;
+		$scope.editContact.name = null;
+	}
+
+	$scope.editNameModal = function($contact) {
+		$scope.setEditContact($contact);
 		$('#editName').modal('show');
 	}
 
 	$scope.submitNameEdit = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editNameNumber + '&name=' + $scope.editName }).
+		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editContact.id + '&name=' + $scope.editContact.name }).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
 					$('#editName').modal('hide');
-					$scope.editNameNumber = null;
-					$scope.editName = null;
+					$scope.resetEditContact();
 					$scope.refreshContent();
 				} else {
 					alertify.error(data.error);
@@ -78,7 +95,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitNewNumber = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newPhoneNumber + '&countrycode=' + $scope.newCountryCode + '&name=' + $scope.newName}).
+		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + $scope.newContact.name}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact added to WhatsSpy. Tracking will start in 5 minutes.");
@@ -273,26 +290,27 @@ angular.module('whatsspyControllers', [])
 	*/
 	$scope.onRangeChanged = function (period) {
 	// nothing
+
 	};
 
 
 	// Append state data to the timelines
 
-
 	$scope.setupTimelineDataForNumber = function($number) {
+
 		// The Vis Group dataset (only one group: Status)
 		var groups = new VisDataSet();
+		// Get the items in place
+		var items = new VisDataSet();
+
 		groups.add({id: 0, content: 'Status'});
 		// Ignore empty sets
-		if($number.data.status != null) {
-			// Get the items in place
-			var items = new VisDataSet();
-
-			for(var y = 0; y < $number.data.status.length; y++) {
-				var startDate = moment($number.data.status[y].start);
+		if($rootScope.accountData[$number.id].status != null) {
+			for(var y = 0; y < $rootScope.accountData[$number.id].status.length; y++) {
+				var startDate = moment($rootScope.accountData[$number.id].status[y].start);
 				var endDate = moment();
-				if($number.data.status[y].end != null) {
-					endDate = moment($number.data.status[y].end);
+				if($rootScope.accountData[$number.id].status[y].end != null) {
+					endDate = moment($rootScope.accountData[$number.id].status[y].end);
 				}
 				items.add({
 					id: 'status-'+y,
@@ -325,22 +343,24 @@ angular.module('whatsspyControllers', [])
 			$scope.startTime = moment().valueOf() - 36460000;
 			$scope.stopTime = moment().valueOf();
 			// Append the data to the number
-			$number.data.timelineData = {
+			$rootScope.accountData[$number.id].timelineData = {
 				items: items,
 				groups: groups
 			};
-			$number.data.timelineLoaded = true;
+
+			$rootScope.accountData[$number.id].timelineLoaded = true;
 		}
 	}
 
 	// create visualization
-		$scope.timelineOptions = {
+	$scope.timelineOptions = {
 		height:"100%",
 		orientation: 'top',
 		groupOrder: 'content'  // groupOrder can be a property name or a sorting function
-		};
+	};
 
-		$scope.graphEvents = {
+
+	$scope.graphEvents = {
 		rangechange: $scope.onRangeChange,
 		rangechanged: $scope.onRangeChanged,
 		onload: $scope.onLoaded
@@ -572,13 +592,13 @@ angular.module('whatsspyControllers', [])
 		for(var x = 0; x < $numbers.length; x++) {
 			var $number = $numbers[x];
 			groups.add({id: x, content: $number.name});
-			if($number.data != null && $number.data != undefined) {
-				for(var y = 0; y < $number.data.status.length; y++) {
-					var startDate = moment($number.data.status[y].start);
+			if($rootScope.accountData[$number.id] != null && $rootScope.accountData[$number.id] != undefined) {
+				for(var y = 0; y < $rootScope.accountData[$number.id].status.length; y++) {
+					var startDate = moment($rootScope.accountData[$number.id].status[y].start);
 					var endDate = moment();
 					var itemClass = x % 6; // 6 styles: 0,1,2,3,4,5
-					if($number.data.status[y].end != null) {
-						endDate = moment($number.data.status[y].end);
+					if($rootScope.accountData[$number.id].status[y].end != null) {
+						endDate = moment($rootScope.accountData[$number.id].status[y].end);
 					}
 					items.add({
 						id: 'status-'+$number.id+'-'+y,
@@ -781,10 +801,10 @@ angular.module('whatsspyControllers', [])
 
 	$scope.liveTimeline = function() {
 		$scope.refreshContent(null);
-		$rootScope.liveFeed = $timeout($scope.liveTimeline, 8000);
+		$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 	}
 
-	$rootScope.liveFeed = $timeout($scope.liveTimeline, 8000);
+	$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 })
 .controller('AboutController', function($rootScope, $q, $scope, $http) {
 

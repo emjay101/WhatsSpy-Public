@@ -1,6 +1,7 @@
 'use strict'
 // -----------------------------------------------------------------------
-//  Whatsspy tracker, developed by Maikel Zweerink
+//  Whatsspy tracker
+//  @Author Maikel Zweerink
 //  app.js - AngularJS application
 // -----------------------------------------------------------------------
 
@@ -26,9 +27,11 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   .otherwise({redirectTo: '/overview'});;
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
-  $rootScope.version = '1.1.3';
+  // Version of the application
+  $rootScope.version = '1.2.0';
 
   $('[data-toggle="tooltip"]').tooltip();
+
   // Set active buttons according to the current page
   $scope.getActivePageClass = function(path) {
     if ($location.path().substr(1, path.length) == path) {
@@ -38,11 +41,21 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
   }
 
-  // Get contact data
   // This data is required for this whole Angularjs Application
   $rootScope.accounts = [];
+  $rootScope.pendingAccounts = [];
+  $rootScope.profilePicPath = null;
+  $rootScope.trackerStart = null;
+  $rootScope.loadedTime = null;
+  $rootScope.newestVersion = null;
+  $rootScope.help = null;
+  // Information that might be lazy loaded.
+  $rootScope.accountData = {};
+
+  // Tracker online/offline info.
   $rootScope.tracker = [];
 
+  // Just some feedback when setting up WhatsSpy
   $rootScope.error = false;
 
   $rootScope.getAccounts = function() {
@@ -52,14 +65,14 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         if(typeof data == 'string') {
           alertify.error('An error occured, please check your configuration:'+data);
           $rootScope.error = true;
+        } else {
+          $rootScope.accounts = data.accounts;
+          $rootScope.pendingAccounts = data.pendingAccounts;
+          $rootScope.tracker = data.tracker;
+          $rootScope.trackerStart = data.trackerStart;
+          $rootScope.profilePicPath = data.profilePicPath;
+          $rootScope.loadedTime = moment();
         }
-        $rootScope.accounts = data.accounts;
-        $rootScope.pendingAccounts = data.pendingAccounts;
-        $rootScope.tracker = data.tracker;
-        $rootScope.trackerStart = data.trackerStart;
-        $rootScope.profilePicPath = data.profilePicPath;
-        $rootScope.loadedTime = moment();
-
         deferred.resolve(null);
       }).
       error(function(data, status, headers, config) {
@@ -98,7 +111,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   $rootScope.loadDataFromNumber = function($number) {
     $rootScope.showLoader = true;
     var promises = [];
-    promises[0] = $rootScope.loadDataCall($number);
+    promises[0] = $rootScope.loadDataCall($number, null);
 
     $q.all(promises).then(function(greeting) {
       $rootScope.showLoader = false;
@@ -113,7 +126,9 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     var deferred = $q.defer();
     $http({method: 'GET', url: 'api/?whatsspy=getContactStats&number='+$number.id}).
       success(function(data, status, headers, config) {
-        $number.data = data[0];
+        $rootScope.accountData[$number.id].status = data[0].status;
+        $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
+        $rootScope.accountData[$number.id].pictures = data[0].pictures;
         $rootScope.$broadcast('statusForNumberLoaded', $number);
         deferred.resolve(null);
       }).
@@ -129,7 +144,19 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     $rootScope.showLoader = true;
     var promises = [];
     promises[0] = $rootScope.getAccounts();
-    promises[1] = $rootScope.getAbout();
+
+    if($rootScope.help == null) {
+      promises[1] = $rootScope.getAbout();
+    }
+    // Load any new status
+    if(Object.keys($rootScope.accountData).length > 0) {
+      var k;
+      for (k in $rootScope.accountData) {
+        if (Object.prototype.hasOwnProperty.call($rootScope.accountData, k)) {
+          $rootScope.loadDataCall($rootScope.accountData[k]);
+        }
+      }
+    }
 
     $q.all(promises).then(function(greeting) {
       $rootScope.showLoader = false;

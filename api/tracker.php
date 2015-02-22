@@ -45,6 +45,7 @@ function signal_handler($signal) {
 	        foreach ($tracking_numbers as $number) {
 				$wa->sendPresenceUnsubscription($number);
 			}
+
         	// Update tracker session
 			$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW() WHERE "end" IS NULL;');
 			$end_tracker_session->execute();
@@ -52,6 +53,8 @@ function signal_handler($signal) {
 			$end_user_session = $DBH->prepare('UPDATE status_history
 												SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
 			$end_user_session->execute();
+			// Reset DB connection
+			$DBH = null;
 			$wa -> disconnect();
             tracker_log('[exit] Shutting down tracker');
             exit;
@@ -418,7 +421,7 @@ function calculateTick($time) {
 
 
 function track() {
-	global $DBH, $wa, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
+	global $DBH, $wa, $tracking_ticks, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
 
 	$crawl_time = time();
 	setupWhatsappHandler();
@@ -436,8 +439,8 @@ function track() {
 
 		//	1) LAST SEEN PRIVACY
 		//
-		// Check lastseen (every 2 hours)
-		if($pollCount % calculateTick(60*60*2) == 0) {
+		// Check lastseen
+		if($pollCount % calculateTick($tracking_ticks['lastseen']) == 0) {
 			tracker_log('[lastseen #'.$lastseenCount.'] Checking '. count($tracking_numbers) . ' users.');
 			foreach ($tracking_numbers as $number) {
 				$wa->sendGetRequestLastSeen($number);
@@ -447,8 +450,8 @@ function track() {
 
 		//	2) STATUS MESSAGE (and privacy)
 		//
-		// Check status message (every 2 hours)
-		if($pollCount % calculateTick(60*60*2) == 0) {
+		// Check status message 
+		if($pollCount % calculateTick($tracking_ticks['statusmsg']) == 0) {
 			tracker_log('[status-msg #'.$statusMsgCount.'] Checking '. count($tracking_numbers) . ' users.');
 			if(count($tracking_numbers) > 0) {
 				$wa->sendGetStatuses($tracking_numbers);
@@ -458,8 +461,8 @@ function track() {
 
 		//	3) PROFILE PICTURE (and privacy)
 		//
-		// Check profile picture (every 3 hours)
-		if($pollCount % calculateTick(60*60*3) == 0) {
+		// Check profile picture
+		if($pollCount % calculateTick($tracking_ticks['profile-pic']) == 0) {
 			tracker_log('[profile-pic #'.$picCount.'] Checking '. count($tracking_numbers) . ' users.');
 			foreach ($tracking_numbers as $number) {
 				$wa->sendGetProfilePicture($number, true);
@@ -469,8 +472,8 @@ function track() {
 
 		//	4) DATABASE ACCOUNT REFRESH
 		//
-		// Check user database and refresh user set every hour but with a offset of 12 minutes
-		if($pollCount % calculateTick(60*60*1) == calculateTick(60*12)) {
+		// Check user database and refresh user set every hour but with a offset of 80 seconds.
+		if($pollCount % calculateTick($tracking_ticks['refresh-db']) == calculateTick($tracking_ticks['refresh-db']-80)) {
 			retrieveTrackingUsers(true);
 		}
 
@@ -479,14 +482,14 @@ function track() {
 		// Verify any freshly inserted accounts and check if there really whatsapp users.
 		// Check everey 5 minutes.
 		// When the user is verified the number is automaticly added to the tracker running DB.
-		if($pollCount % calculateTick(60*5) == 0) {
+		if($pollCount % calculateTick($tracking_ticks['verify-check']) == 0) {
 			verifyTrackingUsers();
 		}
 
 		//	6) WHATSAPP PING
 		//
 		// Keep connection alive (<300s)
-		if($pollCount % calculateTick(60*2) == 0) {
+		if($pollCount % calculateTick($tracking_ticks['keep-alive']) == 0) {
 			tracker_log('[keep-alive] Ping sent');
 			$wa->sendPing();
 		}
@@ -528,6 +531,9 @@ do {
 		} catch(Exception $e) {
 			// Connection closed, nevermind
 		}
+		// Reset DB connection
+		$DBH = null;
+		$DBH = setupDB($dbAuth);
 		// Update tracker session
 		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW() WHERE "end" IS NULL;');
 		$end_tracker_session->execute();
@@ -535,6 +541,7 @@ do {
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
 		$end_user_session->execute();
+
 		tracker_log('[error] Tracker exception! '.$e->getMessage());
 		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
 	}

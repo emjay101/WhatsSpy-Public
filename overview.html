@@ -45,14 +45,17 @@
 							<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="number.profilepic == null" src="https://placehold.it/50x50" />
 						</div>
 						<div class="col-md-6">
-							<h3>{{number.name | emptyName}} <small>{{number.last_statusmessage}}</small></h3>
+							<h3>{{number.name | emptyName}} <small class="contact_status">{{number.last_statusmessage}}</small></h3>
 							<span data-ng-show="number.since != null" class="label label-info">tracking since {{number.since | staticDatetime}}</span>
 							<span data-ng-show="number.records != null" class="label label-info">{{number.records}} status records</span>
 							<span data-ng-show="number.latest_online != null" class="label label-info">Last seen <span am-time-ago="number.latest_online"></span></span>
 						</div>
 						<div class="col-md-3 whatsspy-contact-options">
+								<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
+									<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
+									<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
+								</a>
 								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
-								<a class="btn btn-default" data-ng-click="setNumberInactive(number.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a>
 						</div>
 						<div class="col-md-2 whatsspy-contact-phone">
 							<div class="input-group">
@@ -62,19 +65,17 @@
 				    	</div>
 			    		<div class="clear"></div>
 					</div>
-					<div class="panel-body">
-						<div data-ng-click="loadDataFromNumber(number);" data-ng-show="number.data == null && number.records > 1" class="whatsspy-panel-body-lazy-load"></div>
+					<div class="panel-body" data-ng-show="accountData[number.id].showPanel == true">
 						<span data-ng-show="number.records <= 1">
 							<center>No information available ..</center>
 						</span>
 						<span data-ng-show="number.records > 1">
 							<!-- Timeline information -->
-<!-- 							<a data-ng-click="" class="whatsspy-number-timeline-load">load timeline</a> -->
-							<div data-ng-show="number.data == null && number.records > 1" class="whatsspy-lazy-load-warning"> Click to load data</div>
-							<div ng-show="number.data.timelineLoaded" class="whatsspy-number-timeline">
-								<vis-timeline data="number.data.timelineData" options="timelineOptions" events="graphEvents"></vis-timeline>
+							<div data-ng-show="accountData[number.id] == null && number.records > 1" class="whatsspy-lazy-load-warning"> Click to load data</div>
+							<div data-ng-show="accountData[number.id].timelineLoaded" class="whatsspy-number-timeline">
+								<vis-timeline data="accountData[number.id].timelineData" options="timelineOptions" events="graphEvents"></vis-timeline>
 							</div>
-							<div class="whatsspy-passive-timeline" data-ng-show="number.data.timelineLoaded != true && number.data.status != null">
+							<div class="whatsspy-passive-timeline" data-ng-show="accountData[number.id].timelineLoaded != true && accountData[number.id].status != null">
 								<button class="btn btn-default"  data-ng-click="loadTimelineManually(number)">Load timeline</button>
 							</div>
 							<!-- Additional information -->
@@ -85,37 +86,37 @@
 									  <!-- Nav tabs -->
 									  <ul class="nav nav-tabs" role="tablist">
 									    <li role="presentation" class="active"><a aria-controls="logs" role="tab" data-toggle="tab" data-target="#logs-{{number.id}}">Logs</a></li>
-									    <li role="presentation"><a aria-controls="statusmessages" role="tab" data-toggle="tab" data-target="#statusmessages-{{number.id}}">Status Messages <span data-ng-show="number.data.statusmessages.length > 0" class="badge">{{number.data.statusmessages.length}}</span></a></li>
-									    <li role="presentation"><a aria-controls="pictures" role="tab" data-toggle="tab" data-target="#pictures-{{number.id}}">Profile pictures <span data-ng-show="number.data.pictures.length > 0" class="badge">{{number.data.pictures.length}}</span></a></li>
+									    <li role="presentation"><a aria-controls="statusmessages" role="tab" data-toggle="tab" data-target="#statusmessages-{{number.id}}">Status Messages <span data-ng-show="accountData[number.id].statusmessages.length > 0" class="badge">{{accountData[number.id].statusmessages.length}}</span></a></li>
+									    <li role="presentation"><a aria-controls="pictures" role="tab" data-toggle="tab" data-target="#pictures-{{number.id}}">Profile pictures <span data-ng-show="accountData[number.id].pictures.length > 0" class="badge">{{accountData[number.id].pictures.length}}</span></a></li>
 									  </ul>
 
 									  <!-- Tab panes -->
 									  <div class="tab-content">
 									    <div role="tabpanel" class="tab-pane active whatsspy-tab-info-logs" id="logs-{{number.id}}">
-											<div class="whatsspy-status-entry" data-ng-repeat="entry in number.data.status">
+											<div class="whatsspy-status-entry" data-ng-repeat="entry in accountData[number.id].status">
 												<span class="label label-info" title="Logid: {{entry.sid}}">{{entry.start | staticDate}}</span> 
 												Online from <strong>{{entry.start | staticTime}}</strong> till <strong data-ng-show="entry.end != null">{{entry.end | staticTime}}</strong><strong data-ng-show="entry.end == null">now</strong>
 											</div>
-											<div class="whatsspy-no-information-data" data-ng-show="number.data.status == null || number.data.status.length == 0">
+											<div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].status == null || accountData[number.id].status.length == 0">
 									    		No information available ...
 									    	</div>
 									    </div>
 									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-logs" id="statusmessages-{{number.id}}">
-											<div class="whatsspy-status-entry" data-ng-repeat="entry in number.data.statusmessages">
+											<div class="whatsspy-status-entry" data-ng-repeat="entry in accountData[number.id].statusmessages">
 												<span class="label label-info">{{entry.changed_at | staticDatetime}}</span> 
 												{{entry.status}}
 											</div>
-											<div class="whatsspy-no-information-data" data-ng-show="number.data.statusmessages == null || number.data.statusmessages.length == 0">
+											<div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].statusmessages == null || accountData[number.id].statusmessages.length == 0">
 									    		No information available ...
 									    	</div>
 									    </div>
 									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-pic" id="pictures-{{number.id}}">
-									    	<div data-ng-repeat="picture in number.data.pictures" class="whatsspy-img-container">
+									    	<div data-ng-repeat="picture in accountData[number.id].pictures" class="whatsspy-img-container">
 									    		<img class="img-rounded whatsspy-img-big" data-ng-src="{{profilePicPath}}{{picture.hash}}.jpg" />
 									    		<br />
 									    		<span class="label label-info">{{picture.changed_at | staticDate}}</span>
 									    	</div>
-									    	<div class="whatsspy-no-information-data" data-ng-show="number.data.status == null || number.data.pictures.length == 0">
+									    	<div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].status == null || accountData[number.id].pictures.length == 0">
 									    		No information available ...
 									    	</div>
 									    </div>
@@ -200,8 +201,8 @@
 										        </tr>
 										        <tr>
 										          <th>(7d) Online moments</th>
-										          <td><span data-ng-show="number.data.status == null" title="You need to load the data before you can see these stats" class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-										          	<span data-ng-show="number.data.status != null">{{number.data.status.length}}</span>
+										          <td><span data-ng-show="accountData[number.id].status == null" title="You need to load the data before you can see these stats" class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+										          	<span data-ng-show="accountData[number.id].status != null">{{accountData[number.id].status.length}}</span>
 										          </td>
 										        </tr>
 										      </tbody>
@@ -233,35 +234,33 @@
       	<form class="form-horizontal">
 		  <div class="form-group">
 		    <label for="countryCode" class="col-sm-2 control-label">Phone number</label>
-		    <div class="col-sm-10">
+		    <div class="col-sm-8">
 		    	<div class="row">
-		    		<div class="col-md-2">
+		    		<div class="col-md-3">
 		    			<div class="input-group ">
             				<span class="input-group-addon">+</span>  
-			    			<input type="text" class="form-control" id="countryCode" data-ng-model="newCountryCode" placeholder="countrycode ..." value="0031">
+			    			<input type="text" class="form-control" id="countryCode" data-ng-model="newContact.countryCode" placeholder="countrycode ..." value="0031">
 			    		</div>
 		    		</div>
-		    		<div class="col-md-10">
-		    			<input type="text"  class="form-control" id="phoneNumber" data-ng-model="newPhoneNumber"placeholder="phone number ..." >
+		    		<div class="col-md-9">
+		    			<input type="text"  class="form-control" id="phoneNumber" data-ng-model="newContact.number"placeholder="phone number ..." >
 		    		</div>
 		    	</div>
 		    </div>
 		  </div>
 		  <div class="form-group">
 		    <label for="name" class="col-sm-2 control-label">Contact name</label>
-		    <div class="col-sm-10">
-		      <input type="text" class="form-control" id="name" data-ng-model="newName" placeholder="(optional) name of contact">
-		    </div>
-		  </div>
-		  <div class="form-group">
-		    <div class="col-sm-offset-2 col-sm-10">
-		      <button type="submit" data-ng-click="submitNewNumber();" class="btn btn-default">Add contact</button>
+		    <div class="col-sm-8">
+		      <input type="text" class="form-control" id="name" data-ng-model="newContact.name" placeholder="(optional) name of contact">
 		    </div>
 		  </div>
 		</form>
-		<small>The new contact will be verified as an Whatsapp user and added to the tracker within 5 minutes. After this you can find the contact in the overview list.</small>
+		<small>The new contact will be verified as an WhatsApp user and added to the tracker within 5 minutes. After this you can find the contact in the overview list.</small>
       </div>
       <div class="modal-footer">
+		<div class="whatsspy-contact-options">
+      		<button type="submit" data-ng-click="submitNewNumber();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Add contact</button>
+      	</div>
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
@@ -278,35 +277,36 @@
       <div class="modal-body">
       	<form class="form-horizontal">
 		  <div class="form-group">
-		    <label for="phoneNumber" class="col-sm-3 control-label">Phone number</label>
-		    <div class="col-sm-5">
+		    <label for="phoneNumber" class="col-sm-2 control-label">Phone number</label>
+		    <div class="col-sm-5 col-sm-offset-1">
 		    	<div class="row">
 	    			<div class="input-group ">
         				<span class="input-group-addon">+</span>  
-		    			<input type="text" class="form-control" data-ng-value="editNameNumber" disabled="disabled">
+		    			<input type="text" class="form-control" id="phoneNumber" data-ng-value="editContact.id" disabled="disabled">
 		    		</div>
 		    	</div>
 		    </div>
 		  </div>
 		  <div class="form-group">
-		    <label for="name" class="col-sm-3 control-label">Contact name</label>
-		    <div class="col-sm-5">
+		    <label for="name" class="col-sm-2 control-label">Contact name</label>
+		    <div class="col-sm-5 col-sm-offset-1">
 		    	<div class="row">
-	    			<div class="input-group">
-				      <input type="text" class="form-control" id="name" data-ng-model="editName" placeholder="(optional) name of contact" style="min-width: 400px;">
+	    			<div class="input-group"> 
+	    				<div class="input-group-addon"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></div>
+				      	<input type="text" class="form-control" id="name" data-ng-model="editContact.name" placeholder="(optional) name of contact">
 				    </div>
 		    	</div>
-		    </div>
-		  </div>
-		  <div class="form-group">
-		    <div class="col-sm-offset-3 col-sm-10" style="padding-left: 0px;">
-		      <button type="submit" data-ng-click="submitNameEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save contact</button> <a class="btn btn-danger" data-ng-click="deleteNumber(editNameNumber);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact and all it's history</a>
 		    </div>
 		  </div>
 		</form>
 
       </div>
       <div class="modal-footer">
+      	<div class="whatsspy-contact-options">
+	      	<button type="submit" data-ng-click="submitNameEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save contact</button> 
+			<a class="btn btn-warning" title="Do not track the user, but keep any status/privacy records of this person." data-toggle="tooltip" data-placement="bottom" data-ng-click="setNumberInactive(number.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a> 
+			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteNumber(editNameNumber);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact and all it's history</a>
+		</div>
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>

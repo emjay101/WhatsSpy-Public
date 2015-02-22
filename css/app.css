@@ -78,8 +78,8 @@ header {
 }
 
 #status {
-	position: absolute;
-	right: 15px;
+	float: right;
+	margin-right: 15px;
 	height: 105px;
 	margin-top: 25px;
 	border-radius: 6px;
@@ -218,6 +218,7 @@ header {
 	opacity: 0.4;
 	background-color: gray;
 }
+
 .whatsspy-lazy-load-warning {
 	height: 100px;
 	padding-top: 40px;
@@ -270,6 +271,16 @@ header {
 .whatsspy-data-management {
 	cursor: pointer;
 }
+
+.contact_status {
+    font-size: 12px;
+}
+
+.whatsspy-contact-options {
+	float: left;
+	display: inline-block;
+}
+
 
 
 /**

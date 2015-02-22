@@ -163,6 +163,7 @@ switch($_GET['whatsspy']) {
 		if (isset($_GET['number'])) {
 			$numbers = explode(',', $_GET['number']);
 			$accounts = array();
+
 			foreach($numbers as $number) {
 				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - \'14 day\'::INTERVAL ORDER BY start DESC');
 				$select->execute(array(':number'=> $number));
@@ -194,7 +195,7 @@ switch($_GET['whatsspy']) {
 					$status['changed_at'] = fixTimezone($status['changed_at']);				
 					array_push($result_statusmsg, $status);
 				}
-				// It might not be an existing number but just add this because of the 7-day limit.
+				// It might not be an existing number but just add this because of the 14-day limit.
 				array_push($accounts, array('id' => $number, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture));
 			}
 			echo json_encode($accounts);
