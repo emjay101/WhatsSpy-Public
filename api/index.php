@@ -261,7 +261,7 @@ switch($_GET['whatsspy']) {
 											AND x."end" > :since 
 											AND x."end" <= :till 
 											AND a."active" = true
-										ORDER BY x.start DESC
+										ORDER BY x."end" DESC
 										LIMIT 200;');
 			$select->execute(array(':since'=> date('c', $since_users), ':till'=> date('c', $till)));
 
