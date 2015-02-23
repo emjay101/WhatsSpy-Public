@@ -225,19 +225,19 @@ switch($_GET['whatsspy']) {
 		$select = $DBH->prepare('(
 									(SELECT null as "type", null as "start", null as "end", null as "id", null as "name", null as "msg_status", null as "hash", false as "lastseen_privacy", false as "profilepic_privacy", false as "statusmsg_privacy", null as "changed_at")
 									UNION ALL
-									(SELECT \'tracker_start\', x.start, x."end", null, null, null, null, null, null, null, x.start FROM tracker_history x WHERE start >= :since AND start <= :till)
+									(SELECT \'tracker_start\', x.start, x."end", null, null, null, null, null, null, null, x.start FROM tracker_history x WHERE start > :since AND start <= :till)
 									UNION ALL
-									(SELECT \'tracker_end\', x.start, x."end", null, null, null, null, null, null, null, x."end" FROM tracker_history x WHERE "end" IS NOT NULL AND start >= :since AND start <= :till)
+									(SELECT \'tracker_end\', x.start, x."end", null, null, null, null, null, null, null, x."end" FROM tracker_history x WHERE "end" IS NOT NULL AND start > :since AND start <= :till)
 									UNION ALL
-									(SELECT  \'statusmsg\', null, null, x.number, a.name, x.status, null, null, null, null, x.changed_at FROM statusmessage_history x LEFT JOIN accounts a ON a.id = x.number WHERE changed_at >= :since AND changed_at <= :till)
+									(SELECT  \'statusmsg\', null, null, x.number, a.name, x.status, null, null, null, null, x.changed_at FROM statusmessage_history x LEFT JOIN accounts a ON a.id = x.number WHERE changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'profilepic\', null, null, x.number, a.name, null, x.hash, null, null, null, x.changed_at FROM profilepicture_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									(SELECT  \'profilepic\', null, null, x.number, a.name, null, x.hash, null, null, null, x.changed_at FROM profilepicture_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'lastseen_privacy\', null, null, x.number, a.name, null, null, x.privacy, null, null, x.changed_at FROM lastseen_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									(SELECT  \'lastseen_privacy\', null, null, x.number, a.name, null, null, x.privacy, null, null, x.changed_at FROM lastseen_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'profilepic_privacy\', null, null, x.number, a.name, null, null, null, x.privacy, null, x.changed_at FROM profilepic_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									(SELECT  \'profilepic_privacy\', null, null, x.number, a.name, null, null, null, x.privacy, null, x.changed_at FROM profilepic_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at >= :since AND changed_at <= :till)
+									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
 								 ) ORDER BY changed_at DESC;');
 		$select->execute(array(':since'=> date('c', $since_activity), ':till'=> date('c', $till)));
 		
@@ -258,7 +258,7 @@ switch($_GET['whatsspy']) {
 										LEFT JOIN accounts a ON a.id = x.number
 										WHERE x.status = true 
 											AND x."end" IS NOT NULL 
-											AND x."end" >= :since 
+											AND x."end" > :since 
 											AND x."end" <= :till 
 											AND a."active" = true
 										ORDER BY x.start DESC
