@@ -253,7 +253,7 @@ switch($_GET['whatsspy']) {
 		// Ignore user status
 		if(!isset($_GET['till'])) {
 			// Get user stats
-			$select = $DBH->prepare('SELECT  x.start, x."end", a.id, a.name, x.status, x.start 
+			$select = $DBH->prepare('SELECT  x.sid, x.start, x."end", a.id, a.name, x.status, x.start 
 										FROM status_history x 
 										LEFT JOIN accounts a ON a.id = x.number
 										WHERE x.status = true 

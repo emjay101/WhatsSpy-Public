@@ -78,7 +78,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitNameEdit = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editContact.id + '&name=' + $scope.editContact.name }).
+		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) }).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
@@ -95,7 +95,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitNewNumber = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + $scope.newContact.name}).
+		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + encodeURIComponent($scope.newContact.name)}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact added to WhatsSpy. Tracking will start in 5 minutes.");
@@ -702,13 +702,21 @@ angular.module('whatsspyControllers', [])
 		$timeout(function(){$scope.setStatusToDefault($item);}, 4000);
 	}
 
+	$scope.isStatusPresent = function($status) {
+		for (var i = $scope.timelineData.userstatus.length - 1; i >= 0; i--) {
+			if($scope.timelineData.userstatus[i].sid == $status.sid) {
+				return true;
+			}
+		};
+		return false;
+	}
+
 	$scope.appendToTimelineFront = function($data) {
 		// Activities
 		for(var i = 0; i < $data.activity.length; i++) {
 			// Add UI feedback
 			$data.activity[i].new = true;
 			$scope.setStatusTimeout($data.activity[i]);
-
 			$scope.timelineData.activity.unshift($data.activity[i]);
 		}
 		// Userstatus
@@ -716,8 +724,9 @@ angular.module('whatsspyControllers', [])
 			// Add UI feedback
 			$data.userstatus[i].new = true;
 			$scope.setStatusTimeout($data.userstatus[i]);
-
-			$scope.timelineData.userstatus.unshift($data.userstatus[i]);
+			if(!$scope.isStatusPresent($data.userstatus[i])) {
+				$scope.timelineData.userstatus.unshift($data.userstatus[i]);
+			}
 		}
 
 		$scope.timelineData.till = $data.till;
@@ -752,7 +761,8 @@ angular.module('whatsspyControllers', [])
 	$scope.loadDataTimeLine = function(query, insertBefore) {
 		var deferred = $q.defer();
 		if($scope.timelineData != null && query == null) {
-			query = '&since='+$scope.timelineData.till;
+			// Retrieve any records from the since -4 seconds. Overlap is fixed when appending the data.
+			query = '&since='+($scope.timelineData.till - 4);
 		}
 		if(query === null) {
 			query = '';
