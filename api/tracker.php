@@ -415,8 +415,8 @@ function checkStatusMessage($number) {
 
 function calculateTick($time) {
 	// One tick takes:
-	// 0-2 seconds socket read
-	return round($time / 2);
+	// 0-1 seconds socket read
+	return round($time / 1);
 }
 
 
@@ -496,8 +496,8 @@ function track() {
 		// usage of 39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa
 		$pollCount++;
 		// Draw the socket read a draw
-		if(($tick_end - $tick_start) < 2.0) {
-			sleep(2);
+		if(($tick_end - $tick_start) < 1.0) {
+			sleep(1);
 		}
 	}
 }

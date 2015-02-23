@@ -304,8 +304,8 @@
       <div class="modal-footer">
       	<div class="whatsspy-contact-options">
 	      	<button type="submit" data-ng-click="submitNameEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save contact</button> 
-			<a class="btn btn-warning" title="Do not track the user, but keep any status/privacy records of this person." data-toggle="tooltip" data-placement="bottom" data-ng-click="setNumberInactive(number.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a> 
-			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteNumber(editNameNumber);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact and all it's history</a>
+			<a class="btn btn-warning" title="Do not track the user, but keep any status/privacy records of this person." data-toggle="tooltip" data-placement="bottom" data-ng-click="setNumberInactive(editContact.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a> 
+			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteNumber(editContact.id);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact and all it's history</a>
 		</div>
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
