@@ -28,7 +28,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
   // Version of the application
-  $rootScope.version = '1.2.1';
+  $rootScope.version = '1.2.2';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -129,6 +129,8 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         if($rootScope.accountData[$number.id] == undefined) {
           $rootScope.accountData[$number.id] = {};
         }
+        $rootScope.accountData[$number.id].id = data[0].id;
+        $rootScope.accountData[$number.id].user = data[0].user;
         $rootScope.accountData[$number.id].status = data[0].status;
         $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
         $rootScope.accountData[$number.id].pictures = data[0].pictures;

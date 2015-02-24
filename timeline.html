@@ -29,20 +29,26 @@
 				</div>
 			</div>
 		</div>
+		<div class="row visible-xs-block">
+			<ul class="nav nav-tabs">
+				<li role="presentation" data-ng-class="{'active': showActivityTimeline == true}" data-ng-click="setTimelineTab('activity');"><a aria-controls="activity-timeline" role="tab" data-toggle="tab" data-target="#activity-timeline">Activity Timeline</a></li>
+				<li role="presentation" data-ng-class="{'active': showStatusTimeline == true}" data-ng-click="setTimelineTab('status');"><a aria-controls="status-timeline" role="tab" data-toggle="tab" data-target="#status-timeline">Status Timeline</a></li>
+			</ul>
+		</div>
 		<div class="row">
-			<div class="col-md-8">
+			<div class="col-md-8 col-xs-12" data-ng-show="showActivityTimeline == true">
 				<h3>Activity timeline</h3>
 				<div data-ng-repeat="item in timelineData.activity | numberFilter:filterPhonenumber:filterName">
 					<!-- ACTIVITY: TRACKER START -->
 					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'tracker_start'">
 					  <div class="panel-heading">
-					  	<div class="col-md-1">
+					  	<div class="col-md-1 col-xs-2">
 					  		<span class="glyphicon glyphicon-list-alt whatsspy-timeline-activity-icon" aria-hidden="true"></span>
 					  	</div>
-					  	<div class="col-md-7">
+					  	<div class="col-md-7 col-xs-10">
 					  		<h3 class="panel-title">Tracker is now online</h3>
 					  	</div>
-					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}}
 					  	</div>
 					  	<div class="clear"></div>
@@ -54,13 +60,13 @@
 					<!-- ACTIVITY: TRACKER STOP -->
 					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'tracker_end'">
 					  <div class="panel-heading">
-					  	<div class="col-md-1">
+					  	<div class="col-md-1 col-xs-2">
 					  		<span class="glyphicon glyphicon-list-alt whatsspy-timeline-activity-icon" aria-hidden="true"></span>
 					  	</div>
-					  	<div class="col-md-7">
+					  	<div class="col-md-7 col-xs-10">
 					  		<h3 class="panel-title">Tracker is now offline</h3>
 					  	</div>
-					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}}
 					  	</div>
 					  	<div class="clear"></div>
@@ -72,13 +78,13 @@
 					<!-- ACTIVITY: STATUS MSG CHANGE -->
 					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'statusmsg'">
 					  <div class="panel-heading">
-					  	<div class="col-md-1">
+					  	<div class="col-md-1 col-xs-2">
 					  		<span class="glyphicon glyphicon-comment whatsspy-timeline-activity-icon " aria-hidden="true"></span>
 					  	</div>
-					  	<div class="col-md-7">
+					  	<div class="col-md-7 col-xs-10">
 					  		<h3 class="panel-title">New status message for {{item.name | emptyName}}</h3> ({{item.id}})
 					  	</div>
-					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}}
 					  	</div>
 					  	<div class="clear"></div>
@@ -90,13 +96,13 @@
 					<!-- ACTIVITY: STATUS PROFILE PICTURE CHANGE -->
 					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'profilepic'">
 					  <div class="panel-heading">
-					  	<div class="col-md-1">
+					  	<div class="col-md-1 col-xs-2">
 					  		<span class="glyphicon glyphicon-picture whatsspy-timeline-activity-icon " aria-hidden="true"></span>
 					  	</div>
-					  	<div class="col-md-7">
+					  	<div class="col-md-7 col-xs-10">
 					  		<h3 class="panel-title">New profile photo for {{item.name | emptyName}}</h3> ({{item.id}})
 					  	</div>
-					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}}
 					  	</div>
 					  	<div class="clear"></div>
@@ -108,13 +114,13 @@
 					<!-- ACTIVITY: STATUS LAST SEEN PRIVACY -->
 					<div class="panel panel-default whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}" data-ng-show="item.type == 'lastseen_privacy' || item.type == 'profilepic_privacy' || item.type == 'statusmsg_privacy'">
 					  <div class="panel-heading">
-					  	<div class="col-md-1">
+					  	<div class="col-md-1 col-xs-2">
 					  		<span class="glyphicon glyphicon-pencil whatsspy-timeline-activity-icon " aria-hidden="true"></span>
 					  	</div>
-					  	<div class="col-md-7">
+					  	<div class="col-md-7 col-xs-10">
 					  		<h3 class="panel-title">{{item.name | emptyName}} changed his privacy setting</h3> ({{item.id}})
 					  	</div>
-					  	<div class="col-md-4 whatsspy-timeline-changed-at">
+					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}}
 					  	</div>
 					  	<div class="clear"></div>
@@ -145,7 +151,7 @@
 					<center>Click to load older entries ..</center>
 				</div>
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-4 col-xs-12"  data-ng-show="showStatusTimeline == true">
 				<h3>Status timeline</h3>
 				<!-- userstatus -->
 				<div data-ng-repeat="item in timelineData.userstatus | numberFilter:filterPhonenumber:filterName">

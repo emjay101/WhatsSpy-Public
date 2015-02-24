@@ -694,6 +694,20 @@ angular.module('whatsspyControllers', [])
 	$scope.timelineData = null;
 	$rootScope.liveFeed = null;
 
+	$scope.showActivityTimeline = true;
+	$scope.showStatusTimeline = true;
+
+	$scope.setTimelineTab = function(tab) {
+		if(tab == 'activity') {
+			$scope.showActivityTimeline = true;
+			$scope.showStatusTimeline = false;
+		} else {
+			// Status
+			$scope.showActivityTimeline = false;
+			$scope.showStatusTimeline = true;
+		}
+	}
+
 	$scope.setStatusToDefault = function($item) {
 		$item.new = false;
 	}
