@@ -106,7 +106,7 @@ switch($_GET['whatsspy']) {
 										pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
 								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
 								(SELECT COUNT(1) as "records" FROM status_history WHERE number = n.id) "records",
-								(SELECT start FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online",
+								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online",
 								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "resultall"
 								FROM accounts n
 								LEFT JOIN profilepicture_history pph

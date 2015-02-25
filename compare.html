@@ -44,7 +44,7 @@
 									<td>
 										<div class="row">
 											<div class="col-md-2">
-												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{account.profilepic_updated | staticDatetime}}" data-ng-show="account.profilepic != null" data-ng-src="{{profilePicPath}}{{account.profilepic}}.jpg" />
+												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{account.profilepic_updated | staticDatetime}}" data-ng-show="account.profilepic != null" data-ng-src="{{(account.profilepic != null && profilePicPath != null) && profilePicPath + account.profilepic + '.jpg' || ''}}" />
 												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="account.profilepic == null" src="https://placehold.it/100x100" />
 											</div>
 											<div class="col-md-10">

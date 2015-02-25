@@ -108,7 +108,7 @@
 					  	<div class="clear"></div>
 					  	</div>
 					  <div class="panel-body whatsspy-timeline-photo">
-					    <img data-ng-cloak class="img-responsive img-rounded whatsspy-timeline-photo-thumb" data-ng-src="{{profilePicPath}}{{item.hash}}.jpg" />
+					    <img class="img-responsive img-rounded whatsspy-timeline-photo-thumb" data-ng-src="{{(item.hash != null && profilePicPath != null) && profilePicPath + item.hash + '.jpg' || ''}}" />
 					  </div>
 					</div>	
 					<!-- ACTIVITY: STATUS LAST SEEN PRIVACY -->

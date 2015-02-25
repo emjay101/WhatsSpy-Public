@@ -101,9 +101,11 @@ angular.module('whatsspyFilters', [])
 		return contacts.filter(function(contact) {
 			var result = true;
 			if(phoneNumber != null) {
-			if(contact.id.indexOf(phoneNumber) != 0) {
-				result = false;
-			}
+				if(contact.id == null) {
+					result = false;
+				} else if(contact.id.indexOf(phoneNumber) != 0) {
+					result = false;
+				}
 			}
 			if(name != null) {
 				// Multiple searching terms used
