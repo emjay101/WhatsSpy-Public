@@ -521,6 +521,10 @@ do {
 		tracker_log('[DB-check] Table\'s do not exist in database "'.$dbAuth['dbname'].'". Check the troubleshooting page.');
 		exit();
 	}
+	if($whatsappAuth['secret'] == '') {
+		tracker_log('[config] number and secret fields are required for the tracker to operate.');
+		exit();
+	}
 	try {
 		// Start the tracker
 		track();
