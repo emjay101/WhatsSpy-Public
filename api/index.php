@@ -89,10 +89,11 @@ switch($_GET['whatsspy']) {
 	case 'updateName':
 		if(isset($_GET['number']) && isset($_GET['name'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
+			$notify = ($_GET['notify_actions'] == 'true' ? true : false);
 			$name = $_GET['name']; // do not use htmlentities, AngularJS will protect us
 			$update = $DBH->prepare('UPDATE accounts
-										SET name = :name WHERE id = :id;');
-			$update->execute(array(':id' => $number, ':name' => $name));
+										SET name = :name, "notify_actions" = :notify_actions WHERE id = :id;');
+			$update->execute(array(':id' => $number, ':name' => $name, ':notify_actions' => (int)$notify));
 			echo json_encode(['success' => true, 'number' => $number]);
 		} else {
 			echo json_encode(['error' => 'No name or correct phone number supplied!', 'code' => 400]);
@@ -101,11 +102,14 @@ switch($_GET['whatsspy']) {
 	// Get global statistics of your whatsspy database.
 	// These quries are optimised to perform <2 seconds on an Raspberry Pi.
 	case 'getStats':
-		$select = $DBH->prepare('SELECT n.id, n.name, n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
+		// Because this will be the first call for the GUI, we will only check it here.
+		// Upgrade DB if it's old:
+		checkDBMigration($DBH);
+
+		$select = $DBH->prepare('SELECT n.id, n.name, n."notify_actions", n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
 										smh.status as "last_statusmessage",
 										pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
 								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
-								(SELECT COUNT(1) as "records" FROM status_history WHERE number = n.id) "records",
 								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online",
 								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "resultall"
 								FROM accounts n
@@ -140,7 +144,7 @@ switch($_GET['whatsspy']) {
 		}
 
 
-		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'profilePicPath' => $whatsspyWebProfilePath]);
+		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'profilePicPath' => $whatsspyWebProfilePath, 'userNotificationPhonenumber' => $whatsspyWhatsAppUserNotification]);
 
 		break;
 	// Get specific analytics and information of an given contact.
@@ -150,15 +154,22 @@ switch($_GET['whatsspy']) {
 			$accounts = array();
 
 			foreach($numbers as $number) {
+				//
+				//	Primary user information (user)
+				//
 				$select = $DBH->prepare('SELECT  
 										lsph.privacy as "lastseen_changed_privacy", lsph.changed_at as "lastseen_changed_privacy_updated",
 										pcph.privacy as "profilepic_changed_privacy", pcph.changed_at as "profilepic_changed_privacy_updated",
 										smph.privacy as "statusmessage_changed_privacy", smph.changed_at as "statusmessage_changed_privacy_updated",
-								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'1 day\'::INTERVAL AND "end" IS NOT NULL) "result1",
-								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "result7",
-								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'14 day\'::INTERVAL AND "end" IS NOT NULL) "result14",
-								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'31 day\'::INTERVAL AND "end" IS NOT NULL) "result31",
-								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "resultall"
+								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'1 day\'::INTERVAL AND "end" IS NOT NULL) "online_1day",
+								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "online_7day",
+								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'14 day\'::INTERVAL AND "end" IS NOT NULL) "online_14day",
+								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'31 day\'::INTERVAL AND "end" IS NOT NULL) "online_31day",
+								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "online_all",
+								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id AND start >= NOW() - \'1 day\'::INTERVAL) "count_1day",
+								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
+								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id AND start >= NOW() - \'31 day\'::INTERVAL) "count_31day",
+								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id) "count_all"
 								FROM accounts n
 								LEFT JOIN profilepicture_history pph
 									ON n.id = pph.number AND pph.changed_at = (SELECT changed_at FROM profilepicture_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
@@ -183,7 +194,52 @@ switch($_GET['whatsspy']) {
 					$result_user = $userProp;
 				}
 
+				//
+				//	Advanced user statistics (advanced_analytics)
+				//
 
+				// Get status count per hour
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND number = :number AND start >= NOW() - \'7 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+				$select->execute(array(':number'=> $number));
+				$hour_status_7day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+				
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND number = :number AND start >= NOW() - \'14 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+				$select->execute(array(':number'=> $number));
+				$hour_status_14day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND number = :number GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+				$select->execute(array(':number'=> $number));
+				$hour_status_all = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+
+				// Get status count per weekday
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND number = :number AND start >= NOW() - \'7 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+				$select->execute(array(':number'=> $number));
+				$weekday_status_7day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND number = :number AND start >= NOW() - \'14 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+				$select->execute(array(':number'=> $number));
+				$weekday_status_14day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND number = :number GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+				$select->execute(array(':number'=> $number));
+				$weekday_status_all = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+
+				// Set all analytics in the data structure
+				$result_advanced_analytics = array();
+
+				$result_advanced_analytics['hour_status_7day'] = $hour_status_7day;
+				$result_advanced_analytics['hour_status_14day'] = $hour_status_14day;
+				$result_advanced_analytics['hour_status_all'] = $hour_status_all;
+
+				$result_advanced_analytics['weekday_status_7day'] = $weekday_status_7day;
+				$result_advanced_analytics['weekday_status_14day'] = $weekday_status_14day;
+				$result_advanced_analytics['weekday_status_all'] = $weekday_status_all;
+
+
+				//
+				//	User statuses (status)
+				//
 				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - \'14 day\'::INTERVAL ORDER BY start DESC');
 				$select->execute(array(':number'=> $number));
 				$result_status = array();
@@ -195,6 +251,9 @@ switch($_GET['whatsspy']) {
 					array_push($result_status, $status);
 				}
 
+				//
+				//	Profile picture history (pictures)
+				//
 				$select = $DBH->prepare('SELECT hash, changed_at FROM profilepicture_history WHERE number = :number ORDER BY changed_at DESC');
 				$select->execute(array(':number'=> $number));
 				$result_picture = array();
@@ -205,6 +264,9 @@ switch($_GET['whatsspy']) {
 					array_push($result_picture, $status);
 				}
 
+				//
+				//	Status message history (statusmessages)
+				//
 				$select = $DBH->prepare('SELECT status, changed_at FROM statusmessage_history WHERE number = :number ORDER BY changed_at DESC');
 				$select->execute(array(':number'=> $number));
 				$result_statusmsg = array();
@@ -214,8 +276,9 @@ switch($_GET['whatsspy']) {
 					$status['changed_at'] = fixTimezone($status['changed_at']);				
 					array_push($result_statusmsg, $status);
 				}
+
 				// It might not be an existing number but just add this because of the 14-day limit.
-				array_push($accounts, array('id' => $number, 'user' => $result_user, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture));
+				array_push($accounts, array('id' => $number, 'user' => $result_user, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture, 'advanced_analytics' => $result_advanced_analytics));
 			}
 			echo json_encode($accounts);
 		} else {
@@ -300,6 +363,21 @@ switch($_GET['whatsspy']) {
 			echo json_encode(array('activity' => $result_activity, 'userstatus' => $result_user_status, 'since' => (int)$since_activity, 'till' => $till));
 		}
 
+		break;
+	// Get global statistics for the whole tracking DB
+	case 'getGlobalStats':
+
+		$select_user_status = $DBH->prepare('SELECT n.id, n.name,
+								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
+								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "online_7day"
+								FROM accounts n
+								WHERE n.active = true AND n.verified=true
+								ORDER BY n.name ASC');
+		$select_user_status -> execute();
+		$result_user_status = $select_user_status->fetchAll(PDO::FETCH_ASSOC);
+
+
+		echo json_encode(['user_status' => $result_user_status]);
 		break;
 	case 'getAbout':
 		echo file_get_contents($whatsspyAboutQAUrl);

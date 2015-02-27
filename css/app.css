@@ -173,25 +173,37 @@ header {
 	min-height:210px;
 }
 .whatsspy-analytics-th {
-	width: 75%;
+	width: 50%;
+}
+.whatsspy-analytics-th-big {
+	width: 70%;
 }
 .whatsspy-analytics-th-privacy {
 	width: 100px;
 }
 .whatsspy-tab-info-logs {
-	height: 225px;
+	height: 300px;
+	overflow-y: scroll;
+	border: 1px solid #ddd;
+}
+.whatsspy-tab-info-overview {
+	min-height: 300px;
+}
+
+.whatsspy-tab-status-msg {
+	height: 300px;
 	overflow-y: scroll;
 }
 .whatsspy-tab-info-pic {
-	height: 225px;
-	overflow-x: scroll;
+	height: 300px;
+	overflow-y: scroll;
 }
 .whatsspy-img-big {
-	height: 175px;
+	height: 210px;
 }
 .whatsspy-img-container {
 	display: inline-block;
-	width: 175px;
+	width: 210px;
 	margin: 5px;
 	text-align: center;
 }
@@ -281,6 +293,26 @@ header {
 	display: inline-block;
 }
 
+
+.whatsspy-notify-actions {
+
+}
+
+.whatsspy-contact-option-status {
+	font-size: 12px;
+	padding-left: 5px;
+}
+
+.whatsspy-label-notifications {
+	display: inline-block;
+	width: 100%;
+}
+
+.whatsspy-bar-graph-toggle {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+}
 
 
 /**
@@ -404,6 +436,15 @@ header {
 
 .whatsspy-timeline-new {
 	background-color: #B6DAB2 !important;
+}
+
+
+/*
+* Stats page
+*/
+
+.whatsspy-stat-head {
+	text-align: center;
 }
 
 /*

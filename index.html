@@ -8,6 +8,7 @@
         <meta name="author" content="Maikel Zweerink@gitlab.maikel.pro">
         <title>WhatsSpy Public</title>
         <link rel="stylesheet" href="css/vendor/bootstrap.min.css">
+        <link rel="stylesheet" href="css/vendor/nv.d3.min.css">
         <link rel="stylesheet" href="css/app.css">
         <link rel="stylesheet" href="css/vendor/vis.min.css" />
         <link rel="stylesheet" href="css/alertify.core.css" />
@@ -21,6 +22,9 @@
         <script src="js/vendor/moment-timezone.min.js"></script>
         <script src="js/vendor/angular-moment.min.js"></script>
         <script src="js/vendor/vis.min.js"></script>
+        <script src="js/vendor/d3.min.js"></script>
+        <script src="js/vendor/nv.d3.min.js"></script>
+        <script src="js/vendor/angularjs-nvd3-directives.min.js"></script>
         <script src="js/vendor/angular-vis.js"></script>
         <script src="js/vendor/alertify.min.js"></script>
         <script src="js/filters.js"></script>
@@ -55,6 +59,12 @@
                                 <a href="#/timeline" data-ng-class="getActivePageClass('timeline')">
                                     <span class="setting-icon glyphicon glyphicon-time"></span><br />
                                     Timeline
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#/statistics" data-ng-class="getActivePageClass('statistics')">
+                                    <span class="setting-icon glyphicon glyphicon-signal"></span><br />
+                                    Statistics
                                 </a>
                             </li>
                             <li>

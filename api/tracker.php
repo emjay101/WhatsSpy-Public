@@ -73,7 +73,7 @@ pcntl_signal(SIGINT, "signal_handler");
 
 // General last seen privacy check
 function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
-	global $DBH;
+	global $DBH, $wa;
 	$number = explode("@", $from)[0];
 	$privacy_status = $DBH->prepare('SELECT "lastseen_privacy" FROM accounts WHERE "id"=:number');
 	$privacy_status -> execute(array(':number' => $number));
@@ -88,7 +88,7 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 
 // General change retrieving
 function onPresenceReceived($mynumber, $from, $type) {
-	global $DBH, $crawl_time;
+	global $DBH, $wa, $crawl_time;
 	$number = explode("@", $from)[0];
 	// $type is either "available" or "unavailable"
 	$status = ($type == 'available' ? true : false);
@@ -104,6 +104,7 @@ function onPresenceReceived($mynumber, $from, $type) {
 							   ':number' => $number,
 							   ':start' => date('c', $crawl_time)));
 		tracker_log('  -[poll] '.$number.' is now '.$type.'.');
+		checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
 	} else {
 		$row  = $latest_status -> fetch();
 		# Latest status is the same as the current status       : Do nothing
@@ -124,13 +125,14 @@ function onPresenceReceived($mynumber, $from, $type) {
 									':number' => $number,
 									':start' => date('c', $crawl_time)));
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
+			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
 		}
 	}
 }
 
 // retrieve profile pics
 function onGetProfilePicture($mynumber, $from, $type, $data) {
-	global $DBH, $whatsspyProfilePath;
+	global $DBH, $wa, $whatsspyProfilePath, $whatsspyNMAKey, $whatsspyLNKey;
 	$number = explode("@", $from)[0];
 	tracker_log('  -[profile-pic] Processing profile picture of '.$number.'.');
 	if($type == 'image') {
@@ -166,6 +168,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			$insert->execute(array(':hash' => $hash,
 								   ':number' => $number));
 			tracker_log('  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').');
+			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new profile picture.', $filename);
 		}
 		// Update privacy
 		$privacy_status = $DBH->prepare('SELECT "profilepic_privacy" FROM accounts WHERE "id"=:number');
@@ -175,7 +178,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			$update = $DBH->prepare('UPDATE accounts
 									SET "profilepic_privacy" = false WHERE "id" = :number;');
 			$update->execute(array(':number' => $number));
-			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED! ');
+			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED!');
 		}
 	} else {
 		tracker_log('  -[profile-pic] Previews not implemented.');
@@ -184,7 +187,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 
 // Retrieve status messages of users
 function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
-	global $DBH;
+	global $DBH, $wa;
 	$number = explode("@", $from)[0];
 	$privacy_enabled = ($time == null ? true : false);
 
@@ -204,6 +207,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 								   ':number' => $number,
 								   ':time' => (string)$time));
 			tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
+			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new status message: \''.$data.'\'.');
 		}
 	}
 
@@ -256,7 +260,7 @@ function onSyncResultNumberCheck($result) {
 }
 
 function onGetError($mynumber, $from, $id, $data ) {
-	global $DBH, $pollCount;
+	global $DBH, $wa, $pollCount;
 	if (preg_match("/^lastseen-/", $id)) {
         if ($data->getAttribute("code") == '405' || 
         	$data->getAttribute("code") == '403' || 
@@ -521,6 +525,9 @@ do {
 		tracker_log('[DB-check] Table\'s do not exist in database "'.$dbAuth['dbname'].'". Check the troubleshooting page.');
 		exit();
 	}
+	// Upgrade DB if it's old
+	checkDBMigration($DBH);
+
 	if($whatsappAuth['secret'] == '') {
 		tracker_log('[config] number and secret fields are required for the tracker to operate.');
 		exit();

@@ -18,19 +18,21 @@
 			<div class="col-md-9">
 				<div class="well whatsspy-header-box">
 					<p>
-						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The system is checking all statuses <span data-ng-show="accounts.length > 0">from {{accounts.length}} contacts</span> continuously from {{trackerStart | staticDatetime}}
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The system is checking all statuses <span data-ng-show="accounts.length > 0">from {{accounts.length}} contacts</span> since {{trackerStart | staticDatetime}}
 					</p>
 					<p>
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Contacts that have "last seen" set to "nobody" will be <a href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/" target="_blank">tracked anyway</a>.
 					</p>
 					<p>
-						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> This page contains data from now to 14 days ago. This information does not update (press F5 to reload).
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The timeline contains data from now to 14 days ago. You can update this information by clicking the time in "status".
+					</p>
+					<p>
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Beside the timeline all the information is from since you started tracking this contact.
 					</p>
 					<p data-ng-show="pendingAccounts.length > 0">
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> {{pendingAccounts.length}} contacts will be verified within 5-10 minutes, <a data-ng-click="refreshContent()">reload data</a> to check again.
 					</p>
 					<p>
-						<br />
 						<span class="btn btn-default" data-toggle="modal" data-target="#addNumber"><span class="glyphicon glyphicon-plus"></span> Add contact by phone number</span> 
 						<a class="btn btn-default" href="https://maikel.pro/service/whatsspy/?importGoogleContacts&warning" target="_blank"><span class="glyphicon glyphicon-refresh"></span> Import Google Contacts</a> 
 					</p>
@@ -42,7 +44,7 @@
 					<div class="panel-heading whatsspy-contact-head">
 						<div class="col-md-1 col-xs-10">
 							<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null && profilePicPath != null) && profilePicPath + number.profilepic + '.jpg' || ''}}" />
-							<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="number.profilepic == null" src="https://placehold.it/50x50" />
+							<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="number.profilepic == null" src="https://placehold.it/75x75" />
 						</div>
 						<div class="col-md-6 col-xs-12">
 							<h3>{{number.name | emptyName}} <small class="contact_status">{{number.last_statusmessage}}</small></h3>
@@ -63,14 +65,21 @@
 	            				<span class="input-group-addon">+</span>  
 				    			<input type="text" class="form-control" data-ng-value="number.id">
 				    		</div>
+				    		<div class="whatsspy-contact-option-status">
+					    		<span data-ng-show="number.notify_actions == true"> 
+					    			<span class="label label-danger whatsspy-label-notifications">
+					    				notifications enabled
+					    			</span>
+					    		</span>
+					    	</div>
 				    	</div>
 			    		<div class="clear"></div>
 					</div>
 					<div class="panel-body" data-ng-show="accountData[number.id].showPanel == true">
-						<span data-ng-show="number.records <= 1">
+						<span data-ng-show="accountData[number.id].status.length <= 1">
 							<center>No information available ..</center>
 						</span>
-						<span data-ng-show="number.records > 1">
+						<span data-ng-show="accountData[number.id].status.length > 1">
 							<!-- Timeline information -->
 							<div data-ng-show="accountData[number.id] == null && number.records > 1" class="whatsspy-lazy-load-warning"> Click to load data</div>
 							<div data-ng-show="accountData[number.id].timelineLoaded" class="whatsspy-number-timeline">
@@ -82,27 +91,182 @@
 							<!-- Additional information -->
 							<div class="row">
 								<div class="col-md-8">
-									<h4>Information</h4>
+									<h4>Analytics / Information</h4>
 									<div role="tabpanel">
 									  <!-- Nav tabs -->
 									  <ul class="nav nav-tabs" role="tablist">
-									    <li role="presentation" class="active"><a aria-controls="logs" role="tab" data-toggle="tab" data-target="#logs-{{number.id}}">Logs</a></li>
+									    <li role="presentation" class="active" ><a aria-controls="overview" role="tab" data-toggle="tab" data-target="#overview-{{number.id}}">Overview</a></li>
+									    <li role="presentation"><a aria-controls="opened-overview" role="tab" data-toggle="tab" data-target="#opened-overview-{{number.id}}">Opened overview</a></li>
+									    <li role="presentation"><a aria-controls="time-overview" role="tab" data-toggle="tab" data-target="#time-overview-{{number.id}}">Time overview</a></li>
 									    <li role="presentation"><a aria-controls="statusmessages" role="tab" data-toggle="tab" data-target="#statusmessages-{{number.id}}">Status Messages <span data-ng-show="accountData[number.id].statusmessages.length > 0" class="badge">{{accountData[number.id].statusmessages.length}}</span></a></li>
 									    <li role="presentation"><a aria-controls="pictures" role="tab" data-toggle="tab" data-target="#pictures-{{number.id}}">Profile pictures <span data-ng-show="accountData[number.id].pictures.length > 0" class="badge">{{accountData[number.id].pictures.length}}</span></a></li>
 									  </ul>
 
 									  <!-- Tab panes -->
 									  <div class="tab-content">
-									    <div role="tabpanel" class="tab-pane active whatsspy-tab-info-logs" id="logs-{{number.id}}">
-											<div class="whatsspy-status-entry" data-ng-repeat="entry in accountData[number.id].status">
-												<span class="label label-info" title="Logid: {{entry.sid}}">{{entry.start | staticDate}}</span> 
-												Online from <strong>{{entry.start | staticTime}}</strong> till <strong data-ng-show="entry.end != null">{{entry.end | staticTime}}</strong><strong data-ng-show="entry.end == null">now</strong>
-											</div>
-											<div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].status == null || accountData[number.id].status.length == 0">
-									    		No information available ...
-									    	</div>
+									    <div role="tabpanel" class="tab-pane active whatsspy-tab-info-overview" id="overview-{{number.id}}">
+									    	<div data-ng-show="accountData[number.id].user != null">
+										    	<div class="row">
+										    		<div class="col-md-6">
+										    			<h5>Opened WhatsApp client</h5>
+														<table class="table table-striped table-bordered ">
+													      <tbody>
+													        <tr>
+													          <th class="whatsspy-analytics-th-big">(24h) today </th>
+													          <td>{{accountData[number.id].user.count_1day}} times</td>
+													        </tr>
+													        <tr>
+													          <th>(07d) last 7 days </th>
+													          <td>{{accountData[number.id].user.count_7day}} times</td>
+													        </tr>
+													        <tr>
+													          <th>(14d) last two weeks </th>
+													          <td>{{accountData[number.id].status.length}} times</td>
+													        </tr>
+													        <tr>
+													          <th>(31d) last month </th>
+													          <td>{{accountData[number.id].user.count_31day}} times</td>
+													        </tr>
+													        <tr>
+													          <th>(---) all time </th>
+													          <td>{{accountData[number.id].user.count_all}} times</td>
+													        </tr>
+													      </tbody>
+													    </table>
+													    <small><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Tracking since {{number.since | staticDatetime}}.</small>
+										    		</div>
+										    		<div class="col-md-6">
+										    			<h5>Time spent on WhatsApp</h5>
+														<table class="table table-striped table-bordered ">
+													      <tbody>
+													        <tr>
+													          <th class="whatsspy-analytics-th">(24h) today </th>
+													          <td>{{accountData[number.id].user.online_1day | timeFormat}}</td>
+													        </tr>
+													        <tr>
+													          <th>(07d) last week</th>
+													          <td>{{accountData[number.id].user.online_7day | timeFormat}}</td>
+													        </tr>
+													        <tr>
+													          <th>(14d) last two weeks</th>
+													          <td>{{accountData[number.id].user.online_14day | timeFormat}}</td>
+													        </tr>
+													        <tr>
+													          <th>(31d) last month </th>
+													          <td>{{accountData[number.id].user.online_31day | timeFormat}}</td>
+													        </tr>
+													        <tr>
+													          <th>(---) all time </th>
+													          <td>{{accountData[number.id].user.online_all | timeFormat}}</td>
+													        </tr>
+													      </tbody>
+													    </table>
+										    		</div>
+										    	</div>
+										    </div>
+										    <div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].user == null">
+										    	Loading information ...
+										    </div>
 									    </div>
-									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-logs" id="statusmessages-{{number.id}}">
+									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-overview" id="opened-overview-{{number.id}}">
+									    	<div data-ng-show="accountData[number.id].user != null">
+										    	<div class="row">
+										    		<div class="col-md-12">
+										    			<div class="whatsspy-bar-graph-toggle">
+										    				<button data-ng-show="accountData[number.id].generated.showHour != true" data-ng-click="accountData[number.id].generated.showWeekday = false; accountData[number.id].generated.showHour = true; " type="button" class="btn btn-info">Show per hour</button>
+										    				<button data-ng-show="accountData[number.id].generated.showWeekday != true" data-ng-click="accountData[number.id].generated.showWeekday = true; accountData[number.id].generated.showHour = false" type="button" class="btn btn-info">Show per weekday</button>
+										    			</div>
+										    			<span data-ng-show="accountData[number.id].generated.showWeekday == true">
+											    			<h5>Opening WhatsApp per weekday</h5>
+											    			<nvd3-multi-bar-chart
+														    	data="accountData[number.id].generated.chart_weekday_status_count_all"
+														        id="opened-overview-graph-weekday-{{number.id}}"
+														        tooltipcontent="barChartToolTip('weekday', 'times')"
+														        width="800"
+	        													height="300"
+														        showXAxis="false"
+														        showYAxis="true"
+														        margin=" {top:5,bottom:5,right:0}"
+														        showLegend="true"
+														        tooltips="true"
+														        stacked="true">
+														        	<svg></svg>
+														    </nvd3-multi-bar-chart>
+														</span>
+														<span data-ng-show="accountData[number.id].generated.showHour == true">
+											    			<h5>Opening WhatsApp per hour</h5>
+											    			<nvd3-multi-bar-chart
+														    	data="accountData[number.id].generated.chart_hour_status_count_all"
+														        id="opened-overview-graph-hour-{{number.id}}"
+														        tooltipcontent="barChartToolTip('hour', 'times')"
+														        width="800"
+	        													height="300"
+														        showXAxis="false"
+														        showYAxis="true"
+														        margin=" {top:5,bottom:5,right:0}"
+														        showLegend="true"
+														        tooltips="true"
+														        stacked="true">
+														        	<svg></svg>
+														    </nvd3-multi-bar-chart>
+														</span>
+										    		</div>
+										    	</div>
+										    </div>
+										    <div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].user == null">
+										    	Loading information ...
+										    </div>
+									    </div>
+									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-overview" id="time-overview-{{number.id}}">
+									    	<div data-ng-show="accountData[number.id].user != null">
+										    	<div class="row">
+										    		<div class="col-md-12">
+										    			<div class="whatsspy-bar-graph-toggle">
+										    				<button data-ng-show="accountData[number.id].generated.showHour != true" data-ng-click="accountData[number.id].generated.showWeekday = false; accountData[number.id].generated.showHour = true; " type="button" class="btn btn-info">Show per hour</button>
+										    				<button data-ng-show="accountData[number.id].generated.showWeekday != true" data-ng-click="accountData[number.id].generated.showWeekday = true; accountData[number.id].generated.showHour = false" type="button" class="btn btn-info">Show per weekday</button>
+										    			</div>
+										    			<span data-ng-show="accountData[number.id].generated.showWeekday == true">
+											    			<h5>Time on WhatsApp per weekday</h5>
+											    			<nvd3-multi-bar-chart
+														    	data="accountData[number.id].generated.chart_weekday_status_time_all"
+														        id="time-overview-graph-weekday-{{number.id}}"
+														        tooltipcontent="barChartToolTip('weekday', 'minutes')"
+														        width="800"
+	        													height="300"
+														        showXAxis="false"
+														        showYAxis="true"
+														        margin=" {top:5,bottom:5,right:0}"
+														        showLegend="true"
+														        tooltips="true"
+														        stacked="true">
+														        	<svg></svg>
+														    </nvd3-multi-bar-chart>
+														</span>
+														<span data-ng-show="accountData[number.id].generated.showHour == true">
+											    			<h5>Time on WhatsApp per hour</h5>
+											    			<nvd3-multi-bar-chart
+														    	data="accountData[number.id].generated.chart_hour_status_time_all"
+														        id="time-overview-graph-hour-{{number.id}}"
+														        tooltipcontent="barChartToolTip('hour', 'minutes')"
+														        width="800"
+	        													height="300"
+														        showXAxis="false"
+														        showYAxis="true"
+														        margin=" {top:5,bottom:5,right:0}"
+														        showLegend="true"
+														        tooltips="true"
+														        stacked="true">
+														        	<svg></svg>
+														    </nvd3-multi-bar-chart>
+														</span>
+										    		</div>
+										    	</div>
+										    </div>
+										    <div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].user == null">
+										    	Loading information ...
+										    </div>
+									    </div>
+									    <div role="tabpanel" class="tab-pane whatsspy-tab-status-msg" id="statusmessages-{{number.id}}">
 											<div class="whatsspy-status-entry" data-ng-repeat="entry in accountData[number.id].statusmessages">
 												<span class="label label-info">{{entry.changed_at | staticDatetime}}</span> 
 												{{entry.status}}
@@ -125,45 +289,17 @@
 									</div>
 								</div>
 								<div class="col-md-4">
-									<h4>Analytics</h4>
+									<h4>Privacy / Online status</h4>
 									<div role="tabpanel">
 									  <!-- Nav tabs -->
 									  <ul class="nav nav-tabs" role="tablist">
-									    <li role="presentation" class="active"><a aria-controls="time-spent" role="tab" data-toggle="tab" data-target="#time-spent-{{number.id}}">Online time</a></li>
-									    <li role="presentation"><a aria-controls="privacy" role="tab" data-toggle="tab" data-target="#privacy-{{number.id}}">Privacy</a></li>
-									    <li role="presentation"><a aria-controls="stats" role="tab" data-toggle="tab" data-target="#stats-{{number.id}}">Stats</a></li>
+									    <li role="presentation" class="active"><a aria-controls="privacy" role="tab" data-toggle="tab" data-target="#privacy-{{number.id}}">Privacy</a></li>
+									    <li role="presentation"><a aria-controls="stats" role="tab" data-toggle="tab" data-target="#logs-{{number.id}}">Online events</a></li>
 									  </ul>
 
 									  <!-- Tab panes -->
 									  <div class="tab-content">
-									    <div role="tabpanel" class="tab-pane active" id="time-spent-{{number.id}}">
-									    	<table class="table table-striped table-bordered ">
-										      <tbody>
-										        <tr>
-										          <th class="whatsspy-analytics-th">(24h) Today </th>
-										          <td>{{accountData[number.id].user.result1}}</td>
-										        </tr>
-										        <tr>
-										          <th>(07d) Last week</th>
-										          <td>{{accountData[number.id].user.result7}}</td>
-										        </tr>
-										        <tr>
-										          <th>(14d) Last two weeks</th>
-										          <td>{{accountData[number.id].user.result14}}</td>
-										        </tr>
-										        <tr>
-										          <th>(31d) Last month </th>
-										          <td>{{accountData[number.id].user.result31}}</td>
-										        </tr>
-										        <tr>
-										          <th>(-) All time </th>
-										          <td>{{accountData[number.id].user.resultall}}</td>
-										        </tr>
-										      </tbody>
-										    </table>
-										    <small><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> These times are inaccurate when the user is being tracked for less than 31 days.</small>
-									    </div>
-									    <div role="tabpanel" class="tab-pane" id="privacy-{{number.id}}">
+									    <div role="tabpanel" class="tab-pane active" id="privacy-{{number.id}}">
 									    	<table class="table table-striped table-bordered ">
 										      <tbody>
 										        <tr>
@@ -172,7 +308,7 @@
 										          	<span data-ng-show="number.lastseen_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger label-full-width">contacts*</span>
 													<span data-ng-show="number.lastseen_privacy == false" class="label label-success label-full-width">everyone</span>
 													
-													<span data-ng-show="accountData[number.id].user.lastseen_changed_privacy != null">changed to <strong>{{accountData[number.id].user.lastseen_changed_privacy | privacy}}</strong><br /> at {{accountData[number.id].user.lastseen_changed_privacy_updated | staticDatetime}}*</span>
+													<small><span data-ng-show="accountData[number.id].user.lastseen_changed_privacy != null">changed to <strong>{{accountData[number.id].user.lastseen_changed_privacy | privacy}}</strong><br /> at {{accountData[number.id].user.lastseen_changed_privacy_updated | staticDatetime}}*</span></small>
 												</td>
 										        </tr>
 										        <tr>
@@ -181,7 +317,7 @@
 										          	<span data-ng-show="number.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger label-full-width">contacts*</span>
 													<span data-ng-show="number.profilepic_privacy == false" class="label label-success label-full-width">everyone</span>
 
-													<span data-ng-show="accountData[number.id].user.profilepic_changed_privacy != null">changed to <strong>{{accountData[number.id].user.profilepic_changed_privacy | privacy}}</strong><br /> at {{accountData[number.id].user.profilepic_changed_privacy_updated | staticDatetime}}*</span>
+													<small><span data-ng-show="accountData[number.id].user.profilepic_changed_privacy != null">changed to <strong>{{accountData[number.id].user.profilepic_changed_privacy | privacy}}</strong><br /> at {{accountData[number.id].user.profilepic_changed_privacy_updated | staticDatetime}}*</span></small>
 												</td>
 										        </tr>
 										        <tr>
@@ -190,29 +326,21 @@
 										          	<span data-ng-show="number.statusmessage_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger label-full-width">contacts*</span>
 													<span data-ng-show="number.statusmessage_privacy == false" class="label label-success label-full-width">everyone</span>
 
-													<span data-ng-show="accountData[number.id].user.statusmessage_changed_privacy != null">changed to <strong>{{accountData[number.id].user.statusmessage_changed_privacy | privacy}}</strong><br /> at {{accountData[number.id].user.statusmessage_changed_privacy_updated | staticDatetime}}*</span>
+													<small><span data-ng-show="accountData[number.id].user.statusmessage_changed_privacy != null">changed to <strong>{{accountData[number.id].user.statusmessage_changed_privacy | privacy}}</strong><br /> at {{accountData[number.id].user.statusmessage_changed_privacy_updated | staticDatetime}}*</span></small>
 												</td>
 										        </tr>
 										      </tbody>
 										    </table>
 										    <small><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> May be off to up to 2 hours.</small>
 									    </div>
-									    <div role="tabpanel" class="tab-pane" id="stats-{{number.id}}">
-									    	<table class="table table-striped table-bordered ">
-										      <tbody>
-										        <tr>
-										          <th class="whatsspy-analytics-th">total num. of records </th>
-										          <td>{{number.records}}</td>
-										        </tr>
-										        <tr>
-										          <th>(14d) Online moments</th>
-										          <td><span data-ng-show="accountData[number.id].status == null" title="You need to load the data before you can see these stats" class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-										          	<span data-ng-show="accountData[number.id].status != null">{{accountData[number.id].status.length}}</span>
-										          </td>
-										        </tr>
-										      </tbody>
-										    </table>
-										    <small><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>  These times are inaccurate when the user is being tracked for less than 14 days.</small>
+									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-logs" id="logs-{{number.id}}">
+											<div class="whatsspy-status-entry" data-ng-repeat="entry in accountData[number.id].status">
+												<span class="label label-info" title="Logid: {{entry.sid}}">{{entry.start | staticDate}}</span> 
+												from <strong>{{entry.start | staticTime}}</strong> till <strong data-ng-show="entry.end != null">{{entry.end | staticTime}}</strong><strong data-ng-show="entry.end == null">now</strong>
+											</div>
+											<div class="whatsspy-no-information-data" data-ng-show="accountData[number.id].status == null || accountData[number.id].status.length == 0">
+									    		No information available ...
+									    	</div>
 									    </div>
 									  </div>
 									</div>
@@ -283,7 +411,7 @@
       	<form class="form-horizontal">
 		  <div class="form-group">
 		    <label for="phoneNumber" class="col-sm-2 control-label">Phone number</label>
-		    <div class="col-sm-5 col-sm-offset-1">
+		    <div class="col-sm-7 col-sm-offset-1">
 		    	<div class="row">
 	    			<div class="input-group ">
         				<span class="input-group-addon">+</span>  
@@ -294,12 +422,28 @@
 		  </div>
 		  <div class="form-group">
 		    <label for="name" class="col-sm-2 control-label">Contact name</label>
-		    <div class="col-sm-5 col-sm-offset-1">
+		    <div class="col-sm-7 col-sm-offset-1">
 		    	<div class="row">
 	    			<div class="input-group"> 
 	    				<div class="input-group-addon"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></div>
 				      	<input type="text" class="form-control" id="name" data-ng-model="editContact.name" placeholder="(optional) name of contact">
 				    </div>
+		    	</div>
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="name" class="col-sm-2 control-label">Notifications via WhatsApp</label>
+		    <div class="col-sm-7 col-sm-offset-1">
+		    	<div class="row">
+	    			<div class="input-group"> 
+	    				<span data-ng-show="editContact.notify_actions == false">
+	    					<button type="button" class="btn btn-primary" data-ng-click="editContact.notify_actions = true">Enable notifications</button>
+	    				</span>
+	    				<span data-ng-show="editContact.notify_actions == true">
+	    					<button type="button" class="btn btn-success" data-ng-click="editContact.notify_actions = false">Disable notifications</button>
+	    				</span>
+				    </div>
+				    <small>Sending notifications to <strong>{{userNotificationPhonenumber | notificationPhonenumber}}</strong>. You will recieve messages for online/offline status changes, status message changes and profile picture changes. Do not enable notifications for too much people (10+), this might cause a WhatsApp ban for spamming.</small>
 		    	</div>
 		    </div>
 		  </div>

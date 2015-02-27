@@ -5,7 +5,7 @@
 //  app.js - AngularJS application
 // -----------------------------------------------------------------------
 
-angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyControllers', 'angularMoment'])
+angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyControllers', 'angularMoment', 'nvd3ChartDirectives'])
 .config(function($routeProvider, $locationProvider) {
   $routeProvider
   .when('/overview', {
@@ -20,6 +20,10 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     templateUrl: 'timeline.html',
     controller: 'TimelineController'
   })
+  .when('/statistics', {
+    templateUrl: 'statistics.html',
+    controller: 'StatisticsController'
+  })
   .when('/about', {
     templateUrl: 'about.html',
     controller: 'AboutController'
@@ -28,7 +32,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q) {
   // Version of the application
-  $rootScope.version = '1.2.3';
+  $rootScope.version = '1.3.0';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -45,6 +49,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   $rootScope.accounts = [];
   $rootScope.pendingAccounts = [];
   $rootScope.profilePicPath = null;
+  $rootScope.userNotificationPhonenumber = null;
   $rootScope.trackerStart = null;
   $rootScope.loadedTime = null;
   $rootScope.newestVersion = null;
@@ -71,6 +76,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
           $rootScope.tracker = data.tracker;
           $rootScope.trackerStart = data.trackerStart;
           $rootScope.profilePicPath = data.profilePicPath;
+          $rootScope.userNotificationPhonenumber = data.userNotificationPhonenumber;
           $rootScope.loadedTime = moment();
         }
         deferred.resolve(null);
@@ -134,6 +140,24 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         $rootScope.accountData[$number.id].status = data[0].status;
         $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
         $rootScope.accountData[$number.id].pictures = data[0].pictures;
+        // Setup data structures for the GUI
+        $rootScope.accountData[$number.id].generated = {};
+        $rootScope.accountData[$number.id].generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: '7 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_7day},
+                                                                                                                    {key: '14 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_14day},
+                                                                                                                    {key: 'all time', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_all}]);
+        $rootScope.accountData[$number.id].generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: '7 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_7day},
+                                                                                                                    {key: '14 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_14day},
+                                                                                                                    {key: 'all time', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_all}]);
+        $rootScope.accountData[$number.id].generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: '7 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_7day},
+                                                                                                                    {key: '14 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_14day},
+                                                                                                                    {key: 'all time', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_all}]);
+        $rootScope.accountData[$number.id].generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: '7 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_7day},
+                                                                                                                    {key: '14 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_14day},
+                                                                                                                    {key: 'all time', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_all}]);
+        // Set default view
+        $rootScope.accountData[$number.id].generated.showHour = false;
+        $rootScope.accountData[$number.id].generated.showWeekday = true;
+
         $rootScope.$broadcast('statusForNumberLoaded', $number);
         deferred.resolve(null);
       }).
@@ -141,6 +165,21 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         deferred.reject(null);
       });
     return deferred.promise;
+  }
+
+  $rootScope.setupBarChartData = function($data) {
+    var $dataSets = [];
+    for (var i = 0; i < $data.length; i++) {
+      var $values = [];
+      for (var y = 0; y < $data[i].data.length; y++) {
+        // This is unreadable but:
+        // Push an array with (id), (value)
+        // So for example DOW 0, 100 online statuses
+        $values.push([$data[i].data[y][$data[i].id], $data[i].data[y][$data[i].value]]);
+      };
+      $dataSets.push({key: $data[i].key, values: $values});
+    }
+    return $dataSets;
   }
 
 

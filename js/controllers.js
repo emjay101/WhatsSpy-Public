@@ -8,16 +8,21 @@
 // -----------------------------------------------------------------------
 
 angular.module('whatsspyControllers', [])
-.controller('OverviewController', function($rootScope, $q, $scope, $http, $route, $routeParams, $location, $timeout, VisDataSet) {
+.controller('OverviewController', function($rootScope, $q, $scope, $http, $timeout, VisDataSet, $filter) {
 	// Add new number
 	$scope.newContact = {'countryCode': '0031', 'number': null, 'name': null};
 
 	// Edit name
-	$scope.editContact = {'id': null, 'name': null};
+	$scope.editContact = {'id': null, 'name': null, 'notify_actions': null};
 
 	// Javascript page setup call
 	$('[data-toggle="tooltip"]').tooltip();
 
+	$scope.$on('$routeChangeStart', function(next, current) { 
+		// Dump loaded data, this causes why to long load times when the user goes back to this page.
+		$rootScope.accountData = [];
+		
+	});
 
 	// Functions
 	$scope.setNumberInactive = function(contactId) {
@@ -65,11 +70,13 @@ angular.module('whatsspyControllers', [])
 	$scope.setEditContact = function($contact) {
 		$scope.editContact.id = $contact.id;
 		$scope.editContact.name = $contact.name;
+		$scope.editContact.notify_actions = $contact.notify_actions;
 	}
 
 	$scope.resetEditContact = function() {
 		$scope.editContact.id = null;
 		$scope.editContact.name = null;
+		$scope.editContact.notify_actions = null;
 	}
 
 	$scope.editNameModal = function($contact) {
@@ -78,7 +85,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitNameEdit = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) }).
+		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_actions=' + $scope.editContact.notify_actions }).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
@@ -118,6 +125,32 @@ angular.module('whatsspyControllers', [])
 
 	$scope.loadTimelineManually = function($number) {
 		$scope.setupTimelineDataForNumber($number);
+	}
+
+	// Bar chart
+
+	$scope.barChartToolTip = function(value, type) {
+		if(value == 'weekday') {
+			return function(key, x, y, e, graph) {
+				var tooltip = '<strong>('+key+') ' + $filter('weekdayToName')(x) + '</strong><br />';
+				if(type == 'times') {
+					tooltip += '<span>opened ' +  Math.floor(y) + ' times.</span>';
+				} else {
+					tooltip += '<span>' +  Math.floor(y) + ' minutes.</span>';
+				}
+				return tooltip;   
+			}
+		} else if(value == 'hour') {
+			return function(key, x, y, e, graph) {
+				var tooltip = '<strong>' + x + ':00 - '+ x +':59</strong><br />';
+				if(type == 'times') {
+					tooltip += '<span>opened ' +  Math.floor(y) + ' times.</span>';
+				} else {
+					tooltip += '<span>' +  Math.floor(y) + ' minutes.</span>';
+				}
+				return tooltip;
+			}
+		}
 	}
 
 
@@ -829,6 +862,69 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
+})
+.controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter) {
+	$scope.stats = null;
+
+	/**
+    * d3.js functions to read dataset created in app.js
+    */
+	$scope.xFunction = function(){
+		return function(d) {
+			return d.name;
+		};
+	}
+
+	$scope.yFunction = function(prop){
+		return function(d) {
+			return d[prop];
+		};
+	}
+
+	$scope.tooltipUserStatusCount = function() {
+		return function(key, x, y, e, graph) {
+			return  '<h4 class="whatsspy-stat-head">' + key + '</h4>' +
+		        '<p>' +  y.point.count_7day + ' times</p>'
+		}
+	}
+
+	$scope.tooltipUserStatusTime = function() {
+		return function(key, x, y, e, graph) {
+			return  '<h4 class="whatsspy-stat-head">' + key + '</h4>' +
+		        '<p>' +  $filter('timeFormat')(y.point.online_7day) + '</p>'
+		}
+	}
+
+	$scope.loadGlobalStats = function() {
+		var deferred = $q.defer();
+		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats'}).
+		success(function(data, status, headers, config) {
+			$scope.stats = data;
+			deferred.resolve(null);
+		}).
+		error(function(data, status, headers, config) {
+			deferred.reject(null);
+		});
+		return deferred.promise;
+	}
+
+	// Get all the required information
+	$scope.refreshContent = function() {
+		$rootScope.showLoader = true;
+		var promises = [];
+		promises[0] = $scope.loadGlobalStats();
+
+		$q.all(promises).then(function(greeting) {
+		$rootScope.showLoader = false;
+		}, function(reason) {
+			$rootScope.showLoader = false;
+		}, function(update) {
+		// nothing to do
+		});
+	}
+
+	// Call the setup
+	$scope.refreshContent();
 })
 .controller('AboutController', function($rootScope, $q, $scope, $http) {
 

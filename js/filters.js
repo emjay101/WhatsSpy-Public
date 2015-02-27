@@ -75,6 +75,33 @@ angular.module('whatsspyFilters', [])
 		return out;
 	}
 })
+.filter('weekdayToName', function() {
+	return function(weekday) {
+		switch (weekday) {
+		    case 0:
+		        return "Sunday";
+		        break;
+		    case 1:
+		        return "Monday";
+		        break;
+		    case 2:
+		        return "Tuesday";
+		        break;
+		    case 3:
+		        return "Wednesday";
+		        break;
+		    case 4:
+		        return "Thursday";
+		        break;
+		    case 5:
+		        return "Friday";
+		        break;
+		    case 6:
+		        return "Saturday";
+		        break;
+		}
+	}
+})
 .filter('emptyName', function () {
 	return function (value) {
 		if(value == null) {
@@ -93,6 +120,45 @@ angular.module('whatsspyFilters', [])
 		}
 	};
 })
+.filter('notificationPhonenumber', function () {
+	return function (value) {
+		if(value == null || value == '') {
+			return 'not set, please add this to config.php';
+		} else {
+			return value;
+		}
+	};
+})
+.filter('timeFormat', function () {
+        return function (seconds) {
+            var str = '';
+            var remainingSec = seconds;
+            if(seconds == null || seconds == undefined) {
+              return str;
+            } 
+
+            if(remainingSec > 43200) {
+              str += Math.floor(remainingSec / 43200) + 'd ';
+              remainingSec = remainingSec % 43200;
+            }
+
+            if(remainingSec > 3600) {
+              str += Math.floor(remainingSec / 3600) + 'h ';
+              remainingSec = remainingSec % 3600;
+            }
+
+            if(remainingSec > 60) {
+              str += Math.floor(remainingSec / 60) + 'min ';
+              remainingSec = remainingSec % 60;
+            } 
+
+            if(remainingSec > 0) {
+              str += remainingSec + 'sec';
+            }
+
+            return str;
+        };
+    })
 .filter('numberFilter', function () {
 	return function (contacts, phoneNumber, name) {
 		if(contacts == undefined) {

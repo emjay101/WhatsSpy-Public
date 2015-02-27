@@ -12,6 +12,57 @@ function setupDB($dbAuth) {
 	return $DBH;
 }
 
+function checkDBMigration($DBH) {
+	/**
+	  *		Database option added in 1.3.0
+	  *		- Allows user to specificly add notifications for users
+	  */
+	$select = $DBH->prepare('SELECT column_name  
+								FROM information_schema.columns 
+								WHERE table_name=\'accounts\' and column_name=\'notify_actions\';');
+	$select -> execute();
+	if($select -> rowCount() == 0) {
+		$alter = $DBH->prepare('ALTER TABLE accounts
+  									ADD COLUMN notify_actions boolean NOT NULL DEFAULT false;');
+		$alter -> execute();
+		if(!$alter) {
+			echo 'The following error occured when trying to upgrade DB:';
+			print_r($DBH->errorInfo());
+			exit();
+		}
+	}
+	/**
+	  *		Database option added in 1.
+	  *		- 
+	  */
+}
+
+function checkAndSendWhatsAppNotify($DBH, $wa, $number, $msg, $img = null) {
+	global $whatsspyWhatsAppUserNotification;
+	if($whatsspyWhatsAppUserNotification == '' || $whatsspyWhatsAppUserNotification == null) {
+		return;
+	} else {
+		// Phonenumber is set, now check if the $number actually has notify_actions on
+		$select = $DBH->prepare('SELECT name FROM accounts WHERE id = :number AND notify_actions = true');
+		$select -> execute(array(':number' => $number));
+		if($select -> rowCount() > 0) {
+			// notify_actions enabled
+			$row  = $select -> fetch();
+			$filteredMsg = str_replace(':name', $row['name'], $msg);
+			if($img == null) {
+				$wa -> sendMessage($whatsspyWhatsAppUserNotification, $filteredMsg);
+			} else {
+				$wa -> sendMessage($whatsspyWhatsAppUserNotification, $filteredMsg);
+				$wa -> sendMessageImage($whatsspyWhatsAppUserNotification, $img);
+			}
+			
+		} else {
+			// notify_actions not enabled
+			return;
+		}
+	}
+}
+
 
 function sendMessage($title, $message, $NMAKey = null, $LNKey = null, $priority = '2', $image = null) {
 	if($NMAKey != null && $NMAKey != '') {
@@ -138,6 +189,52 @@ function fixTimezone($timestamp) {
 		}
 	}
 	return $timestamp;
+}
+
+function cleanTimeIntervals($data, $type) {
+	if($type == 'weekday') {
+		$returnData = array();
+
+		$weekdays = [0,1,2,3,4,5,6];
+		$i = 0;
+		foreach ($weekdays as $weekday) {
+			// Check for missing data
+			if($weekday == (int)$data[$i]['dow']) {
+				// Set value to integer (default string when out of DB)
+				$data[$i]['dow'] = (int)$data[$i]['dow'];
+				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
+				array_push($returnData, $data[$i]);
+				$i++;
+			} else {
+				$item['dow'] = $weekday;
+				$item['count'] = 0;
+				$item['minutes'] = 0;
+				array_push($returnData, $item);
+			}
+		}
+		return $returnData;
+	} elseif($type == 'hour') {
+		$returnData = array();
+
+		$hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+		$i = 0;
+		foreach ($hours as $hour) {
+			// Check for missing data
+			if($hour == (int)$data[$i]['hour']) {
+				// Set value to integer (default string when out of DB)
+				$data[$i]['hour'] = (int)$data[$i]['hour'];
+				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
+				array_push($returnData, $data[$i]);
+				$i++;
+			} else {
+				$item['hour'] = $hour;
+				$item['count'] = 0;
+				$item['minutes'] = 0; // seconds
+				array_push($returnData, $item);
+			}
+		}
+		return $returnData;
+	}
 }
 
 function tracker_log($msg, $date = true, $newline = true) {
