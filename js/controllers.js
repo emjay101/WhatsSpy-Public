@@ -132,21 +132,21 @@ angular.module('whatsspyControllers', [])
 	$scope.barChartToolTip = function(value, type) {
 		if(value == 'weekday') {
 			return function(key, x, y, e, graph) {
-				var tooltip = '<strong>('+key+') ' + $filter('weekdayToName')(x) + '</strong><br />';
+				var tooltip = '<strong class="whatsspy-bar-chart-head">('+key+') ' + $filter('weekdayToName')(x) + '</strong><br />';
 				if(type == 'times') {
-					tooltip += '<span>opened ' +  Math.floor(y) + ' times.</span>';
+					tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  Math.floor(y) + ' times.</span>';
 				} else {
-					tooltip += '<span>' +  Math.floor(y) + ' minutes.</span>';
+					tooltip += '<span class="whatsspy-bar-chart-content">' +  Math.floor(y) + ' minutes.</span>';
 				}
 				return tooltip;   
 			}
 		} else if(value == 'hour') {
 			return function(key, x, y, e, graph) {
-				var tooltip = '<strong>' + x + ':00 - '+ x +':59</strong><br />';
+				var tooltip = '<strong class="whatsspy-bar-chart-head">' + x + ':00 - '+ x +':59</strong><br />';
 				if(type == 'times') {
-					tooltip += '<span>opened ' +  Math.floor(y) + ' times.</span>';
+					tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  Math.floor(y) + ' times.</span>';
 				} else {
-					tooltip += '<span>' +  Math.floor(y) + ' minutes.</span>';
+					tooltip += '<span class="whatsspy-bar-chart-content">' +  Math.floor(y) + ' minutes.</span>';
 				}
 				return tooltip;
 			}

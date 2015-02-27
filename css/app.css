@@ -314,6 +314,11 @@ header {
 	right: 5px;
 }
 
+.whatsspy-bar-chart-head {
+	display: inline-block;
+	text-align: center;
+}
+
 
 /**
   *  Whatsspy Compare page

@@ -271,4 +271,15 @@ function checkDB($DBH, $dbTables) {
 	return false;
 }
 
+function checkConfig() {
+	global $whatsappAuth;
+
+	// Check if config is filled in.
+	if($whatsappAuth['secret'] == '') {
+		tracker_log('[config] number and secret fields are required for the tracker to operate.');
+		exit();
+	}
+
+}
+
 ?>

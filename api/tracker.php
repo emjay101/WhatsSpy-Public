@@ -11,6 +11,10 @@
 //
 // -----------------------------------------------------------------------
 
+// DO NOT START THIS SCRIPT FROM THE CGI.
+if (PHP_SAPI !== 'cli'){ 
+	exit();
+}
 
 declare(ticks = 20);
 
@@ -192,7 +196,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	$privacy_enabled = ($time == null ? true : false);
 
 	if(!$privacy_enabled) {
-		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND ("changed_at" = to_timestamp(:time) AND "status" = :status)');
+		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND ("changed_at" = to_timestamp(:time) OR "status" = :status)');
 		$latest_statusmsg -> execute(array(':number' => $number,
 										   ':status' => $data,
 										   ':time' => (string)$time));
@@ -506,12 +510,6 @@ function track() {
 	}
 }
 
-
-// DO NOT START THIS SCRIPT FROM THE CGI.
-if (PHP_SAPI !== 'cli'){ 
-	exit();
-}
-
 // Starting the tracker
 tracker_log('------------------------------------------------------------------', false);
 tracker_log('|                    WhatsSpy Public Tracker                     |', false);
@@ -527,11 +525,8 @@ do {
 	}
 	// Upgrade DB if it's old
 	checkDBMigration($DBH);
-
-	if($whatsappAuth['secret'] == '') {
-		tracker_log('[config] number and secret fields are required for the tracker to operate.');
-		exit();
-	}
+	// Nag about config.php if it's old
+	checkConfig();
 	try {
 		// Start the tracker
 		track();
