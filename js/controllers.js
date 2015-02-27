@@ -142,7 +142,7 @@ angular.module('whatsspyControllers', [])
 			}
 		} else if(value == 'hour') {
 			return function(key, x, y, e, graph) {
-				var tooltip = '<strong class="whatsspy-bar-chart-head">' + x + ':00 - '+ x +':59</strong><br />';
+				var tooltip = '<strong class="whatsspy-bar-chart-head">('+key+') ' + x + ':00 - '+ x +':59</strong><br />';
 				if(type == 'times') {
 					tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  Math.floor(y) + ' times.</span>';
 				} else {
