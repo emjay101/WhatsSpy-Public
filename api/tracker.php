@@ -132,7 +132,9 @@ function onPresenceReceived($mynumber, $from, $type) {
 									':number' => $number,
 									':start' => date('c', $crawl_time-2)));
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
-			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
+			if($type == 'available') {
+				checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
+			}
 		}
 	}
 }
