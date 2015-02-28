@@ -118,16 +118,19 @@ function onPresenceReceived($mynumber, $from, $type) {
 			$update = $DBH->prepare('UPDATE status_history
 									SET "end" = :end WHERE number = :number
 														AND sid = :sid;');
+			// Use crawl_time -4 second for compensation of the Infratructure.
+			// End signals tend to be sent later than starting signals.
 			$update->execute(array(':number' => $number,
 							   ':sid' => $row['sid'],
-							   ':end' => date('c', $crawl_time)));
+							   ':end' => date('c', $crawl_time-4)));
 			# Create new record
 			$insert = $DBH->prepare('INSERT INTO status_history (
 			            			"status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
+			// Use crawl_time -2 second for compensation of the Infratructure.
 			$insert->execute(array(':status' => (int)$status,
 									':number' => $number,
-									':start' => date('c', $crawl_time)));
+									':start' => date('c', $crawl_time-2)));
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
 		}

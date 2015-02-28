@@ -452,6 +452,16 @@ header {
 	text-align: center;
 }
 
+.whatsspy-statistics-table-normal {
+	width: 70%;
+}
+.whatsspy-statistics-first-row {
+	min-height: 440px;
+}
+.whatsspy-statistics-piechart-control {
+	text-align: center;
+}
+
 /*
 * about page
 */

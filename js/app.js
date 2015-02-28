@@ -30,7 +30,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   })
   .otherwise({redirectTo: '/overview'});;
 })
-.controller('MainController', function($scope, $rootScope, $location, $http, $q) {
+.controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
   $rootScope.version = '1.3.0';
 
@@ -142,18 +142,22 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         $rootScope.accountData[$number.id].pictures = data[0].pictures;
         // Setup data structures for the GUI
         $rootScope.accountData[$number.id].generated = {};
-        $rootScope.accountData[$number.id].generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: '7 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_7day},
+        $rootScope.accountData[$number.id].generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_today},
+                                                                                                                    {key: '7 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_7day},
                                                                                                                     {key: '14 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_14day},
                                                                                                                     {key: 'all time', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_all}]);
-        $rootScope.accountData[$number.id].generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: '7 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_7day},
-                                                                                                                    {key: '14 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_14day},
-                                                                                                                    {key: 'all time', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_all}]);
-        $rootScope.accountData[$number.id].generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: '7 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_7day},
-                                                                                                                    {key: '14 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_14day},
-                                                                                                                    {key: 'all time', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_all}]);
-        $rootScope.accountData[$number.id].generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: '7 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_7day},
-                                                                                                                    {key: '14 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_14day},
-                                                                                                                    {key: 'all time', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_all}]);
+        $rootScope.accountData[$number.id].generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_today},
+                                                                                                                 {key: '7 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_7day},
+                                                                                                                 {key: '14 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_14day},
+                                                                                                                 {key: 'all time', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_all}]);
+        $rootScope.accountData[$number.id].generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_today},
+                                                                                                                   {key: '7 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_7day},
+                                                                                                                   {key: '14 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_14day},
+                                                                                                                   {key: 'all time', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_all}]);
+        $rootScope.accountData[$number.id].generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_today},
+                                                                                                                {key: '7 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_7day},
+                                                                                                                {key: '14 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_14day},
+                                                                                                                {key: 'all time', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_all}]);
         // Set default view
         $rootScope.accountData[$number.id].generated.showHour = false;
         $rootScope.accountData[$number.id].generated.showWeekday = true;
@@ -182,6 +186,32 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     return $dataSets;
   }
 
+  // Bar chart
+
+  $rootScope.barChartToolTip = function(value, type) {
+    if(value == 'weekday') {
+      return function(key, x, y, e, graph) {
+        var tooltip = '<strong class="whatsspy-bar-chart-head">('+key+') ' + $filter('weekdayToName')(x) + '</strong><br />';
+        if(type == 'times') {
+          tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  y.substring(0, y.length -2) + ' times.</span>';
+        } else {
+          tooltip += '<span class="whatsspy-bar-chart-content">' +  y.substring(0, y.length -2) + ' minutes.</span>';
+        }
+        return tooltip;   
+      }
+    } else if(value == 'hour') {
+      return function(key, x, y, e, graph) {
+        var tooltip = '<strong class="whatsspy-bar-chart-head">('+key+') ' + x + ':00 - '+ x +':59</strong><br />';
+        if(type == 'times') {
+          tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  y.substring(0, y.length -2) + ' times.</span>';
+        } else {
+          tooltip += '<span class="whatsspy-bar-chart-content">' +  y.substring(0, y.length -2) + ' minutes.</span>';
+        }
+        return tooltip;
+      }
+    }
+  }
+
 
   // Get all the required information
   $rootScope.refreshContent = function() {
@@ -191,6 +221,10 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 
     if($rootScope.help == null) {
       promises[1] = $rootScope.getAbout();
+    }
+
+    if($rootScope.inStatsPage == true) {
+      promises[2] = $rootScope.loadGlobalStats();
     }
     // Load any new status
     if(Object.keys($rootScope.accountData).length > 0) {

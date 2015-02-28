@@ -127,32 +127,6 @@ angular.module('whatsspyControllers', [])
 		$scope.setupTimelineDataForNumber($number);
 	}
 
-	// Bar chart
-
-	$scope.barChartToolTip = function(value, type) {
-		if(value == 'weekday') {
-			return function(key, x, y, e, graph) {
-				var tooltip = '<strong class="whatsspy-bar-chart-head">('+key+') ' + $filter('weekdayToName')(x) + '</strong><br />';
-				if(type == 'times') {
-					tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  Math.floor(y) + ' times.</span>';
-				} else {
-					tooltip += '<span class="whatsspy-bar-chart-content">' +  Math.floor(y) + ' minutes.</span>';
-				}
-				return tooltip;   
-			}
-		} else if(value == 'hour') {
-			return function(key, x, y, e, graph) {
-				var tooltip = '<strong class="whatsspy-bar-chart-head">('+key+') ' + x + ':00 - '+ x +':59</strong><br />';
-				if(type == 'times') {
-					tooltip += '<span class="whatsspy-bar-chart-content">opened ' +  Math.floor(y) + ' times.</span>';
-				} else {
-					tooltip += '<span class="whatsspy-bar-chart-content">' +  Math.floor(y) + ' minutes.</span>';
-				}
-				return tooltip;
-			}
-		}
-	}
-
 
 	// Timeline setup
 	// Angular-vis.js - This needs to be cleaned
@@ -808,8 +782,8 @@ angular.module('whatsspyControllers', [])
 	$scope.loadDataTimeLine = function(query, insertBefore) {
 		var deferred = $q.defer();
 		if($scope.timelineData != null && query == null) {
-			// Retrieve any records from the since -4 seconds. Overlap is fixed when appending the data.
-			query = '&since='+($scope.timelineData.till - 4);
+			// Retrieve any records from the since -8 seconds. Overlap is fixed when appending the data.
+			query = '&since='+($scope.timelineData.till - 8);
 		}
 		if(query === null) {
 			query = '';
@@ -866,6 +840,13 @@ angular.module('whatsspyControllers', [])
 .controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter) {
 	$scope.stats = null;
 
+	$rootScope.inStatsPage = true;
+	$scope.$on('$routeChangeStart', function(next, current) { 
+		$rootScope.inStatsPage = false;
+	});
+
+
+
 	/**
     * d3.js functions to read dataset created in app.js
     */
@@ -891,15 +872,38 @@ angular.module('whatsspyControllers', [])
 	$scope.tooltipUserStatusTime = function() {
 		return function(key, x, y, e, graph) {
 			return  '<h4 class="whatsspy-stat-head">' + key + '</h4>' +
-		        '<p>' +  $filter('timeFormat')(y.point.online_7day) + '</p>'
+		        '<p>' +  $filter('timeFormat')(y.point.seconds_7day) + '</p>'
 		}
 	}
 
-	$scope.loadGlobalStats = function() {
+	$rootScope.loadGlobalStats = function() {
 		var deferred = $q.defer();
 		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats'}).
 		success(function(data, status, headers, config) {
 			$scope.stats = data;
+			// Setup data structures for the GUI
+	        $scope.stats.generated = {};
+	        $scope.stats.generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_today},
+	        																					  {key: '7 days', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_7day},
+	                                                                                              {key: '14 days', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_14day},
+	                                                                                              {key: 'all time', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_all}]);
+	        $scope.stats.generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_today},
+	        																				   {key: '7 days', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_7day},
+	                                                                                           {key: '14 days', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_14day},
+	                                                                                           {key: 'all time', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_all}]);
+	        $scope.stats.generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_today},
+	        																					 {key: '7 days', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_7day},
+	                                                                                             {key: '14 days', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_14day},
+	                                                                                             {key: 'all time', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_all}]);
+	        $scope.stats.generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_today},
+	        																				  {key: '7 days', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_7day},
+	                                                                                          {key: '14 days', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_14day},
+	                                                                                          {key: 'all time', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_all}]);
+	        // Set default view
+        	$scope.stats.generated.showHour = false;
+        	$scope.stats.generated.showWeekday = true;
+        	$scope.stats.generated.showPieChart = 'all';
+
 			deferred.resolve(null);
 		}).
 		error(function(data, status, headers, config) {
@@ -912,7 +916,7 @@ angular.module('whatsspyControllers', [])
 	$scope.refreshContent = function() {
 		$rootScope.showLoader = true;
 		var promises = [];
-		promises[0] = $scope.loadGlobalStats();
+		promises[0] = $rootScope.loadGlobalStats();
 
 		$q.all(promises).then(function(greeting) {
 		$rootScope.showLoader = false;

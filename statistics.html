@@ -1,65 +1,351 @@
 <div class="row">
 	<div class="col-md-12">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">Global Statistics</h3>
-			</div>
-			<div class="panel-body">
-				<div class="row">
-					<div class="col-md-6">
-						<h4 class="whatsspy-stat-head">Opening WhatsApp in the last 7 days</h4>
-						<nvd3-pie-chart
-							data="stats.user_status"
-							id="pieChart-user-activities-count"
-							width="300"
-							height="300"
-							x="xFunction()"
-							y="yFunction('count_7day')"
-							margin="{left:0,top:0,bottom:0,right:0}"
-							labelType="percent"
-							tooltips="true"
-							noData="No information available"
-							tooltipcontent="tooltipUserStatusCount()"
-							showLabels="true">
-							<svg></svg>
-						</nvd3-pie-chart>
-					</div>
-					<div class="col-md-6">
-						<h4 class="whatsspy-stat-head">Online time in the last 7 days</h4>
-						<nvd3-pie-chart
-							data="stats.user_status"
-							id="pieChart-user-activities-time"
-							width="300"
-							height="300"
-							x="xFunction()"
-							y="yFunction('online_7day')"
-							margin="{left:0,top:0,bottom:0,right:0}"
-							labelType="percent"
-							tooltips="true"
-							noData="No information available"
-							tooltipcontent="tooltipUserStatusTime()"
-							showLabels="true">
-							<svg></svg>
-						</nvd3-pie-chart>
-					</div>	
-				</div>
-				Pie chart voor diff status messages/profile pics
-			</div>
+		<!-- panels here -->
+		<div class="whatsspy-no-information-data" data-ng-show="stats.global_stats.first_tracker_session == null">
+			Not enough information available ...
 		</div>
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">User Specific Statistics</h3>
-			</div>
-			<div class="panel-body">
-				<div class="row">
-					<div class="col-md-8">
-							hier bar chart voor users online/uur per persoon
+		<span data-ng-show="stats.global_stats.first_tracker_session != null">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-home" aria-hidden="true"></span> WhatsSpy Public Statistics</h3>
+						</div>
+						<div class="panel-body whatsspy-statistics-first-row">
+							<h5>Tracker status</h5>
+							<table class="table table-striped table-bordered ">
+						      <tbody>
+						        <tr>
+						          <th class="whatsspy-statistics-table-normal">Tracker sessions </th>
+						          <td>{{stats.global_stats.tracker_session_count}}</td>
+						        </tr>
+						        <tr>
+						          <th>First tracker session (start of information flow)</th>
+						          <td>{{stats.global_stats.first_tracker_session | staticDatetime}}</td>
+						        </tr>
+						       </tbody>
+						    </table>
+						    <h5>Database content</h5>
+						    <table class="table table-striped table-bordered ">
+						      <tbody>
+						        <tr>
+						          <th class="whatsspy-statistics-table-normal">Online/offline statuses gathered</th>
+						          <td>{{stats.global_stats.user_status_count}} statuses</td>
+						        </tr>
+						        <tr>
+						          <th>Total time spent on WhatsApp by all contacts</th>
+						          <td>{{stats.global_stats.user_status_count_time | timeFormat}}</td>
+						        </tr>
+						        <tr>
+						          <th>Profile pictures gathered</th>
+						          <td>{{stats.global_stats.profilepicture_count}} profile pictures</td>
+						        </tr>
+						        <tr>
+						          <th>Status messages gathered</th>
+						          <td>{{stats.global_stats.statusmessage_count}} status messages</td>
+						        </tr>
+						      </tbody>
+						    </table>
+						    <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> All information on this page does not update. You can refresh by clicking the gray timestamp in "status".
+						</div>
 					</div>
-					<div class="col-md-4">
-
+				</div>
+				<div class="col-md-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> Privacy awareness</h3>
+						</div>
+						<div class="panel-body whatsspy-statistics-first-row">
+							<h5>Privacy settings of tracked users</h5>
+							<table class="table table-striped table-bordered ">
+								<tbody>
+								<tr>
+								  <th>Privacy option</th>
+								  <th>contacts/nobody</th>
+								  <th>everyone</th>
+								</tr>
+								<tr>
+								  <td>Lastseen*</td>
+								  <td><span class="label label-danger">{{stats.global_stats.account_lastseen_privacy_enabled}} users</span></td>
+								  <td><span class="label label-success">{{stats.global_stats.account_lastseen_privacy_disabled}} users</span></td>
+								</tr>
+								<tr>
+								  <td>Status messages</td>
+								  <td><span class="label label-danger">{{stats.global_stats.account_statusmessage_privacy_enabled}} users</span></td>
+								  <td><span class="label label-success">{{stats.global_stats.account_statusmessage_privacy_disabled}} users</span></td>
+								</tr>
+								<tr>
+								  <td>Profile pictures</td>
+								  <td><span class="label label-danger">{{stats.global_stats.account_profilepic_privacy_enabled}} users</span></td>
+								  <td><span class="label label-success">{{stats.global_stats.account_profilepic_privacy_disabled}} users</span></td>
+								</tr>
+								</tbody>
+							</table>
+							<h5>Privacy changes while tracking</h5>
+							<table class="table table-striped table-bordered ">
+								<tbody>
+							        <tr>
+							          <th class="whatsspy-statistics-table-normal">Lastseen privacy changes</th>
+							          <td>{{stats.global_stats.lastseen_privacy_count}} changes</td>
+							        </tr>
+							        <tr>
+							          <th>Profile picture privacy changes</th>
+							          <td>{{stats.global_stats.profilepic_privacy_count}} changes</td>
+							        </tr>
+							        <tr>
+							          <th>Status message privacy changes</th>
+							          <td>{{stats.global_stats.statusmessage_privacy_count}} changes</td>
+							        </tr>
+								</tbody>
+							</table>
+							<small>* The lastseen option does not protect you against tracking online/offline statuses. Check this <a href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/" target="_blank">article</a> explaining the problem in detail.</small>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> WhatsApp usage (online time / opening) compared per user</h3>
+						</div>
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-md-12 whatsspy-statistics-piechart-control">
+					    				<button data-ng-disabled="stats.generated.showPieChart == '7days'" data-ng-click="stats.generated.showPieChart = '7days';" type="button" class="btn btn-info">Show 7 days</button>
+					    				<button data-ng-disabled="stats.generated.showPieChart == '14days'" data-ng-click="stats.generated.showPieChart = '14days';" type="button" class="btn btn-info">Show 14 days</button>
+					    				<button data-ng-disabled="stats.generated.showPieChart == 'all'" data-ng-click="stats.generated.showPieChart = 'all';" type="button" class="btn btn-info">Show all</button>
+									</div>
+								</div>
+							<div class="row">
+								<div class="col-md-6">
+									<span data-ng-show="stats.generated.showPieChart == 'all'">
+										<h4 class="whatsspy-stat-head">Opening WhatsApp - All</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-count-all"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('count_all')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusCount()"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+									<span data-ng-show="stats.generated.showPieChart == '7days'">
+										<h4 class="whatsspy-stat-head">Opening WhatsApp - Last 7 days</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-count-7day"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('count_7day')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusCount()"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+									<span data-ng-show="stats.generated.showPieChart == '14days'">
+										<h4 class="whatsspy-stat-head">Opening WhatsApp - Last 14 days</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-count-14day"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('count_14day')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusCount()"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+								</div>
+								<div class="col-md-6">
+									<span data-ng-show="stats.generated.showPieChart == 'all'">
+										<h4 class="whatsspy-stat-head">Online time in WhatsApp - All</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-time-all"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('seconds_all')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusTime()"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+									<span data-ng-show="stats.generated.showPieChart == '7days'">
+										<h4 class="whatsspy-stat-head">Online time in WhatsApp - Last 7 days</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-time-7day"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('seconds_7day')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusTime()"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+									<span data-ng-show="stats.generated.showPieChart == '14days'">
+										<h4 class="whatsspy-stat-head">Online time in WhatsApp - Last 14 days</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-time-14day"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('seconds_14day')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusTime()"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+								</div>	
+							</div>
+							Please note that every online session can be off by 0-4 seconds based on WhatsApp, your machine and your network activity. This means all this data is the <strong>maximum</strong> time they spent on WhatsApp.
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> WhatsApp usage (online time / opening) compared per timeunit</h3>
+						</div>
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-md-6">
+									<span data-ng-show="stats.generated.showWeekday == true">
+						    			<h4>Opening WhatsApp per weekday</h4>
+						    			<nvd3-multi-bar-chart
+									    	data="stats.generated.chart_weekday_status_count_all"
+									        id="opened-overview-graph-weekday"
+									        tooltipcontent="barChartToolTip('weekday', 'times')"
+									        width="500"
+											height="300"
+									        showXAxis="false"
+									        showYAxis="true"
+									        margin=" {top:5,bottom:5,right:0}"
+									        showLegend="true"
+									        tooltips="true"
+									        stacked="true">
+									        	<svg></svg>
+									    </nvd3-multi-bar-chart>
+									</span>
+									<span data-ng-show="stats.generated.showHour == true">
+						    			<h4>Opening WhatsApp per hour</h4>
+						    			<nvd3-multi-bar-chart
+									    	data="stats.generated.chart_hour_status_count_all"
+									        id="opened-overview-graph-hour"
+									        tooltipcontent="barChartToolTip('hour', 'times')"
+									        width="500"
+											height="300"
+									        showXAxis="false"
+									        showYAxis="true"
+									        margin=" {top:5,bottom:5,right:0}"
+									        showLegend="true"
+									        tooltips="true"
+									        stacked="true">
+									        	<svg></svg>
+									    </nvd3-multi-bar-chart>
+									</span>
+								</div>
+								<div class="col-md-6">
+									<div class="whatsspy-bar-graph-toggle">
+					    				<button data-ng-show="stats.generated.showHour != true" data-ng-click="stats.generated.showWeekday = false; stats.generated.showHour = true; " type="button" class="btn btn-info">Show per hour</button>
+					    				<button data-ng-show="stats.generated.showWeekday != true" data-ng-click="stats.generated.showWeekday = true; stats.generated.showHour = false" type="button" class="btn btn-info">Show per weekday</button>
+					    			</div>
+					    			<span data-ng-show="stats.generated.showWeekday == true">
+						    			<h4>Time on WhatsApp per weekday</h4>
+						    			<nvd3-multi-bar-chart
+									    	data="stats.generated.chart_weekday_status_time_all"
+									        id="time-overview-graph-weekday"
+									        tooltipcontent="barChartToolTip('weekday', 'minutes')"
+									        width="500"
+											height="300"
+									        showXAxis="false"
+									        showYAxis="true"
+									        margin=" {top:5,bottom:5,right:0}"
+									        showLegend="true"
+									        tooltips="true"
+									        stacked="true">
+									        	<svg></svg>
+									    </nvd3-multi-bar-chart>
+									</span>
+									<span data-ng-show="stats.generated.showHour == true">
+						    			<h4>Time on WhatsApp per hour</h4>
+						    			<nvd3-multi-bar-chart
+									    	data="stats.generated.chart_hour_status_time_all"
+									        id="time-overview-graph-hour"
+									        tooltipcontent="barChartToolTip('hour', 'minutes')"
+									        width="500"
+											height="300"
+									        showXAxis="false"
+									        showYAxis="true"
+									        margin=" {top:5,bottom:5,right:0}"
+									        showLegend="true"
+									        tooltips="true"
+									        stacked="true">
+									        	<svg></svg>
+									    </nvd3-multi-bar-chart>
+									</span>
+								</div>	
+							</div>
+							<br />
+							<br />
+						</div>
 					</div>	
 				</div>
 			</div>
-		</div>	
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Top 10 tracked users</h3>
+						</div>
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-md-6">
+									gi
+								</div>
+								<div class="col-md-6">
+									
+								</div>	
+							</div>
+						</div>
+					</div>	
+				</div>
+			</div>
+		</span>
 	</div>
 </div>

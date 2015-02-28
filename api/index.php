@@ -161,11 +161,11 @@ switch($_GET['whatsspy']) {
 										lsph.privacy as "lastseen_changed_privacy", lsph.changed_at as "lastseen_changed_privacy_updated",
 										pcph.privacy as "profilepic_changed_privacy", pcph.changed_at as "profilepic_changed_privacy_updated",
 										smph.privacy as "statusmessage_changed_privacy", smph.changed_at as "statusmessage_changed_privacy_updated",
-								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'1 day\'::INTERVAL AND "end" IS NOT NULL) "online_1day",
-								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "online_7day",
-								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'14 day\'::INTERVAL AND "end" IS NOT NULL) "online_14day",
-								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'31 day\'::INTERVAL AND "end" IS NOT NULL) "online_31day",
-								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "online_all",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'1 day\'::INTERVAL AND "end" IS NOT NULL) "online_1day",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "online_7day",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'14 day\'::INTERVAL AND "end" IS NOT NULL) "online_14day",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'31 day\'::INTERVAL AND "end" IS NOT NULL) "online_31day",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "online_all",
 								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id AND start >= NOW() - \'1 day\'::INTERVAL) "count_1day",
 								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
 								(SELECT COUNT(1) FROM status_history WHERE status = true AND number = n.id AND start >= NOW() - \'31 day\'::INTERVAL) "count_31day",
@@ -199,6 +199,10 @@ switch($_GET['whatsspy']) {
 				//
 
 				// Get status count per hour
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND number = :number AND start >= DATE_TRUNC(\'day\', NOW()) GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+				$select->execute(array(':number'=> $number));
+				$hour_status_today = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+
 				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND number = :number AND start >= NOW() - \'7 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
 				$select->execute(array(':number'=> $number));
 				$hour_status_7day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
@@ -212,6 +216,10 @@ switch($_GET['whatsspy']) {
 				$hour_status_all = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
 
 				// Get status count per weekday
+				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND number = :number AND start >= DATE_TRUNC(\'day\', NOW()) GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+				$select->execute(array(':number'=> $number));
+				$weekday_status_today = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
 				$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND number = :number AND start >= NOW() - \'7 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
 				$select->execute(array(':number'=> $number));
 				$weekday_status_7day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
@@ -228,10 +236,12 @@ switch($_GET['whatsspy']) {
 				// Set all analytics in the data structure
 				$result_advanced_analytics = array();
 
+				$result_advanced_analytics['hour_status_today'] = $hour_status_today;
 				$result_advanced_analytics['hour_status_7day'] = $hour_status_7day;
 				$result_advanced_analytics['hour_status_14day'] = $hour_status_14day;
 				$result_advanced_analytics['hour_status_all'] = $hour_status_all;
 
+				$result_advanced_analytics['weekday_status_today'] = $weekday_status_today;
 				$result_advanced_analytics['weekday_status_7day'] = $weekday_status_7day;
 				$result_advanced_analytics['weekday_status_14day'] = $weekday_status_14day;
 				$result_advanced_analytics['weekday_status_all'] = $weekday_status_all;
@@ -366,10 +376,85 @@ switch($_GET['whatsspy']) {
 		break;
 	// Get global statistics for the whole tracking DB
 	case 'getGlobalStats':
+		// General tracker info
+		$select_global = $DBH->prepare('SELECT
+											(SELECT COUNT(1) FROM tracker_history) "tracker_session_count",
+											(SELECT start FROM tracker_history ORDER BY start ASC LIMIT 1) "first_tracker_session",
+											(SELECT COUNT(1) FROM status_history WHERE status=true) "user_status_count",
+											(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) FROM status_history WHERE status=true AND "end" IS NOT NULL) "user_status_count_time",
+											(SELECT COUNT(1) FROM profilepicture_history) "profilepicture_count",
+											(SELECT COUNT(1) FROM statusmessage_history) "statusmessage_count",
+											(SELECT COUNT(1) FROM lastseen_privacy_history) "lastseen_privacy_count",
+											(SELECT COUNT(1) FROM profilepic_privacy_history) "profilepic_privacy_count",
+											(SELECT COUNT(1) FROM statusmessage_privacy_history) "statusmessage_privacy_count",
+											(SELECT COUNT(1) FROM accounts WHERE active = true AND verified = true AND lastseen_privacy = true) "account_lastseen_privacy_enabled",
+											(SELECT COUNT(1) FROM accounts WHERE active = true AND verified = true AND lastseen_privacy = false) "account_lastseen_privacy_disabled",
+											(SELECT COUNT(1) FROM accounts WHERE active = true AND verified = true AND statusmessage_privacy = true) "account_statusmessage_privacy_enabled",
+											(SELECT COUNT(1) FROM accounts WHERE active = true AND verified = true AND statusmessage_privacy = false) "account_statusmessage_privacy_disabled",
+											(SELECT COUNT(1) FROM accounts WHERE active = true AND verified = true AND profilepic_privacy = true) "account_profilepic_privacy_enabled",
+											(SELECT COUNT(1) FROM accounts WHERE active = true AND verified = true AND profilepic_privacy = false) "account_profilepic_privacy_disabled";');
+		$select_global -> execute();
+		$result_global = $select_global -> fetch(PDO::FETCH_ASSOC);
+		// Fix timezone
+		$result_global['first_tracker_session'] = fixTimezone($result_global['first_tracker_session']);
 
+
+		// Get status count per hour
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND start >= DATE_TRUNC(\'day\', NOW()) GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+		$select->execute();
+		$hour_status_today = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND start >= NOW() - \'7 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+		$select->execute();
+		$hour_status_7day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+		
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true AND start >= NOW() - \'14 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+		$select->execute();
+		$hour_status_14day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "hour" FROM status_history WHERE status = true GROUP BY TRUNC(EXTRACT(HOUR FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "hour"');
+		$select->execute();
+		$hour_status_all = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'hour');
+
+		// Get status count per weekday
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND start >= DATE_TRUNC(\'day\', NOW()) GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+		$select->execute();
+		$weekday_status_today = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND start >= NOW() - \'7 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+		$select->execute();
+		$weekday_status_7day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true AND start >= NOW() - \'14 day\'::INTERVAL GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+		$select->execute();
+		$weekday_status_14day = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+		$select = $DBH->prepare('SELECT COUNT(1) as "count", ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))/60) as "minutes", TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) as "dow" FROM status_history WHERE status = true GROUP BY TRUNC(EXTRACT(DOW FROM (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END))) ORDER BY "dow"');
+		$select->execute();
+		$weekday_status_all = cleanTimeIntervals($select->fetchAll(PDO::FETCH_ASSOC), 'weekday');
+
+
+		// Set all analytics in the data structure
+		$result_user_status_time = array();
+
+		$result_user_status_time['hour_status_today'] = $hour_status_today;
+		$result_user_status_time['hour_status_7day'] = $hour_status_7day;
+		$result_user_status_time['hour_status_14day'] = $hour_status_14day;
+		$result_user_status_time['hour_status_all'] = $hour_status_all;
+
+		$result_user_status_time['weekday_status_today'] = $weekday_status_today;
+		$result_user_status_time['weekday_status_7day'] = $weekday_status_7day;
+		$result_user_status_time['weekday_status_14day'] = $weekday_status_14day;
+		$result_user_status_time['weekday_status_all'] = $weekday_status_all;
+
+		// user data for pie charts
 		$select_user_status = $DBH->prepare('SELECT n.id, n.name,
-								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
-								(SELECT EXTRACT(\'epoch\' FROM date_trunc(\'second\', SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "online_7day"
+								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND status = true AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "seconds_7day",
+								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND status = true AND start >= NOW() - \'14 day\'::INTERVAL) "count_14day",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'14 day\'::INTERVAL AND "end" IS NOT NULL) "seconds_14day",
+								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND status = true) "count_all",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id AND "end" IS NOT NULL) "seconds_all"
 								FROM accounts n
 								WHERE n.active = true AND n.verified=true
 								ORDER BY n.name ASC');
@@ -377,7 +462,7 @@ switch($_GET['whatsspy']) {
 		$result_user_status = $select_user_status->fetchAll(PDO::FETCH_ASSOC);
 
 
-		echo json_encode(['user_status' => $result_user_status]);
+		echo json_encode(['global_stats' => $result_global, 'user_status_analytics_user' => $result_user_status, 'user_status_analytics_time' => $result_user_status_time]);
 		break;
 	case 'getAbout':
 		echo file_get_contents($whatsspyAboutQAUrl);

@@ -1,7 +1,7 @@
 <?php
 // -----------------------------------------------------------------------
 //	Whatsspy tracker
-//	@Maikel Zweerink
+//	@Author Maikel Zweerink
 //	Data.php - Contains required data for the tracker.
 // -----------------------------------------------------------------------
 
