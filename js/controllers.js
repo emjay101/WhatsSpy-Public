@@ -869,10 +869,10 @@ angular.module('whatsspyControllers', [])
 		}
 	}
 
-	$scope.tooltipUserStatusTime = function() {
+	$scope.tooltipUserStatusTime = function(prop) {
 		return function(key, x, y, e, graph) {
 			return  '<h4 class="whatsspy-stat-head">' + key + '</h4>' +
-		        '<p>' +  $filter('timeFormat')(y.point.seconds_7day) + '</p>'
+		        '<p>' +  $filter('timeFormat')(y.point[prop]) + '</p>'
 		}
 	}
 
@@ -902,7 +902,10 @@ angular.module('whatsspyControllers', [])
 	        // Set default view
         	$scope.stats.generated.showHour = false;
         	$scope.stats.generated.showWeekday = true;
-        	$scope.stats.generated.showPieChart = 'all';
+        	$scope.stats.generated.showPieChart = 'today';
+
+        	$scope.stats.generated.top10DayChoice = 'today';
+        	$scope.stats.generated.top10TimeChoice = 'alltime';
 
 			deferred.resolve(null);
 		}).

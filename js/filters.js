@@ -105,7 +105,7 @@ angular.module('whatsspyFilters', [])
 .filter('emptyName', function () {
 	return function (value) {
 		if(value == null) {
-			return 'Unknown contact';
+			return 'No name';
 		} else {
 			return value;
 		}

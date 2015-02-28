@@ -2,7 +2,8 @@
 	<div class="col-md-12">
 		<!-- panels here -->
 		<div class="whatsspy-no-information-data" data-ng-show="stats.global_stats.first_tracker_session == null">
-			Not enough information available ...
+			<span data-ng-show="showLoader == false">Not enough information available ...</span>
+			<span data-ng-show="showLoader == true">Loading information ...</span>
 		</div>
 		<span data-ng-show="stats.global_stats.first_tracker_session != null">
 			<div class="row">
@@ -112,6 +113,7 @@
 						<div class="panel-body">
 							<div class="row">
 								<div class="col-md-12 whatsspy-statistics-piechart-control">
+					    				<button data-ng-disabled="stats.generated.showPieChart == 'today'" data-ng-click="stats.generated.showPieChart = 'today';" type="button" class="btn btn-info">Show today</button>
 					    				<button data-ng-disabled="stats.generated.showPieChart == '7days'" data-ng-click="stats.generated.showPieChart = '7days';" type="button" class="btn btn-info">Show 7 days</button>
 					    				<button data-ng-disabled="stats.generated.showPieChart == '14days'" data-ng-click="stats.generated.showPieChart = '14days';" type="button" class="btn btn-info">Show 14 days</button>
 					    				<button data-ng-disabled="stats.generated.showPieChart == 'all'" data-ng-click="stats.generated.showPieChart = 'all';" type="button" class="btn btn-info">Show all</button>
@@ -132,7 +134,25 @@
 											labelType="percent"
 											tooltips="true"
 											noData="No information available"
-											tooltipcontent="tooltipUserStatusCount()"
+											tooltipcontent="tooltipUserStatusCount('count_all')"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+									<span data-ng-show="stats.generated.showPieChart == 'today'">
+										<h4 class="whatsspy-stat-head">Opening WhatsApp - Today</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-count-today"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('count_today')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusCount('count_today')"
 											showLabels="true">
 											<svg></svg>
 										</nvd3-pie-chart>
@@ -150,7 +170,7 @@
 											labelType="percent"
 											tooltips="true"
 											noData="No information available"
-											tooltipcontent="tooltipUserStatusCount()"
+											tooltipcontent="tooltipUserStatusCount('count_7day')"
 											showLabels="true">
 											<svg></svg>
 										</nvd3-pie-chart>
@@ -168,7 +188,7 @@
 											labelType="percent"
 											tooltips="true"
 											noData="No information available"
-											tooltipcontent="tooltipUserStatusCount()"
+											tooltipcontent="tooltipUserStatusCount('count_14day')"
 											showLabels="true">
 											<svg></svg>
 										</nvd3-pie-chart>
@@ -188,7 +208,25 @@
 											labelType="percent"
 											tooltips="true"
 											noData="No information available"
-											tooltipcontent="tooltipUserStatusTime()"
+											tooltipcontent="tooltipUserStatusTime('seconds_all')"
+											showLabels="true">
+											<svg></svg>
+										</nvd3-pie-chart>
+									</span>
+									<span data-ng-show="stats.generated.showPieChart == 'today'">
+										<h4 class="whatsspy-stat-head">Online time in WhatsApp - Today</h4>
+										<nvd3-pie-chart
+											data="stats.user_status_analytics_user"
+											id="pieChart-user-activities-time-today"
+											width="300"
+											height="300"
+											x="xFunction()"
+											y="yFunction('seconds_today')"
+											margin="{left:0,top:15,bottom:0,right:0}"
+											labelType="percent"
+											tooltips="true"
+											noData="No information available"
+											tooltipcontent="tooltipUserStatusTime('seconds_today')"
 											showLabels="true">
 											<svg></svg>
 										</nvd3-pie-chart>
@@ -206,7 +244,7 @@
 											labelType="percent"
 											tooltips="true"
 											noData="No information available"
-											tooltipcontent="tooltipUserStatusTime()"
+											tooltipcontent="tooltipUserStatusTime('seconds_7day')"
 											showLabels="true">
 											<svg></svg>
 										</nvd3-pie-chart>
@@ -224,7 +262,7 @@
 											labelType="percent"
 											tooltips="true"
 											noData="No information available"
-											tooltipcontent="tooltipUserStatusTime()"
+											tooltipcontent="tooltipUserStatusTime('seconds_14day')"
 											showLabels="true">
 											<svg></svg>
 										</nvd3-pie-chart>
@@ -336,10 +374,51 @@
 						<div class="panel-body">
 							<div class="row">
 								<div class="col-md-6">
-									gi
+									<h4>Top 10 most active users per day - {{stats.generated.top10DayChoice}}</h4>
+									<button data-ng-disabled="stats.generated.top10DayChoice == 'today'" data-ng-click="stats.generated.top10DayChoice = 'today';" type="button" class="btn btn-info">Today</button>
+									<button data-ng-disabled="stats.generated.top10DayChoice == 'yesterday'" data-ng-click="stats.generated.top10DayChoice = 'yesterday';" type="button" class="btn btn-info">Yesterday</button>
+									<button data-ng-disabled="stats.generated.top10DayChoice == '2days_ago'" data-ng-click="stats.generated.top10DayChoice = '2days_ago';" type="button" class="btn btn-info">2 days ago</button>
+									<button data-ng-disabled="stats.generated.top10DayChoice == '3days_ago'" data-ng-click="stats.generated.top10DayChoice = '3days_ago';" type="button" class="btn btn-info">3 days ago</button>
+									<button data-ng-disabled="stats.generated.top10DayChoice == '4days_ago'" data-ng-click="stats.generated.top10DayChoice = '4days_ago';" type="button" class="btn btn-info">4 days ago</button>
+									<br />
+									<br />
+									<table class="table table-striped table-bordered ">
+										<tbody>
+										<tr>
+										  <th>Tracked contact</th>
+										  <th>Time online</th>
+										  <th>Opened WA</th>
+										</tr>
+										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10DayChoice]">
+										  <td><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</td>
+										  <td>{{user.online | timeFormat}}</td>
+										  <td>{{user.count}} times</td>
+										</tr>
+										</tbody>
+									</table>
 								</div>
 								<div class="col-md-6">
-									
+									<h4>Top 10 most active users in total - {{stats.generated.top10TimeChoice}}</h4>
+									<button data-ng-disabled="stats.generated.top10TimeChoice == 'alltime'" data-ng-click="stats.generated.top10TimeChoice = 'alltime';" type="button" class="btn btn-info">All</button>
+									<button data-ng-disabled="stats.generated.top10TimeChoice == '31days'" data-ng-click="stats.generated.top10TimeChoice = '31days';" type="button" class="btn btn-info">31 days</button>
+									<button data-ng-disabled="stats.generated.top10TimeChoice == '7days'" data-ng-click="stats.generated.top10TimeChoice = '7days';" type="button" class="btn btn-info">7 days</button>
+									<button data-ng-disabled="stats.generated.top10TimeChoice == '24hours'" data-ng-click="stats.generated.top10TimeChoice = '24hours';" type="button" class="btn btn-info">24 hours</button>
+									<br />
+									<br />
+									<table class="table table-striped table-bordered ">
+										<tbody>
+										<tr>
+										  <th>Tracked contact</th>
+										  <th>Time online</th>
+										  <th>Opened WA</th>
+										</tr>
+										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10TimeChoice]">
+										  <td><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</td>
+										  <td>{{user.online | timeFormat}}</td>
+										  <td>{{user.count}} times</td>
+										</tr>
+										</tbody>
+									</table>
 								</div>	
 							</div>
 						</div>

@@ -449,6 +449,8 @@ switch($_GET['whatsspy']) {
 
 		// user data for pie charts
 		$select_user_status = $DBH->prepare('SELECT n.id, n.name,
+								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND status = true AND start >= DATE_TRUNC(\'day\', NOW())) "count_today",
+								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= DATE_TRUNC(\'day\', NOW()) AND "end" IS NOT NULL) "seconds_today",
 								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND status = true AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
 								(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= n.id  AND start >= NOW() - \'7 day\'::INTERVAL AND "end" IS NOT NULL) "seconds_7day",
 								(SELECT COUNT(1) FROM status_history WHERE number = n.id AND status = true AND start >= NOW() - \'14 day\'::INTERVAL) "count_14day",
@@ -461,8 +463,130 @@ switch($_GET['whatsspy']) {
 		$select_user_status -> execute();
 		$result_user_status = $select_user_status->fetchAll(PDO::FETCH_ASSOC);
 
+		// Top 10 setup
+		$result_top10 = array();
 
-		echo json_encode(['global_stats' => $result_global, 'user_status_analytics_user' => $result_user_status, 'user_status_analytics_time' => $result_user_status_time]);
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= DATE_TRUNC(\'day\', NOW()) 
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['today'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'1 day\'::INTERVAL)) 
+							        	AND start < DATE_TRUNC(\'day\', NOW()) 
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['yesterday'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'2 day\'::INTERVAL)) 
+							        	AND start < DATE_TRUNC(\'day\', (NOW() - \'1 day\'::INTERVAL)) 
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['2days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'3 day\'::INTERVAL)) 
+							        	AND start < DATE_TRUNC(\'day\', (NOW() - \'2 day\'::INTERVAL)) 
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['3days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'4 day\'::INTERVAL)) 
+							        	AND start < DATE_TRUNC(\'day\', (NOW() - \'3 day\'::INTERVAL)) 
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['4days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= NOW() - \'1 day\'::INTERVAL
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['24hours'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= NOW() - \'7 day\'::INTERVAL
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['7days'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND start >= NOW() - \'7 day\'::INTERVAL
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['31days'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['alltime'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		echo json_encode(['global_stats' => $result_global, 'top10_users' => $result_top10, 'user_status_analytics_user' => $result_user_status, 'user_status_analytics_time' => $result_user_status_time]);
 		break;
 	case 'getAbout':
 		echo file_get_contents($whatsspyAboutQAUrl);
