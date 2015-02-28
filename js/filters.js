@@ -137,9 +137,9 @@ angular.module('whatsspyFilters', [])
               return str;
             } 
 
-            if(remainingSec > 43200) {
-              str += Math.floor(remainingSec / 43200) + 'd ';
-              remainingSec = remainingSec % 43200;
+            if(remainingSec > 86400) {
+              str += Math.floor(remainingSec / 86400) + 'd ';
+              remainingSec = remainingSec % 86400;
             }
 
             if(remainingSec > 3600) {
