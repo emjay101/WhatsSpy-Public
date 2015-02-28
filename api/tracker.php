@@ -448,7 +448,7 @@ function track() {
 		$tick_start = microtime(true);
 		$wa->pollMessage();
 		$tick_end = microtime(true);
-		tracker_log('[poll #'.$pollCount.'] Tracking '. count($tracking_numbers) . ' users.');
+		tracker_log('[poll #'.$pollCount.'] Tracking '. count($tracking_numbers) . ' users.'."\r", true, false);
 
 		//	1) LAST SEEN PRIVACY
 		//
