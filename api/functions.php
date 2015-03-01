@@ -220,7 +220,7 @@ function cleanTimeIntervals($data, $type) {
 		$i = 0;
 		foreach ($hours as $hour) {
 			// Check for missing data
-			if($hour == (int)$data[$i]['hour']) {
+			if($hour == (int)@$data[$i]['hour']) {
 				// Set value to integer (default string when out of DB)
 				$data[$i]['hour'] = (int)$data[$i]['hour'];
 				$data[$i]['minutes'] = (int)$data[$i]['minutes'];

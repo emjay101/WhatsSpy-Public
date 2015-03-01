@@ -96,12 +96,16 @@ function onPresenceReceived($mynumber, $from, $type) {
 	$number = explode("@", $from)[0];
 	// $type is either "available" or "unavailable"
 	$status = ($type == 'available' ? true : false);
-	$latest_status = $DBH->prepare('SELECT "sid", "status" FROM status_history WHERE "number"=:number AND "end" IS NULL');
+	$latest_status = $DBH->prepare('SELECT "sid", "status", ROUND(EXTRACT(\'epoch\' FROM "start")) as "start" FROM status_history WHERE "number"=:number AND "end" IS NULL');
 	$latest_status -> execute(array(':number' => $number));
 
-
+	$real_time = $crawl_time;
 	if($latest_status -> rowCount() == 0) {
 		// Insert new record
+		if($status == true) {
+			// Once a user comes online, you will be notified by WhatsApp within 2-3 seconds.
+			$real_time = $real_time - 3;
+		}
 	  	$insert = $DBH->prepare('INSERT INTO status_history ("status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
 		$insert->execute(array(':status' => (int)$status,
@@ -115,22 +119,33 @@ function onPresenceReceived($mynumber, $from, $type) {
 		# Latest status is different from the current status    : End record and start new one
 		if($row['status'] != $status) {
 			# End current record
+			if($row['status'] == true) {
+				// Once a user goes offline, you will be notified by WhatsApp within 8-12 seconds.
+				// Only adjust if the starting time allows this.
+				// You can fiddle around with these settings
+				if($row['start'] < ($real_time - 12)) {
+					$real_time = $real_time - 12;
+				} elseif($row['start'] < ($real_time - 8)) {
+					$real_time = $real_time - 8;
+				} else {
+					// It seems like the timing is off, assume small session of 10 seconds.
+					$real_time = $row['start'] + 10;
+				}
+			}
 			$update = $DBH->prepare('UPDATE status_history
 									SET "end" = :end WHERE number = :number
 														AND sid = :sid;');
-			// Use crawl_time -4 second for compensation of the Infratructure.
-			// End signals tend to be sent later than starting signals.
+
 			$update->execute(array(':number' => $number,
 							   ':sid' => $row['sid'],
-							   ':end' => date('c', $crawl_time-4)));
+							   ':end' => date('c', $real_time)));
 			# Create new record
 			$insert = $DBH->prepare('INSERT INTO status_history (
 			            			"status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
-			// Use crawl_time -2 second for compensation of the Infratructure.
 			$insert->execute(array(':status' => (int)$status,
 									':number' => $number,
-									':start' => date('c', $crawl_time-2)));
+									':start' => date('c', $real_time)));
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 			if($type == 'available') {
 				checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
@@ -335,6 +350,16 @@ function verifyTrackingUsers() {
 	}
 }
 
+function resetSocket() {
+	global $wa;
+	// End any running record where an user is online
+	tracker_log('[session] Resetting WhatsApp session (planned).');
+	// Kill current conecction and login.
+	$wa -> disconnect();
+	$wa = null;
+	setupWhatsappHandler();
+}
+
 function retrieveTrackingUsers($clear = false) {
 	global $DBH, $wa, $tracking_numbers;
 	tracker_log('[accounts] Syncing accounts with database. ');
@@ -448,7 +473,7 @@ function track() {
 		$tick_start = microtime(true);
 		$wa->pollMessage();
 		$tick_end = microtime(true);
-		tracker_log('[poll #'.$pollCount.'] Tracking '. count($tracking_numbers) . ' users.'."\r", true, false);
+		tracker_log('[poll #'.$pollCount.'] Tracking '. count($tracking_numbers) . ' users.       '."\r", true, false);
 
 		//	1) LAST SEEN PRIVACY
 		//
@@ -490,7 +515,15 @@ function track() {
 			retrieveTrackingUsers(true);
 		}
 
-		//	5) DATABASE ACCOUNT VERIFY CHECK
+		//  5) SOCKET RESET AND LOGIN
+		//
+		// Disconnect and reconnect with whatsapp to prevent dead tracker
+		if($pollCount % calculateTick($tracking_ticks['reset-socket']) == calculateTick($tracking_ticks['reset-socket']-40)) {
+			resetSocket();
+			retrieveTrackingUsers(false);
+		}
+
+		//	6) DATABASE ACCOUNT VERIFY CHECK
 		//
 		// Verify any freshly inserted accounts and check if there really whatsapp users.
 		// Check everey 5 minutes.
@@ -499,11 +532,11 @@ function track() {
 			verifyTrackingUsers();
 		}
 
-		//	6) WHATSAPP PING
+		//	7) WHATSAPP PING
 		//
 		// Keep connection alive (<300s)
 		if($pollCount % calculateTick($tracking_ticks['keep-alive']) == 0) {
-			tracker_log('[keep-alive] Ping sent');
+			tracker_log('[keep-alive] Ping sent to WhatsApp server.');
 			$wa->sendPing();
 		}
 		// usage of 39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa
