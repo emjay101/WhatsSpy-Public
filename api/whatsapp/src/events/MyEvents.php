@@ -3,7 +3,6 @@ require 'AllEvents.php';
 
 class MyEvents extends AllEvents
 {
-
     /**
      * This is a list of all current events. Uncomment the ones you wish to listen to.
      * Every event that is uncommented - should then have a function below.
@@ -85,5 +84,4 @@ class MyEvents extends AllEvents
     {
         echo "<p>Booo!, Phone number $mynumber is disconnected!</p>";
     }
-
 }

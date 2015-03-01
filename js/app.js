@@ -32,7 +32,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.3.4';
+  $rootScope.version = '1.3.5';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -91,7 +91,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 
   $rootScope.getAbout = function() {
   var deferred = $q.defer();
-  $http({method: 'GET', url: 'api/?whatsspy=getAbout'}).
+  $http({method: 'GET', url: 'api/?whatsspy=getAbout&v='+ $rootScope.version}).
     success(function(data, status, headers, config) {
       $rootScope.newestVersion = data.version;
       $rootScope.help = data.help;

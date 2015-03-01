@@ -91,6 +91,9 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 }
 
 // General change retrieving
+// This is called when:
+// - the user comes online/offline
+// - the first time you send a subscription.
 function onPresenceReceived($mynumber, $from, $type) {
 	global $DBH, $wa, $crawl_time;
 	$number = explode("@", $from)[0];
@@ -353,7 +356,7 @@ function verifyTrackingUsers() {
 function resetSocket() {
 	global $wa;
 	// End any running record where an user is online
-	tracker_log('[session] Resetting WhatsApp session (planned).');
+	tracker_log('[refresh] Resetting socket to ensure a working connection.');
 	// Kill current conecction and login.
 	$wa -> disconnect();
 	$wa = null;
@@ -386,7 +389,7 @@ function setupWhatsappHandler() {
 	global $wa, $whatsappAuth;
 	//bind event handler & tracker_login
 	// Setup new Whatsapp session
-	$wa = new WhatsProt($whatsappAuth['number'], "", "WhatsApp", false);
+	$wa = new WhatsProt($whatsappAuth['number'], "WhatsApp", false);
 	$wa->eventManager()->bind('onGetRequestLastSeen', 'onGetRequestLastSeen');
 	$wa->eventManager()->bind('onGetError', 'onGetError');
 	$wa->eventManager()->bind('onDisconnect', 'onDisconnect');
@@ -554,7 +557,7 @@ tracker_log('|                    WhatsSpy Public Tracker                     |'
 tracker_log('|                        Proof of Concept                        |', false);
 tracker_log('|              Check gitlab.maikel.pro for more info             |', false);
 tracker_log('------------------------------------------------------------------', false);
-sleep(2);
+sleep(3);
 do {
 	// Check database
 	if(!checkDB($DBH, $dbTables)) {

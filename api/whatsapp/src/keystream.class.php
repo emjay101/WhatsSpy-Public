@@ -27,7 +27,7 @@ class KeyStream
     public static function GenerateKeys($password, $nonce)
     {
         $array  = array(
-            "key",//placeholders
+            "key", //placeholders
             "key",
             "key",
             "key"

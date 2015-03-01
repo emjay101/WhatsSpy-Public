@@ -1,8 +1,6 @@
 <?php
-
 class rc4
 {
-
     private $s;
     private $i;
     private $j;
@@ -42,7 +40,6 @@ class rc4
         $this->s[$i] = $this->s[$j];
         $this->s[$j] = $c;
     }
-
 }
 
 // DEPRECATED: WAUTH-1

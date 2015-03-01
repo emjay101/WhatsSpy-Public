@@ -25,6 +25,7 @@ CREATE TABLE accounts
   verified boolean NOT NULL DEFAULT false,
   statusmessage_privacy boolean NOT NULL DEFAULT false,
   profilepic_privacy boolean NOT NULL DEFAULT false,
+  notify_actions boolean NOT NULL DEFAULT false,
   CONSTRAINT pk_phone_id PRIMARY KEY (id)
 )
 WITH (

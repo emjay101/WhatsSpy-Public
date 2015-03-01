@@ -101,6 +101,7 @@ switch($_GET['whatsspy']) {
 		break;
 	// Get global statistics of your whatsspy database.
 	// These quries are optimised to perform <2 seconds on an Raspberry Pi.
+	// This is why all the contact data is lazy-loaded. Querying for all status data can cost over 60 seconds for 10 contacts and 7 days of data.
 	case 'getStats':
 		// Because this will be the first call for the GUI, we will only check it here.
 		// Upgrade DB if it's old:
@@ -589,7 +590,32 @@ switch($_GET['whatsspy']) {
 		echo json_encode(['global_stats' => $result_global, 'top10_users' => $result_top10, 'user_status_analytics_user' => $result_user_status, 'user_status_analytics_time' => $result_user_status_time]);
 		break;
 	case 'getAbout':
-		echo file_get_contents($whatsspyAboutQAUrl);
+		if(!isset($_GET['v'])) {
+			echo json_encode(['error' => 'Missing version', 'code' => 400]);
+			exit();
+		} else {
+			// The Q&A is different for the versions:
+			// - v1.2.0 (Internet Explorer bugs present)
+			// - v1.3.0 (Different timing in the tracker)
+			// This information is to send a version specific Q&A.
+			$postdata = http_build_query(
+			    array(
+			        'agent' => $_SERVER['HTTP_USER_AGENT'],
+			        'lang' => $_SERVER['HTTP_ACCEPT_LANGUAGE'],
+			        'version' => $_GET['v']
+			    )
+			);
+			$opts = array('http' =>
+			    array(
+			        'method'  => 'POST',
+			        'header'  => 'Content-type: application/x-www-form-urlencoded',
+			        'content' => $postdata
+			    )
+			);
+			$context  = stream_context_create($opts);
+			echo file_get_contents($whatsspyAboutQAUrl, false, $context);
+			// Auto update?
+		}
 		break;
 	default:
 		echo json_encode(['error' => 'Unknown action!', 'code' => 400]);
