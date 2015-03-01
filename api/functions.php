@@ -203,6 +203,7 @@ function cleanTimeIntervals($data, $type) {
 				// Set value to integer (default string when out of DB)
 				$data[$i]['dow'] = (int)$data[$i]['dow'];
 				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
+				$data[$i]['count'] = (int)$data[$i]['count'];
 				array_push($returnData, $data[$i]);
 				$i++;
 			} else {
@@ -224,6 +225,7 @@ function cleanTimeIntervals($data, $type) {
 				// Set value to integer (default string when out of DB)
 				$data[$i]['hour'] = (int)$data[$i]['hour'];
 				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
+				$data[$i]['count'] = (int)$data[$i]['count'];
 				array_push($returnData, $data[$i]);
 				$i++;
 			} else {
