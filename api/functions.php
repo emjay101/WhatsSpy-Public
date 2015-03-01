@@ -199,7 +199,7 @@ function cleanTimeIntervals($data, $type) {
 		$i = 0;
 		foreach ($weekdays as $weekday) {
 			// Check for missing data
-			if($weekday == (int)$data[$i]['dow']) {
+			if($weekday == (int)@$data[$i]['dow']) {
 				// Set value to integer (default string when out of DB)
 				$data[$i]['dow'] = (int)$data[$i]['dow'];
 				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
