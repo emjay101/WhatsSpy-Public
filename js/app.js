@@ -32,7 +32,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.3.5';
+  $rootScope.version = '1.3.6';
 
   $('[data-toggle="tooltip"]').tooltip();
 

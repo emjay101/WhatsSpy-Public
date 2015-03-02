@@ -862,10 +862,10 @@ angular.module('whatsspyControllers', [])
 		};
 	}
 
-	$scope.tooltipUserStatusCount = function() {
+	$scope.tooltipUserStatusCount = function(prop) {
 		return function(key, x, y, e, graph) {
 			return  '<h4 class="whatsspy-stat-head">' + key + '</h4>' +
-		        '<p>' +  y.point.count_7day + ' times</p>'
+		        '<p>' +  y.point[prop] + ' times</p>'
 		}
 	}
 
