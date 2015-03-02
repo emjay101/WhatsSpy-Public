@@ -33,7 +33,7 @@ $tracking_ticks = ['lastseen' 		=> 60*60*2,			// Every 2 hours
 			       'profile-pic' 	=> 60*60*4,			// Every 4 hours
 			       'refresh-db' 	=> 60*60*1,			// Every hour (cannot be lower than 81 seconds)
 			       'verify-check' 	=> 60*5,			// Every 5 minutes
-			       'reset-socket' 	=> 60*60*24,		// Every 24 hours  (cannot be lower than 40 seconds)
+			       'reset-socket' 	=> 60*60*32,		// Every 32 hours  (cannot be lower than 40 seconds)
 			       'keep-alive' 	=> 60*2];			// Every 2 minutes
 
 ?>
