@@ -699,6 +699,7 @@ angular.module('whatsspyControllers', [])
 })
 .controller('TimelineController', function($scope, $rootScope, $q, $http, $timeout) {
 	$scope.timelineData = null;
+	$scope.lastRequiredSid = 0;
 	$rootScope.liveFeed = null;
 
 	$scope.showActivityTimeline = true;
@@ -723,14 +724,32 @@ angular.module('whatsspyControllers', [])
 		$timeout(function(){$scope.setStatusToDefault($item);}, 4000);
 	}
 
-	$scope.isStatusPresent = function($status) {
+	$scope.isStatusPresentAndUpdateEnd = function($status) {
 		for (var i = $scope.timelineData.userstatus.length - 1; i >= 0; i--) {
 			if($scope.timelineData.userstatus[i].sid == $status.sid) {
+				// make sure the end record is set
+				if($scope.timelineData.userstatus[i].end == null && $status.end != null) {
+					$scope.timelineData.userstatus[i].new = true;
+					$scope.setStatusTimeout($scope.timelineData.userstatus[i]);
+					$scope.timelineData.userstatus[i].end = $status.end;
+				}
 				return true;
 			}
 		};
 		return false;
 	}
+
+	$scope.findLastRequiredSid = function($data) {
+		var result = 0;
+		for(var i = 0; i < $data.length; i++) {
+			if($data[i].end == null) {
+				result = $data[i].sid;
+			}
+		}
+		return result;
+	}
+
+
 
 	$scope.appendToTimelineFront = function($data) {
 		// Activities
@@ -742,17 +761,26 @@ angular.module('whatsspyControllers', [])
 		}
 		// Userstatus
 		for(var i = 0; i < $data.userstatus.length; i++) {
-			// Add UI feedback
-			$data.userstatus[i].new = true;
-			$scope.setStatusTimeout($data.userstatus[i]);
-			if(!$scope.isStatusPresent($data.userstatus[i])) {
+			// Do not add overlap again
+			// This might be a existing record which we want to update the "end" status.
+			if(!$scope.isStatusPresentAndUpdateEnd($data.userstatus[i])) {
+				// Add UI feedback
+				$data.userstatus[i].new = true;
+				$scope.setStatusTimeout($data.userstatus[i]);
+				// Add first record
 				$scope.timelineData.userstatus.unshift($data.userstatus[i]);
+				// Remove last record
+				$scope.timelineData.userstatus.pop();
+			} 
+			if($data.userstatus[i].end == null) {
+				$scope.lastRequiredSid = $data.userstatus[i].sid;
 			}
 		}
 
 		$scope.timelineData.till = $data.till;
 	}
 
+	// This function is only called for activities, not statuses
 	$scope.appendToTimelineBack = function($data) {
 		// Activities
 		for(var i = 0; i < $data.activity.length; i++) {
@@ -766,9 +794,9 @@ angular.module('whatsspyControllers', [])
 		$scope.timelineData.since = $data.since;
 	}
 
-	$scope.requestOlderData = function() {
+	$scope.requestOlderActivityData = function() {
 		if($scope.timelineData != null) {
-			$scope.refreshContent('&till='+$scope.timelineData.since);
+			$scope.refreshContent('&activities_till='+$scope.timelineData.since);
 		}
 	}
 
@@ -779,25 +807,23 @@ angular.module('whatsspyControllers', [])
 		}
 	});
 
-	$scope.loadDataTimeLine = function(query, insertBefore) {
+	$scope.loadDataTimeLine = function(query) {
 		var deferred = $q.defer();
-		if($scope.timelineData != null && query == null) {
-			// Retrieve any records from the since -8 seconds. Overlap is fixed when appending the data.
-			query = '&since='+($scope.timelineData.till - 8);
-		}
 		if(query === null) {
 			query = '';
 		}
-		if(insertBefore == null) {
-			insertBefore = true;
-		}
 		$http({method: 'GET', url: 'api/?whatsspy=getTimelineStats' + query}).
 		success(function(data, status, headers, config) {
+			// init load (type=init)
 			if($scope.timelineData == null) {
 				$scope.timelineData = data;
+				$scope.lastRequiredSid = $scope.findLastRequiredSid($scope.timelineData.userstatus);
+			// update or history load
 			} else {
-				if(data.till == undefined) {
+				// Load to the end of activities
+				if(data.type == 'activities_till') {
 					$scope.appendToTimelineBack(data);
+				// Load to front of activities & statuses (type=since)
 				} else {
 					$scope.appendToTimelineFront(data);
 				}
@@ -831,7 +857,7 @@ angular.module('whatsspyControllers', [])
 	$scope.refreshContent(null);
 
 	$scope.liveTimeline = function() {
-		$scope.refreshContent(null);
+		$scope.refreshContent('&activities_since='+$scope.timelineData.till+'&sid_status='+$scope.lastRequiredSid);
 		$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 	}
 

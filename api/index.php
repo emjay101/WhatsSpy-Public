@@ -111,8 +111,7 @@ switch($_GET['whatsspy']) {
 										smh.status as "last_statusmessage",
 										pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
 								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
-								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online",
-								(SELECT date_trunc(\'second\', SUM("end" - "start")) as "result" FROM status_history WHERE status = true AND number= n.id  AND "end" IS NOT NULL) "resultall"
+								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online"
 								FROM accounts n
 								LEFT JOIN profilepicture_history pph
 									ON n.id = pph.number AND pph.changed_at = (SELECT changed_at FROM profilepicture_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
@@ -122,8 +121,6 @@ switch($_GET['whatsspy']) {
 								ORDER BY n.name ASC');
 		$select -> execute();
 		$result = array();
-
-		// Quick fix, need better solution
 		foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $account) {
 			$account['profilepic_updated'] = fixTimezone($account['profilepic_updated']);
 			$account['latest_online'] = fixTimezone($account['latest_online']);			
@@ -186,7 +183,6 @@ switch($_GET['whatsspy']) {
 				$select->execute(array(':number'=> $number));
 				$result_user = null;
 
-				// Quick fix, need better solution
 				foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $userProp) {
 					$userProp['lastseen_changed_privacy_updated'] = fixTimezone($userProp['lastseen_changed_privacy_updated']);
 					$userProp['profilepic_changed_privacy_updated'] = fixTimezone($userProp['profilepic_changed_privacy_updated']);
@@ -299,22 +295,34 @@ switch($_GET['whatsspy']) {
 	// Get timeline statistics
 	case 'getTimelineStats':
 		$data = array();
-		$timespan = 60*60*12;
-		$since_activity = (time() - ($timespan*8)); // 4 days
-		$since_users = (time() - $timespan); // 12 hours
-		$till = time(); // Until now
+		// Select by default 5 days of activities
+		$since_activity = (time() - (60*60*24*5));
+		// Select by default 12 hours of statuses
+		$sid_status = 0;
+		// Select till now
+		$till = time();
+		// Return statuses?
+		$return_statuses = true;
+		$type = 'init';
 
-		if(isset($_GET['since']) && is_numeric($_GET['since'])) {
-			$since_activity = $_GET['since'];
-			$since_users = $_GET['since'];
+		// Set a since if given
+		if(isset($_GET['activities_since']) && is_numeric($_GET['activities_since']) &&
+		   isset($_GET['sid_status']) && is_numeric($_GET['sid_status']) ) {
+			$since_activity = $_GET['activities_since'];
+			$sid_status = $_GET['sid_status'];
+			$type = 'since';
 		}
-		// Till only works for Activities, NOT STATUS
-		// till overrules since.
-		if(isset($_GET['till']) && is_numeric($_GET['till'])) {
-			$till = $_GET['till'];
-			$since_activity = ($till - ($timespan*8)); // 4 days
+
+		// older_activities only works for Activities, NOT STATUS
+		// older_activities overrules since.
+		if(isset($_GET['activities_till']) && is_numeric($_GET['activities_till'])) {
+			$till = $_GET['activities_till'];
+			$since_activity = ($till - (60*60*24*5)); // 5 days
+			$return_statuses = false;
+			$type = 'activities_till';
 		}
-		// Get general stats
+
+		// Get activity records
 		$select = $DBH->prepare('(
 									(SELECT null as "type", null as "start", null as "end", null as "id", null as "name", null as "msg_status", null as "hash", false as "lastseen_privacy", false as "profilepic_privacy", false as "statusmsg_privacy", null as "changed_at")
 									UNION ALL
@@ -335,7 +343,6 @@ switch($_GET['whatsspy']) {
 		$select->execute(array(':since'=> date('c', $since_activity), ':till'=> date('c', $till)));
 		
 		$result_activity = array();
-		// Quick fix, need better solution
 		foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $activity) {	
 			$activity['changed_at'] = fixTimezone($activity['changed_at']);			
 			array_push($result_activity, $activity);
@@ -343,36 +350,33 @@ switch($_GET['whatsspy']) {
 		// Shift first record: its just a placeholder in the PostGreSQL UNION
 		array_shift($result_activity);
 
-		// Ignore user status
-		if(!isset($_GET['till'])) {
+		if($return_statuses){
 			// Get user stats
 			$select = $DBH->prepare('SELECT  x.sid, x.start, x."end", a.id, a.name, x.status, x.start 
 										FROM status_history x 
 										LEFT JOIN accounts a ON a.id = x.number
 										WHERE x.status = true 
-											AND x."end" IS NOT NULL 
-											AND x."end" > :since 
-											AND x."end" <= :till 
+											AND x.sid >= :after_sid_status
+											AND (CASE WHEN (x."end" IS NULL) THEN x.start ELSE x."end" END) <= :till 
 											AND a."active" = true
-										ORDER BY x."end" DESC
-										LIMIT 200;');
-			$select->execute(array(':since'=> date('c', $since_users), ':till'=> date('c', $till)));
+										ORDER BY x.start DESC
+										LIMIT 150;');
+			$select->execute(array(':after_sid_status'=> $sid_status, ':till'=> date('c', $till)));
 
 			$result_user_status = array();
-			// Quick fix, need better solution
 			foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $userstatus) {	
 				$userstatus['start'] = fixTimezone($userstatus['start']);			
 				$userstatus['end'] = fixTimezone($userstatus['end']);			
 				array_push($result_user_status, $userstatus);
 			}
-
 		}
 
-		if(isset($_GET['till'])) {
-			echo json_encode(array('activity' => $result_activity, 'userstatus' => array(), 'since' => $since_activity));
-		} else {
-			echo json_encode(array('activity' => $result_activity, 'userstatus' => $result_user_status, 'since' => (int)$since_activity, 'till' => $till));
-		}
+		echo json_encode(array('type' => $type,
+							   'activity' => $result_activity, 
+							   'userstatus' => $result_user_status, 
+							   'sid' => $sid_status,
+							   'since' => (int)$since_activity, 
+							   'till' => $till));
 
 		break;
 	// Get global statistics for the whole tracking DB
@@ -567,6 +571,19 @@ switch($_GET['whatsspy']) {
 							        WHERE a.id = sh.number 
 							        	AND a.active = true 
 							        	AND sh.status = true
+							        	AND start >= NOW() - \'14 day\'::INTERVAL
+							        	AND "end" IS NOT NULL
+							        GROUP BY a.name 
+							        ORDER BY online DESC, count DESC
+							        LIMIT 10');
+		$select -> execute();
+		$result_top10['14days'] = $select->fetchAll(PDO::FETCH_ASSOC);
+
+		$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+							        FROM accounts a, status_history sh
+							        WHERE a.id = sh.number 
+							        	AND a.active = true 
+							        	AND sh.status = true
 							        	AND start >= NOW() - \'7 day\'::INTERVAL
 							        	AND "end" IS NOT NULL
 							        GROUP BY a.name 
@@ -605,13 +622,7 @@ switch($_GET['whatsspy']) {
 			        'version' => $_GET['v']
 			    )
 			);
-			$opts = array('http' =>
-			    array(
-			        'method'  => 'POST',
-			        'header'  => 'Content-type: application/x-www-form-urlencoded',
-			        'content' => $postdata
-			    )
-			);
+			$opts = array('http' => array('method'  => 'POST', 'header'  => 'Content-type: application/x-www-form-urlencoded', 'content' => $postdata));
 			$context  = stream_context_create($opts);
 			echo file_get_contents($whatsspyAboutQAUrl, false, $context);
 			// Auto update?

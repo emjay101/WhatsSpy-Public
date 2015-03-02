@@ -113,7 +113,7 @@ function onPresenceReceived($mynumber, $from, $type) {
 			   						 VALUES (:status, :start, :number, NULL);');
 		$insert->execute(array(':status' => (int)$status,
 							   ':number' => $number,
-							   ':start' => date('c', $crawl_time)));
+							   ':start' => date('c', $real_time)));
 		tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 		checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
 	} else {
@@ -218,16 +218,16 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	$number = explode("@", $from)[0];
 	$privacy_enabled = ($time == null ? true : false);
 
-	if(!$privacy_enabled) {
-		$latest_statusmsg = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number AND ("changed_at" = to_timestamp(:time) OR "status" = :status)');
-		$latest_statusmsg -> execute(array(':number' => $number,
-										   ':status' => $data,
-										   ':time' => (string)$time));
+	$query_time = strtotime($time);
 
-		if($latest_statusmsg -> rowCount() == 0) {
-			// Check last message
-			// Update database
-		    $insert = $DBH->prepare('INSERT INTO statusmessage_history (
+	if(!$privacy_enabled) {
+		// Check if the user has no status message records yet
+		$first_check = $DBH->prepare('SELECT 1 FROM statusmessage_history WHERE "number"=:number');
+		$first_check -> execute(array(':number' => $number));
+
+		if($first_check -> rowCount() == 0) {
+			// Use first known date
+			$insert = $DBH->prepare('INSERT INTO statusmessage_history (
 			            			"number", status, changed_at)
 			   						 VALUES (:number, :status, to_timestamp(:time));');
 			$insert->execute(array(':status' => $data,
@@ -235,6 +235,23 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 								   ':time' => (string)$time));
 			tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
 			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new status message: \''.$data.'\'.');
+		} else {
+			// User has known records, use the current insertion time
+
+			// Check if any previous record indicate the same message
+			$select_latest_statusmsg = $DBH->prepare('SELECT "status" FROM statusmessage_history WHERE "number"=:number ORDER BY changed_at DESC LIMIT 1');
+			$select_latest_statusmsg -> execute(array(':number' => $number));
+			$latest_statusmsg = $select_latest_statusmsg -> fetch(PDO::FETCH_ASSOC);
+
+			if($latest_statusmsg['status'] != $data) {
+				$insert = $DBH->prepare('INSERT INTO statusmessage_history (
+				            			"number", status, changed_at)
+				   						 VALUES (:number, :status, NOW());');
+				$insert->execute(array(':status' => $data,
+									   ':number' => $number));
+				tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
+				checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new status message: \''.$data.'\'.');
+			}
 		}
 	}
 

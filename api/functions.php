@@ -32,9 +32,26 @@ function checkDBMigration($DBH) {
 		}
 	}
 	/**
-	  *		Database option added in 1.
-	  *		- 
+	  *		Database option added in 1.3.6
+	  *		- Indexes for improved performance (up to 4x as fast), noteable on slow machines
+	  *		- Custom version table for better DB checking
 	  */
+	$select = $DBH->prepare('SELECT 1
+							   FROM   information_schema.tables 
+							   WHERE  table_schema = \'public\'
+							   AND    table_name = \'whatsspy_config\'');
+	$select -> execute();
+	if($select -> rowCount() == 0) {
+		$sql_update = file_get_contents('update/database-1.3.6.sql');
+		$upgrade = $DBH->exec($sql_update);
+
+		if(!$upgrade) {
+			echo 'The following error occured when trying to upgrade DB:';
+			print_r($DBH->errorInfo());
+			echo 'In case there is no DB error, please make sure PHP can execute in the "api/update/*" directory.';
+			exit();
+		}
+	}
 }
 
 function checkAndSendWhatsAppNotify($DBH, $wa, $number, $msg, $img = null) {
@@ -124,8 +141,6 @@ function cutZeroPrefix($string) {
 /** Add an new account if not an duplicate */
 function addAccount($name, $account_id, $array_result = false) {
 	global $DBH;
-
-	$name = ($name != null ? htmlentities($name) : null);
 	$number = $account_id;
 
 	// Check before insert

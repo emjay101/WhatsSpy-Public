@@ -56,7 +56,7 @@ $whatsspyLNKey = '';
 
 // Set this varible to recieve notficiations via WhatsApp on your phone.
 // In the GUI you can enable user specific tracking of activities etc.
-// On default no actions will be sent of any tracking contact. You need to enable this under "edit". 
+// On default no actions will be sent of any tracking contact. In the UI you need to enable this for a specific contact under "edit".
 // USE <countrycode><phonenumber> and do not use prefix 0's in countrycode and phonenumber
 // (eg. 0031 0611223300 will become 31 611223300)
 // DO NOT use any special chars (spaces, + etc), only type the number (eg. '31611223300')
