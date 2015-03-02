@@ -584,7 +584,7 @@ switch($_GET['whatsspy']) {
 							        WHERE a.id = sh.number 
 							        	AND a.active = true 
 							        	AND sh.status = true
-							        	AND start >= NOW() - \'7 day\'::INTERVAL
+							        	AND start >= NOW() - \'31 day\'::INTERVAL
 							        	AND "end" IS NOT NULL
 							        GROUP BY a.name 
 							        ORDER BY online DESC, count DESC
