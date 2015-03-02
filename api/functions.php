@@ -101,9 +101,6 @@ function checkDBMigration($DBH) {
 						CREATE INDEX index_statusmessage_history_number_changed_at_desc
 						   ON statusmessage_history ("number", "changed_at" DESC);
 
-						CREATE INDEX index_status_history_number_start_status_true_end_not_null
-						   ON status_history ("number", "start" DESC) WHERE status = true AND "end" IS NOT NULL;
-
 						CREATE INDEX index_lastseen_privacy_history_number_changed_at_desc
 						   ON lastseen_privacy_history ("number", "changed_at" DESC);
 
