@@ -770,7 +770,9 @@ angular.module('whatsspyControllers', [])
 				// Add first record
 				$scope.timelineData.userstatus.unshift($data.userstatus[i]);
 				// Remove last record
-				$scope.timelineData.userstatus.pop();
+				if($scope.timelineData.userstatus.length > 200) {
+					$scope.timelineData.userstatus.pop();
+				}
 			} 
 			if($data.userstatus[i].end == null) {
 				$scope.lastRequiredSid = $data.userstatus[i].sid;
