@@ -79,7 +79,7 @@
 						<span data-ng-show="accountData[number.id].status.length < 1">
 							<center>No information available ..</center>
 						</span>
-						<span data-ng-show="accountData[number.id].status.length > 1">
+						<span data-ng-show="accountData[number.id].status.length > 0">
 							<!-- Timeline information -->
 							<div data-ng-show="accountData[number.id] == null && number.records > 1" class="whatsspy-lazy-load-warning"> Click to load data</div>
 							<div data-ng-show="accountData[number.id].timelineLoaded" class="whatsspy-number-timeline">

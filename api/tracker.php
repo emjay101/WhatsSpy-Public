@@ -426,7 +426,7 @@ function startTrackerHistory() {
 	$tracker_session_check -> execute();
 
 	if($tracker_session_check -> rowCount() > 0) {
-		tracker_log('[warning] Tracker was not properly stopped last time, fixing database issues. ' . $user);
+		tracker_log('[warning] Tracker was not properly stopped last time, fixing database issues. ');
 		// Get last known status
 		$last_status = $DBH->prepare('SELECT "end" FROM status_history WHERE "end" IS NOT NULL ORDER BY "end" DESC LIMIT 1');
 		$last_status -> execute();
