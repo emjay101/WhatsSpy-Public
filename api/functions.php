@@ -9,6 +9,8 @@ function setupDB($dbAuth) {
 	$DBH  = new PDO("pgsql:host=".$dbAuth['host'].";port=".$dbAuth['port'].";dbname=".$dbAuth['dbname'].";user=".$dbAuth['user'].";password=".$dbAuth['password']);
 	// Set UTF8
 	$DBH->query('SET NAMES \'UTF8\';');
+	// Set timezone
+	$DBH->query('SET TIME ZONE "'.date_default_timezone_get().'";');
 	return $DBH;
 }
 
