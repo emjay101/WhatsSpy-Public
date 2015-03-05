@@ -349,6 +349,10 @@ function onSendPong($mynumber, $msgid) {
 	tracker_log('[keep-alive] Pong received');
 }
 
+function onPing($mynumber, $msgid) {
+	tracker_log('[keep-alive] Ping received');
+}
+
 /** 	------------------------------------------------------------------------------
   *			GENERAL tracker functions
   * 	------------------------------------------------------------------------------
@@ -414,6 +418,7 @@ function setupWhatsappHandler() {
 	$wa->eventManager()->bind("onGetStatus", "onGetStatus");
 	$wa->eventManager()->bind('onGetSyncResult', 'onSyncResultNumberCheck');
 	$wa->eventManager()->bind("onGetProfilePicture", "onGetProfilePicture");
+	$wa->eventManager()->bind("onPing", "onPing");
 	$wa->eventManager()->bind("onSendPong", "onSendPong");
 	$wa->connect();
 	$wa->loginWithPassword($whatsappAuth['secret']);
@@ -585,6 +590,9 @@ do {
 	checkDBMigration($DBH);
 	// Nag about config.php if it's old
 	checkConfig();
+
+	// Selective error handling
+	$last_error = null;
 	try {
 		// Start the tracker
 		track();
@@ -606,12 +614,23 @@ do {
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
 		$end_user_session->execute();
 
+		$last_error = $e->getMessage();
+
 		tracker_log('[error] Tracker exception! '.$e->getMessage());
 		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
 	}
-	// Wait 30 seconds before reconnecting.
-	tracker_log('[retry] Reconnectiong to WhatsApp in 30 seconds.');
-	sleep(30);
+
+	if($last_error == 'Connection Closed!') {
+		// Wait 360 seconds before reconnecting.
+		tracker_log('[retry] Reconnectiong to WhatsApp in 360 seconds.');
+		sleep(360);
+	} else {
+		// Wait 30 seconds before reconnecting.
+		tracker_log('[retry] Reconnectiong to WhatsApp in 30 seconds.');
+		sleep(30);
+	}
+	$last_error = null;
+
 } while(true);
 
 
