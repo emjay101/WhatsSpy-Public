@@ -48,7 +48,7 @@ class WhatsProt
     const WHATSAPP_SERVER = 's.whatsapp.net';                                                // The hostname used to login/send messages.
     const WHATSAPP_UPLOAD_HOST = 'https://mms.whatsapp.net/client/iphone/upload.php';        // The upload host.
     const WHATSAPP_DEVICE = 'iPhone';                                                        // The device name.
-    const WHATSAPP_VER = '2.11.14';                                                          // The WhatsApp version.
+    const WHATSAPP_VER = '2.11.16';                                                          // The WhatsApp version.
     const WHATSAPP_USER_AGENT = 'WhatsApp/2.12.61 S40Version/14.26 Device/Nokia302';         // User agent used in request/registration code.
     const WHATSAPP_VER_CHECKER = 'https://coderus.openrepos.net/whitesoft/whatsapp_version'; // Check WhatsApp version
 
@@ -462,8 +462,6 @@ class WhatsProt
             );
             return true;
         } else {
-            $this->debugPrint("Firing onConnectError\n");
-
             $this->eventManager()->fire("onConnectError",
                 array(
                     $this->phoneNumber,
@@ -890,15 +888,6 @@ class WhatsProt
         $this->sendNode($node);
     }
 
-    /**
-     * Send a request to return a list of groups user has started in.
-     *
-     * To capture this list you will need to bind the "onGetGroups" event.
-     */
-    public function sendGetGroupsOwning()
-    {
-        $this->sendGetGroupsFiltered("owning");
-    }
 
     /**
      * Send a request to get a list of people you have currently blocked.
@@ -2690,7 +2679,7 @@ class WhatsProt
             if ($node->hasChild('x') && $this->lastId == $node->getAttribute('id')) {
                 $this->sendNextMessage();
             }
-            if ($this->newMsgBind && $node->getChild('body')) {
+            if ($this->newMsgBind  && ($node->getChild('body') || $node->getChild('media'))) {
                 $this->newMsgBind->process($node);
             }
             if ($node->getAttribute("type") == "text" && $node->getChild('body') != null) {
@@ -3031,13 +3020,15 @@ class WhatsProt
         if ($node->getTag() == "iq"
             && $node->getAttribute('type') == "result") {
             if ($node->getChild("query") != null) {
-                if ($node->getChild(0)->getAttribute('xmlns') == 'jabber:iq:privacy') {
-                    // ToDo: We need to get explicitly list out the children as arguments
-                    //       here.
+                if ($node->nodeIdContains("getprivacy")) {
+                    $listChild = $node->getChild(0)->getChild(0);
+                    foreach ($listChild->getChildren() as $child) {
+                        $blockedJids[] = $child->getAttribute('value');
+                    }
                     $this->eventManager()->fire("onGetPrivacyBlockedList",
                         array(
                             $this->phoneNumber,
-                            $node->getChild(0)->getChild(0)->getChildren()
+                            $blockedJids
                         ));
                 }
                 $this->eventManager()->fire("onGetRequestLastSeen",
@@ -3750,7 +3741,7 @@ class WhatsProt
             ), array($node, $broadcastNode), null);
 
         $this->sendNode($messageNode);
-        $this->waitForServer($msgID);
+        $this->waitForServer($msgId);
         //listen for response
         $this->eventManager()->fire("onSendMessage",
             array(
