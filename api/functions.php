@@ -129,7 +129,12 @@ function checkConfig() {
 		tracker_log('[config] number and secret fields are required for the tracker to operate.');
 		exit();
 	}
-
+	// Check if debug is set
+	if($whatsappAuth['debug'] == null) {
+		tracker_log('[config] $whatsappAuth[\'debug\'] missing, please check config.example.php.');
+		$whatsappAuth['debug'] = false;
+	}
+	sleep(2);
 }
 
 

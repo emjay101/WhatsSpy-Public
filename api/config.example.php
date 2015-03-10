@@ -21,8 +21,10 @@ $dbAuth = 			['host' => 'localhost',
 // - Digits (no spaces, special characters like +)
 // - Needs to be without any prefix 0's. 0031 06 xxx becomes 31 6 xxx (no 0's prefix for both the country code and phonenumber itself).
 // 'secret' is the string of characters ending with a '='. Use WART or look at the wiki to retrieve this.
+// Debug might be handy if you want debug information about WhatsApp exceptions occuring.
 $whatsappAuth = 	['number' => '',
-				 	 'secret' => ''];
+				 	 'secret' => '',
+				 	 'debug' => false];
 
 // Set your timezone
 // Check for all timezones: http://php.net/manual/en/timezones.php

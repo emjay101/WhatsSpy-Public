@@ -16,7 +16,7 @@ if (PHP_SAPI !== 'cli'){
 	exit();
 }
 
-declare(ticks = 20);
+declare(ticks = 30);
 
 require_once 'config.php';
 require_once 'data.php';
@@ -412,7 +412,7 @@ function setupWhatsappHandler() {
 	// bind event handler & tracker_login
 	// Setup new Whatsapp session
 	// change the "false" to "true" if you want debug information about the WhatsApp connection.
-	$wa = new WhatsProt($whatsappAuth['number'], "WhatsApp", false);
+	$wa = new WhatsProt($whatsappAuth['number'], "WhatsApp", $whatsappAuth['debug']);
 	$wa->eventManager()->bind('onGetRequestLastSeen', 'onGetRequestLastSeen');
 	$wa->eventManager()->bind('onGetError', 'onGetError');
 	$wa->eventManager()->bind('onDisconnect', 'onDisconnect');
@@ -452,14 +452,6 @@ function startTrackerHistory() {
 	$start_tracker_session->execute();
 }
 
-/**
-  *		CONTINIOUS TRACKING
-  *		Tracking:
-  *		- User status changes to track if a user is online/offline
-  *		- User lastseen (privacy options)
-  *		- User profile pictures (and changes)
-  *     - User status message (and changes)
-  */
 function checkLastSeen($number) {
 	global $wa;
 	tracker_log('  -[user-lastseen] Checking last seen for '. $number . '.');
@@ -484,7 +476,14 @@ function calculateTick($time) {
 	return round($time / 1);
 }
 
-
+/**
+  *		CONTINIOUS TRACKING
+  *		Tracking:
+  *		- User status changes to track if a user is online/offline
+  *		- User lastseen (privacy options)
+  *		- User profile pictures (and changes)
+  *     - User status message (and changes)
+  */
 function track() {
 	global $DBH, $wa, $tracking_ticks, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
 
@@ -619,6 +618,9 @@ do {
 		$last_error = $e->getMessage();
 
 		tracker_log('[error] Tracker exception! '.$e->getMessage());
+		if($whatsappAuth['debug']) {
+			print_r($e);
+		}
 		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
 	}
 
@@ -627,9 +629,9 @@ do {
 		tracker_log('[retry] Reconnectiong to WhatsApp in 360 seconds.');
 		sleep(360);
 	} else {
-		// Wait 30 seconds before reconnecting.
-		tracker_log('[retry] Reconnectiong to WhatsApp in 30 seconds.');
-		sleep(30);
+		// Wait 60 seconds before reconnecting.
+		tracker_log('[retry] Reconnectiong to WhatsApp in 60 seconds.');
+		sleep(60);
 	}
 	$last_error = null;
 
