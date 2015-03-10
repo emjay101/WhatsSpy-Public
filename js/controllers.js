@@ -1,10 +1,8 @@
 'use strict'
 // -----------------------------------------------------------------------
-//  Whatsspy tracker
-//	@Author Maikel Zweerink
+//	@Name WhatsSpy Public
+// 	@Author Maikel Zweerink
 //  controllers.js - Controllers for the AngularJS application
-//
-//  Yes, this setup is not very clean. It's suiteable for it's purpose.
 // -----------------------------------------------------------------------
 
 angular.module('whatsspyControllers', [])
@@ -40,7 +38,7 @@ angular.module('whatsspyControllers', [])
 			});
 	}
 
-	$scope.deleteNumber = function(contactId) {
+	$scope.deleteAccount = function(contactId) {
 		$http({method: 'GET', url: 'api/?whatsspy=deleteContact&number=' + contactId}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
@@ -84,8 +82,8 @@ angular.module('whatsspyControllers', [])
 		$('#editName').modal('show');
 	}
 
-	$scope.submitNameEdit = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=updateName&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_actions=' + $scope.editContact.notify_actions }).
+	$scope.submitAccountEdit = function() {
+		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_actions=' + $scope.editContact.notify_actions }).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
@@ -101,7 +99,7 @@ angular.module('whatsspyControllers', [])
 			});
 	}
 
-	$scope.submitNewNumber = function() {
+	$scope.submitNewAccount = function() {
 		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + encodeURIComponent($scope.newContact.name)}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {

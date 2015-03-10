@@ -1,11 +1,11 @@
 <?php
 // -----------------------------------------------------------------------
-//	Whatsspy tracker
-//	@Author Maikel Zweerink
+//	@Name WhatsSpy Public
+// 	@Author Maikel Zweerink
 //	Data.php - Contains required data for the tracker.
 // -----------------------------------------------------------------------
 
-// Required tables for the tracker to start.
+// Required tables for the tracker to start (does not include all tables).
 $dbTables = ['accounts', 
 			 'lastseen_privacy_history', 
 			 'profilepic_privacy_history', 
@@ -14,6 +14,10 @@ $dbTables = ['accounts',
 			 'statusmessage_history', 
 			 'statusmessage_privacy_history', 
 			 'tracker_history'];
+
+// Setter for the postgresql to momentjs conversion.
+// Instead of stateless this improves the performance.
+$global_timezone_digits = null;
 
 // Timing for the tracker
 // 		DEFAULT CONFIGURATION:

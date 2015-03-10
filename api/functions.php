@@ -1,140 +1,222 @@
 <?php
 // -----------------------------------------------------------------------
-//Whatsspy tracker
-// @Maikel Zweerink
+//	@Name WhatsSpy Public
+// 	@Author Maikel Zweerink
 //	Functions.php - some general functions used in both the webservice and tracker.
 // -----------------------------------------------------------------------
 
-function setupDB($dbAuth) {
-	$DBH  = new PDO("pgsql:host=".$dbAuth['host'].";port=".$dbAuth['port'].";dbname=".$dbAuth['dbname'].";user=".$dbAuth['user'].";password=".$dbAuth['password']);
-	// Set UTF8
-	$DBH->query('SET NAMES \'UTF8\';');
-	// Set timezone
-	$DBH->query('SET TIME ZONE "'.date_default_timezone_get().'";');
-	return $DBH;
-}
 
-function checkDBMigration($DBH) {
-	/**
-	  *		Database option added in 1.3.0
-	  *		- Allows user to specificly add notifications for users
-	  */
-	$select = $DBH->prepare('SELECT column_name  
-								FROM information_schema.columns 
-								WHERE table_name=\'accounts\' and column_name=\'notify_actions\';');
-	$select -> execute();
-	if($select -> rowCount() == 0) {
-		$alter = $DBH->prepare('ALTER TABLE accounts
-  									ADD COLUMN notify_actions boolean NOT NULL DEFAULT false;');
-		$alter -> execute();
-		if(!$alter) {
-			echo 'The following error occured when trying to upgrade DB:';
-			print_r($DBH->errorInfo());
-			exit();
-		}
-	}
-	/**
-	  *		Database option added in 1.3.6
-	  *		- Indexes for improved performance (up to 4x as fast), noteable on slow machines
-	  *		- Custom version table for better DB checking
-	  */
-	$select = $DBH->prepare('SELECT 1
-							   FROM   information_schema.tables 
-							   WHERE  table_schema = \'public\'
-							   AND    table_name = \'whatsspy_config\'');
-	$select -> execute();
-	if($select -> rowCount() == 0) {
-		// TODO fix update to a file.
-		//$sql_update = file_get_contents('update/database-1.3.6.sql');
-		$sql_update = '-- 1.3.6 Index updates.
+// -----------------------------------------------------------------------
+//	GENERAL FUNCTIONS
+// -----------------------------------------------------------------------
 
-
-						CREATE INDEX index_account_id
-						   ON accounts (id ASC NULLS LAST);
-
-						CREATE INDEX index_tracker_history_end
-						   ON tracker_history ("end" ASC NULLS FIRST);
-
-						CREATE INDEX index_tracker_history_start
-						   ON tracker_history ("start" DESC);
-
-						CREATE INDEX index_tracker_history_start_end_not_null
-						   ON tracker_history ("start" DESC) WHERE "end" IS NOT NULL;
-
-						CREATE INDEX index_status_history_end_status
-						   ON status_history (status ASC NULLS LAST, "end" ASC NULLS FIRST);
-
-						CREATE INDEX index_status_history_number_end
-						   ON status_history ("number" ASC NULLS LAST, "end" ASC NULLS FIRST);
-
-						CREATE INDEX index_profilepicture_history_number
-						   ON profilepicture_history ("number" ASC NULLS LAST);
-
-						CREATE INDEX index_statusmessage_number
-						   ON statusmessage_history ("number" ASC NULLS LAST);
-
-						CREATE INDEX index_accounts_active_true_verified_true
-						   ON accounts ("id") WHERE active = true AND verified = true;
-
-						CREATE INDEX index_status_history_number_end_is_null
-						   ON status_history ("number") WHERE "end" = null;
-
-						CREATE INDEX index_status_history_number_status_true_end_not_null
-						   ON status_history ("number") WHERE status = true AND "end" IS NOT NULL;
-
-						CREATE INDEX index_status_history_number_start_status_true_end_not_null
-						   ON status_history ("number", "start") WHERE status = true AND "end" IS NOT NULL;
-
-						CREATE INDEX index_status_history_status_true
-						   ON status_history ("status") WHERE status = true;
-
-						CREATE INDEX index_status_history_number_status_true_start_desc
-						   ON status_history ("number", "start" DESC) WHERE status = true;
-
-						CREATE INDEX index_status_history_sid_start_end_status_true
-						   ON status_history ("sid" DESC, "start" DESC, "end" DESC) WHERE status = true;
-
-						CREATE INDEX index_status_history_number_start_asc
-						   ON status_history ("number", "start" ASC);
-
-						CREATE INDEX index_profilepicture_history_number_changed_at_desc
-						   ON profilepicture_history ("number", "changed_at" DESC);
-
-						CREATE INDEX index_statusmessage_history_number_changed_at_desc
-						   ON statusmessage_history ("number", "changed_at" DESC);
-
-						CREATE INDEX index_lastseen_privacy_history_number_changed_at_desc
-						   ON lastseen_privacy_history ("number", "changed_at" DESC);
-
-						CREATE INDEX index_profilepic_privacy_history_number_changed_at_desc
-						   ON profilepic_privacy_history ("number", "changed_at" DESC);
-
-						CREATE INDEX index_statusmessage_privacy_history_number_changed_at_desc
-						   ON statusmessage_privacy_history ("number", "changed_at" DESC);
-
-						CREATE TABLE whatsspy_config
-						(
-						   db_version integer
-						) 
-						WITH (
-						  OIDS = FALSE
-						);
-						ALTER TABLE whatsspy_config
-						  OWNER TO whatsspy;
-						GRANT ALL ON TABLE whatsspy_config TO whatsspy;
-
-						INSERT INTO whatsspy_config (db_version)
-						    VALUES (3);';
-		$upgrade = $DBH->exec($sql_update);
-
-		if(!$upgrade) {
-			echo 'The following error occured when trying to upgrade DB:';
-			print_r($DBH->errorInfo());
-			echo 'In case there is no DB error, please make sure PHP can execute in the "api/update/*" directory.';
-			exit();
-		}
+/**
+  *		Cut off any 0's that are at the beginning of the string.
+  *		- Yes, this is recursion.
+  */
+function cutZeroPrefix($string) {
+	$prefix = '0';
+	if (substr($string, 0, strlen($prefix)) == $prefix) {
+	    $string = substr($string, strlen($prefix));
+	    return cutZeroPrefix($string);
+	} else {
+		return $string;
 	}
 }
+
+/**
+  *		Make sure that any timestamp from PostgreSQL meet the requirements for MomentJS
+  *		This means timezones are always in the format: 00:00
+  */
+function fixTimezone($timestamp) {
+	global $global_timezone_digits;
+	if($timestamp != null) {
+		// Set global setter to improve performance
+		if($global_timezone_digits == null) {
+			$split = explode('+', $timestamp);
+			if(strlen($split[1]) == 2) {
+				// contains format +05
+				$global_timezone_digits = 2;
+			} else {
+				// contains the format +05:30
+				$global_timezone_digits = 4;
+			}
+		}
+		// Return requested time.
+		if($global_timezone_digits == 2) {
+			// contains format +05
+			return $timestamp.'00';
+		} else {
+			// contains the format +05:30
+			return $timestamp;
+		}
+	}
+	return $timestamp;
+}
+
+/**
+  *		Format the PostgreSQL data in such a way you have a entry for each hour/weekday even if there are no records.
+  */
+function cleanTimeIntervals($data, $type) {
+	if($type == 'weekday') {
+		$returnData = array();
+
+		$weekdays = [0,1,2,3,4,5,6];
+		$i = 0;
+		foreach ($weekdays as $weekday) {
+			// Check for missing data
+			if($weekday == (int)@$data[$i]['dow']) {
+				// Set value to integer (default string when out of DB)
+				$data[$i]['dow'] = (int)$data[$i]['dow'];
+				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
+				$data[$i]['count'] = (int)$data[$i]['count'];
+				array_push($returnData, $data[$i]);
+				$i++;
+			} else {
+				$item['dow'] = $weekday;
+				$item['count'] = 0;
+				$item['minutes'] = 0;
+				array_push($returnData, $item);
+			}
+		}
+		return $returnData;
+	} elseif($type == 'hour') {
+		$returnData = array();
+
+		$hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+		$i = 0;
+		foreach ($hours as $hour) {
+			// Check for missing data
+			if($hour == (int)@$data[$i]['hour']) {
+				// Set value to integer (default string when out of DB)
+				$data[$i]['hour'] = (int)$data[$i]['hour'];
+				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
+				$data[$i]['count'] = (int)$data[$i]['count'];
+				array_push($returnData, $data[$i]);
+				$i++;
+			} else {
+				$item['hour'] = $hour;
+				$item['count'] = 0;
+				$item['minutes'] = 0; // seconds
+				array_push($returnData, $item);
+			}
+		}
+		return $returnData;
+	}
+}
+
+/**
+  *		General log function.
+  */
+function tracker_log($msg, $date = true, $newline = true) {
+	if($date) {
+		echo '('.date('Y-m-d H:i:s').') ';
+	}
+	echo $msg;
+	if($newline) {
+		echo "\n";
+	}
+}
+
+/**
+  *		Check if the user's config is up to standards and attempt to (temp) fix this.
+  */
+function checkConfig() {
+	global $whatsappAuth;
+
+	// Check if config is filled in.
+	if($whatsappAuth['secret'] == '') {
+		tracker_log('[config] number and secret fields are required for the tracker to operate.');
+		exit();
+	}
+
+}
+
+
+// -----------------------------------------------------------------------
+//	ACCOUNT SPECIFIC FUNCTIONS
+// -----------------------------------------------------------------------
+
+
+
+/**
+  *		Add a new account to the database. 
+  *		Give a name, a phonenumber (id) and request if you a true/false or a array for JSON syntax (for any errors).
+  */
+function addAccount($name, $account_id, $array_result = false) {
+	global $DBH;
+	$number = $account_id;
+
+	// Check before insert
+	$check = $DBH->prepare('SELECT "active" FROM accounts WHERE "id"=:id');
+	$check->execute(array(':id'=> $number));
+	if($check -> rowCount() == 0) {
+		$insert = $DBH->prepare('INSERT INTO accounts (id, active, name)
+   						 			VALUES (:id, true, :name);');
+		$insert->execute(array(':id' => $number,
+								':name' => $name));
+		if($array_result) {
+			return ['success' => true];
+		} else {
+			return true;
+		}
+	} else {
+		// Account already exists, make sure to re-activate if status=false
+		$row  = $check -> fetch();
+		if($row['active'] == true) {
+			if($array_result) {
+				return ['error' => 'Phone already exists!', 'code' => 400];
+			} else {
+				return false;
+			}
+		} else {
+			$update = $DBH->prepare('UPDATE accounts
+									SET "active" = true WHERE id = :number;');
+			$update->execute(array(':number' => $number));
+			if($array_result) {
+				return ['success' => true];
+			} else {
+				return true;
+			}
+		}
+	}
+}
+/**
+  *		Attempt to remove all traces of a user. Returns void.
+  */
+function removeAccount($number) {
+	global $DBH;
+
+	// Delete any statusses
+	$delete = $DBH->prepare('DELETE FROM lastseen_privacy_history
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
+
+	$delete = $DBH->prepare('DELETE FROM profilepic_privacy_history
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
+
+	$delete = $DBH->prepare('DELETE FROM profilepicture_history
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
+
+	$delete = $DBH->prepare('DELETE FROM status_history
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
+
+	$delete = $DBH->prepare('DELETE FROM statusmessage_history
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
+
+	$delete = $DBH->prepare('DELETE FROM statusmessage_privacy_history
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
+	// Delete final record of accounts
+	$delete = $DBH->prepare('DELETE FROM accounts
+								WHERE id = :id;');
+	$delete->execute(array(':id' => $number));
+}
+
 
 function checkAndSendWhatsAppNotify($DBH, $wa, $number, $msg, $img = null) {
 	global $whatsspyWhatsAppUserNotification;
@@ -208,177 +290,6 @@ function sendLNMessage($LNKey, $title, $message, $imgurl) {
 	return true; 
 } 
 
-/** Cut any prefix 0's of an string */
-function cutZeroPrefix($string) {
-	$prefix = '0';
-	if (substr($string, 0, strlen($prefix)) == $prefix) {
-	    $string = substr($string, strlen($prefix));
-	    return cutZeroPrefix($string);
-	} else {
-		return $string;
-	}
-}
 
-
-/** Add an new account if not an duplicate */
-function addAccount($name, $account_id, $array_result = false) {
-	global $DBH;
-	$number = $account_id;
-
-	// Check before insert
-	$check = $DBH->prepare('SELECT "active" FROM accounts WHERE "id"=:id');
-	$check->execute(array(':id'=> $number));
-	if($check -> rowCount() == 0) {
-		$insert = $DBH->prepare('INSERT INTO accounts (id, active, name)
-   						 			VALUES (:id, true, :name);');
-		$insert->execute(array(':id' => $number,
-								':name' => $name));
-		if($array_result) {
-			return ['success' => true];
-		} else {
-			return true;
-		}
-	} else {
-		// Account already exists, make sure to re-activate if status=false
-		$row  = $check -> fetch();
-		if($row['active'] == true) {
-			if($array_result) {
-				return ['error' => 'Phone already exists!', 'code' => 400];
-			} else {
-				return false;
-			}
-		} else {
-			$update = $DBH->prepare('UPDATE accounts
-									SET "active" = true WHERE id = :number;');
-			$update->execute(array(':number' => $number));
-			if($array_result) {
-				return ['success' => true];
-			} else {
-				return true;
-			}
-		}
-	}
-}
-
-$global_timezone_digits = null;
-
-function fixTimezone($timestamp) {
-	global $global_timezone_digits;
-	if($timestamp != null) {
-		// Set global setter to improve performance
-		if($global_timezone_digits == null) {
-			$split = explode('+', $timestamp);
-			if(strlen($split[1]) == 2) {
-				// contains format +05
-				$global_timezone_digits = 2;
-			} else {
-				// contains the format +05:30
-				$global_timezone_digits = 4;
-			}
-		}
-		// Return requested time.
-		if($global_timezone_digits == 2) {
-			// contains format +05
-			return $timestamp.'00';
-		} else {
-			// contains the format +05:30
-			return $timestamp;
-		}
-	}
-	return $timestamp;
-}
-
-function cleanTimeIntervals($data, $type) {
-	if($type == 'weekday') {
-		$returnData = array();
-
-		$weekdays = [0,1,2,3,4,5,6];
-		$i = 0;
-		foreach ($weekdays as $weekday) {
-			// Check for missing data
-			if($weekday == (int)@$data[$i]['dow']) {
-				// Set value to integer (default string when out of DB)
-				$data[$i]['dow'] = (int)$data[$i]['dow'];
-				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
-				$data[$i]['count'] = (int)$data[$i]['count'];
-				array_push($returnData, $data[$i]);
-				$i++;
-			} else {
-				$item['dow'] = $weekday;
-				$item['count'] = 0;
-				$item['minutes'] = 0;
-				array_push($returnData, $item);
-			}
-		}
-		return $returnData;
-	} elseif($type == 'hour') {
-		$returnData = array();
-
-		$hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
-		$i = 0;
-		foreach ($hours as $hour) {
-			// Check for missing data
-			if($hour == (int)@$data[$i]['hour']) {
-				// Set value to integer (default string when out of DB)
-				$data[$i]['hour'] = (int)$data[$i]['hour'];
-				$data[$i]['minutes'] = (int)$data[$i]['minutes'];
-				$data[$i]['count'] = (int)$data[$i]['count'];
-				array_push($returnData, $data[$i]);
-				$i++;
-			} else {
-				$item['hour'] = $hour;
-				$item['count'] = 0;
-				$item['minutes'] = 0; // seconds
-				array_push($returnData, $item);
-			}
-		}
-		return $returnData;
-	}
-}
-
-function tracker_log($msg, $date = true, $newline = true) {
-	if($date) {
-		echo '('.date('Y-m-d H:i:s').') ';
-	}
-	echo $msg;
-	if($newline) {
-		echo "\n";
-	}
-}
-
-function checkDB($DBH, $dbTables) {
-	$where_query = '';
-	foreach ($dbTables as $table) {
-		$where_query .= ' table_name = :'.$table;
-		if(end($dbTables) != $table) {
-			$where_query .= ' OR ';
-		}
-	}
-	$select = $DBH->prepare('SELECT COUNT(1) as "table_count"
-								FROM   information_schema.tables
-								WHERE table_schema = \'public\' AND '.$where_query.';');
-
-	$arguments = array();
-	foreach ($dbTables as $table) {
-		$arguments[':'.$table] = $table;
-	}
-	$select->execute($arguments);
-	$row  = $select -> fetch();
-	if($row['table_count'] == count($dbTables)) {
-		return true;
-	}
-	return false;
-}
-
-function checkConfig() {
-	global $whatsappAuth;
-
-	// Check if config is filled in.
-	if($whatsappAuth['secret'] == '') {
-		tracker_log('[config] number and secret fields are required for the tracker to operate.');
-		exit();
-	}
-
-}
 
 ?>

@@ -1,6 +1,6 @@
 'use strict'
 // -----------------------------------------------------------------------
-//  Whatsspy tracker
+//  @Name WhatsSpy Public
 //  @Author Maikel Zweerink
 //  app.js - AngularJS application
 // -----------------------------------------------------------------------

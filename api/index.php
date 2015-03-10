@@ -1,19 +1,23 @@
 <?php
 // -----------------------------------------------------------------------
-// Whatsspy tracker
-// @Author Maikel Zweerink
+//	@Name WhatsSpy Public
+// 	@Author Maikel Zweerink
 //	Index.php - contains the webservice supplying information to the webUI.
 // -----------------------------------------------------------------------
 require_once 'config.php';
+require_once 'db-functions.php';
 require_once 'functions.php';
 
 $DBH  = setupDB($dbAuth);
 
 
 header("Content-type: application/json; charset=utf-8");
-// Process requests
+// Process any GET requests that are for WhatsSpy Public.
 switch($_GET['whatsspy']) {
-	// Add an new contact to the whatsspy database (39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa)
+	/**
+	  *		Attempt to create a new contact to the WhatsSpy Public Database (39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa)
+	  *		@notice This user is not verified as a WhatsApp user, the tracker verifies the contacts.
+	  */
 	case 'addContact':
 		if(isset($_GET['number']) && isset($_GET['countrycode'])) {
 			// Name is optional
@@ -23,13 +27,15 @@ switch($_GET['whatsspy']) {
 			$countrycode = cutZeroPrefix($_GET['countrycode']);
 			
 			$account = preg_replace('/\D/', '', $countrycode.$number);
+
 			echo json_encode(addAccount($name, $account, true));
 		} else {
 			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
 		}
 		break;
-	// Set the status of an contact to inactive.
-	// This means the information stays in the database but the user won't be tracked.
+	/**
+	  *		Set a contact to inactive, causing the user will not be tracked anymore but all data will be retained.
+	  */
 	case 'setContactInactive':
 		// We need the exact ID: this means no 003106 (only 316...)
 		if(isset($_GET['number'])) {
@@ -43,50 +49,24 @@ switch($_GET['whatsspy']) {
 			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
 		}
 		break;
-	// Delete account.
-	// REMOVE ALL TRACES OF A USER
+	/**
+	  *		Stop tracking the user and delete ALL data of this user.
+	  */
 	case 'deleteContact':
 		// We need the exact ID: this means no 003106 (only 316...)
 		if(isset($_GET['number'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
-
-			// Delete any statusses
-			$delete = $DBH->prepare('DELETE FROM lastseen_privacy_history
-										WHERE "number" = :id;');
-			$delete->execute(array(':id' => $number));
-
-			$delete = $DBH->prepare('DELETE FROM profilepic_privacy_history
-										WHERE "number" = :id;');
-			$delete->execute(array(':id' => $number));
-
-			$delete = $DBH->prepare('DELETE FROM profilepicture_history
-										WHERE "number" = :id;');
-			$delete->execute(array(':id' => $number));
-
-			$delete = $DBH->prepare('DELETE FROM status_history
-										WHERE "number" = :id;');
-			$delete->execute(array(':id' => $number));
-
-			$delete = $DBH->prepare('DELETE FROM statusmessage_history
-										WHERE "number" = :id;');
-			$delete->execute(array(':id' => $number));
-
-			$delete = $DBH->prepare('DELETE FROM statusmessage_privacy_history
-										WHERE "number" = :id;');
-			$delete->execute(array(':id' => $number));
-			// Delete final record of accounts
-			$delete = $DBH->prepare('DELETE FROM accounts
-										WHERE id = :id;');
-			$delete->execute(array(':id' => $number));
-
+			removeAccount($number);
 			$result = ['success' => true, 'number' => $number];
 			echo json_encode($result);
 		} else {
 			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
 		}
 		break;
-	// Update the name of an existing contact
-	case 'updateName':
+	/**
+	  *		Update information of the account.
+	  */
+	case 'updateAccount':
 		if(isset($_GET['number']) && isset($_GET['name'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
 			$notify = ($_GET['notify_actions'] == 'true' ? true : false);
@@ -99,9 +79,10 @@ switch($_GET['whatsspy']) {
 			echo json_encode(['error' => 'No name or correct phone number supplied!', 'code' => 400]);
 		}
 		break;
-	// Get global statistics of your whatsspy database.
-	// These quries are optimised to perform <2 seconds on an Raspberry Pi.
-	// This is why all the contact data is lazy-loaded. Querying for all status data can cost over 60 seconds for 10 contacts and 7 days of data.
+	/**
+	  *		Get all users and some basic information about them.
+	  *		@notice These quries are optimised to perform <2 seconds on an Raspberry Pi. This is why all the contact data is lazy-loaded. Querying for all status data can cost over 60 seconds for 10 contacts and 7 days of data.
+	  */
 	case 'getStats':
 		// Because this will be the first call for the GUI, we will only check it here.
 		// Upgrade DB if it's old:
@@ -145,7 +126,9 @@ switch($_GET['whatsspy']) {
 		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'profilePicPath' => $whatsspyWebProfilePath, 'userNotificationPhonenumber' => $whatsspyWhatsAppUserNotification]);
 
 		break;
-	// Get specific analytics and information of an given contact.
+	/**
+	  *		Get specific stats of a account. You can specify multiple accounts at the same time.
+	  */
 	case 'getContactStats':
 		if (isset($_GET['number'])) {
 			$numbers = explode(',', $_GET['number']);
@@ -292,7 +275,10 @@ switch($_GET['whatsspy']) {
 			echo json_encode(['error' => 'No number supplied!', 'code' => 400]);
 		}
 		break;
-	// Get timeline statistics
+	/**
+	  *		Get all required data for the timeline page.
+	  *		Also is used for the live feed in the timeline page. GET till is used for activites, GET sid is used for contact statuses.
+	  */
 	case 'getTimelineStats':
 		$data = array();
 		// Select by default 5 days of activities
@@ -379,7 +365,9 @@ switch($_GET['whatsspy']) {
 							   'till' => $till));
 
 		break;
-	// Get global statistics for the whole tracking DB
+	/**
+	  *		Get general statistics of the WhatsSpy Public installation and the users.
+	  */
 	case 'getGlobalStats':
 		// General tracker info
 		$select_global = $DBH->prepare('SELECT
@@ -606,6 +594,9 @@ switch($_GET['whatsspy']) {
 
 		echo json_encode(['global_stats' => $result_global, 'top10_users' => $result_top10, 'user_status_analytics_user' => $result_user_status, 'user_status_analytics_time' => $result_user_status_time]);
 		break;
+	/**
+	  *		Get the about page and Questions & Awnsers section. This is also a version check.
+	  */
 	case 'getAbout':
 		if(!isset($_GET['v'])) {
 			echo json_encode(['error' => 'Missing version', 'code' => 400]);
@@ -625,7 +616,6 @@ switch($_GET['whatsspy']) {
 			$opts = array('http' => array('method'  => 'POST', 'header'  => 'Content-type: application/x-www-form-urlencoded', 'content' => $postdata));
 			$context  = stream_context_create($opts);
 			echo file_get_contents($whatsspyAboutQAUrl, false, $context);
-			// Auto update?
 		}
 		break;
 	default:

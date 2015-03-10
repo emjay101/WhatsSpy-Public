@@ -1,7 +1,7 @@
 <?php
 // -----------------------------------------------------------------------
-// Whatsspy tracker
-// @Author Maikel Zweerink
+//	@Name WhatsSpy Public
+// 	@Author Maikel Zweerink
 //
 //  This tracker requires read/write rights in it's own directory.
 //	
@@ -20,6 +20,7 @@ declare(ticks = 20);
 
 require_once 'config.php';
 require_once 'data.php';
+require_once 'db-functions.php';
 require_once 'functions.php';
 require_once 'whatsapp/src/whatsprot.class.php';
 
@@ -408,8 +409,9 @@ function retrieveTrackingUsers($clear = false) {
 
 function setupWhatsappHandler() {
 	global $wa, $whatsappAuth;
-	//bind event handler & tracker_login
+	// bind event handler & tracker_login
 	// Setup new Whatsapp session
+	// change the "false" to "true" if you want debug information about the WhatsApp connection.
 	$wa = new WhatsProt($whatsappAuth['number'], "WhatsApp", false);
 	$wa->eventManager()->bind('onGetRequestLastSeen', 'onGetRequestLastSeen');
 	$wa->eventManager()->bind('onGetError', 'onGetError');
@@ -582,7 +584,7 @@ tracker_log('------------------------------------------------------------------'
 sleep(3);
 do {
 	// Check database
-	if(!checkDB($DBH, $dbTables)) {
+	if(!checkMinimalDB($DBH, $dbTables)) {
 		tracker_log('[DB-check] Table\'s do not exist in database "'.$dbAuth['dbname'].'". Check the troubleshooting page.');
 		exit();
 	}
