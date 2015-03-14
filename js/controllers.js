@@ -166,6 +166,14 @@ angular.module('whatsspyControllers', [])
 		return count;
 	}
 
+	$scope.getGroupName = function(gid) {
+		for (var i = $rootScope.groups.length - 1; i >= 0; i--) {
+			if($rootScope.groups[i]['gid'] == gid) {
+				return $rootScope.groups[i]['name'];
+			}
+		};
+	}
+
 	$scope.$on('statusForNumberLoaded', function (event, $number) {
 	  	$scope.setupTimelineDataForNumber($number);
 	});
