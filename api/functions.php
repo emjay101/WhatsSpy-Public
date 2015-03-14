@@ -105,6 +105,24 @@ function cleanTimeIntervals($data, $type) {
 	}
 }
 
+function cleanSecondCounts($data) {
+	for ($i=0; $i < count($data); $i++) { 
+		if($data[$i]['seconds_today'] == null) {
+			$data[$i]['seconds_today'] = 0;
+		}
+		if($data[$i]['seconds_7day'] == null) {
+			$data[$i]['seconds_7day'] = 0;
+		}
+		if($data[$i]['seconds_14day'] == null) {
+			$data[$i]['seconds_14day'] = 0;
+		}
+		if($data[$i]['seconds_all'] == null) {
+			$data[$i]['seconds_all'] = 0;
+		}
+	}
+	return $data;
+}
+
 /**
   *		General log function.
   */
@@ -122,19 +140,32 @@ function tracker_log($msg, $date = true, $newline = true) {
   *		Check if the user's config is up to standards and attempt to (temp) fix this.
   */
 function checkConfig() {
-	global $whatsappAuth;
+	global $whatsappAuth, $whatsspyNotificatons;
+
+	$notice = false;
 
 	// Check if config is filled in.
-	if($whatsappAuth['secret'] == '') {
+	if($whatsappAuth['secret'] === '') {
 		tracker_log('[config] number and secret fields are required for the tracker to operate.');
 		exit();
 	}
 	// Check if debug is set
-	if($whatsappAuth['debug'] == null) {
-		tracker_log('[config] $whatsappAuth[\'debug\'] missing, please check config.example.php.');
+	if($whatsappAuth['debug'] !== false && $whatsappAuth['debug'] !== true) {
+		tracker_log('[config] $whatsappAuth[\'debug\'] missing (assuming false).');
+		$notice = true;
 		$whatsappAuth['debug'] = false;
 	}
-	sleep(2);
+	// Check if new notification structure is used.
+	if($whatsspyNotificatons === null) {
+		tracker_log('[config] $whatsspyNotificatons missing (notifications disabled).');
+		$notice = true;
+		$whatsspyNotificatons = [];
+	}
+
+	if($notice) {
+		tracker_log('[config] Please copy over the missing variables from config.example.php (starting in 10s).');
+		sleep(10);
+	}
 }
 
 
@@ -222,40 +253,102 @@ function removeAccount($number) {
 	$delete->execute(array(':id' => $number));
 }
 
+/**
+  *		Add a new group to the database. 
+  *		Give a name and request if you a true/false or a array for JSON syntax (for any errors).
+  */
+function addGroup($name, $array_result = false) {
+	global $DBH;
 
-function checkAndSendWhatsAppNotify($DBH, $wa, $number, $msg, $img = null) {
-	global $whatsspyWhatsAppUserNotification;
-	if($whatsspyWhatsAppUserNotification == '' || $whatsspyWhatsAppUserNotification == null) {
-		return;
-	} else {
-		// Phonenumber is set, now check if the $number actually has notify_actions on
-		$select = $DBH->prepare('SELECT name FROM accounts WHERE id = :number AND notify_actions = true');
-		$select -> execute(array(':number' => $number));
-		if($select -> rowCount() > 0) {
-			// notify_actions enabled
-			$row  = $select -> fetch();
-			$filteredMsg = str_replace(':name', $row['name'], $msg);
-			if($img == null) {
-				$wa -> sendMessage($whatsspyWhatsAppUserNotification, $filteredMsg);
-			} else {
-				$wa -> sendMessage($whatsspyWhatsAppUserNotification, $filteredMsg);
-				$wa -> sendMessageImage($whatsspyWhatsAppUserNotification, $img);
-			}
-			
+
+	// Check before insert
+	$check = $DBH->prepare('SELECT 1 FROM groups WHERE "name"=:name');
+	$check->execute(array(':name'=> $name));
+	if($check -> rowCount() == 0) {
+		$insert = $DBH->prepare('INSERT INTO groups (name)
+   						 			VALUES (:name);');
+		$insert->execute(array(':name' => $name));
+		if($array_result) {
+			return ['success' => true];
 		} else {
-			// notify_actions not enabled
-			return;
+			return true;
+		}
+	} else {
+		// Group already exists
+		if($array_result) {
+			return ['success' => false, 'error' => 'Group already exists!'];
+		} else {
+			return false;
 		}
 	}
 }
 
+function removeGroup($gid) {
+	global $DBH;
 
-function sendMessage($title, $message, $NMAKey = null, $LNKey = null, $priority = '2', $image = null) {
-	if($NMAKey != null && $NMAKey != '') {
-		sendNMAMessage($NMAKey, 'WhatsSpy Public', $title, $message, $priority);
+	// Update accounts
+	$update = $DBH->prepare('UPDATE accounts SET group_id = NULL WHERE group_id = :gid');
+	$update->execute(array(':gid' => $gid));
+
+	$delete = $DBH->prepare('DELETE FROM groups
+								WHERE gid = :gid;');
+	$delete->execute(array(':gid' => $gid));
+}
+
+
+// type can be 'user' or 'tracker'.
+function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
+	global $application_name;
+
+	foreach ($whatsspyNotificatons as $name => $notificationAgent) {
+		if($notificationAgent['enabled'] == true) {
+			if($type == 'tracker' && $notificationAgent['notify-tracker'] == true) {
+				// Tracker notification can be sent.
+				if($name == 'nma') {
+					sendNMAMessage($notificationAgent['key'], $application_name, $data['title'], $data['description'], '2');
+				} else if($name == 'ln') {
+					sendLNMessage($notificationAgent['key'], $data['title'], $data['description'], $data['image']);
+				}
+			} else if($type == 'user' && $notificationAgent['notify-user'] == true) {
+				// User notification can be sent.
+				// Check if user is enabled as notifyable
+				$user = isUserNotifyable($DBH, $data['number'], $data['notify_type']);
+				if($user['notifyable'] == true) {
+					$filteredTitle = str_replace(':name', $user['name'], $data['title']);
+					$filteredDesc = str_replace(':name', $user['name'], $data['description']);
+
+					if($name == 'nma') {
+						sendNMAMessage($notificationAgent['key'], $application_name, $filteredTitle, $filteredDesc, '1');
+					} else if($name == 'ln') {
+						sendLNMessage($notificationAgent['key'], $filteredTitle, $filteredDesc, $data['image']);
+					} else if($name == 'wa') {
+						sendWhatsAppMessage($wa, $notificationAgent['key'], $filteredDesc, $data['image']);
+					}
+				}
+			}
+		}
 	}
-	if($LNKey != null && $LNKey != '') {
-		sendLNMessage($LNKey, $title, $message, $image);
+}
+
+function isUserNotifyable($DBH, $number, $notify_type) {
+	$select = $DBH->prepare('SELECT name FROM accounts WHERE id = :number AND notify_'.$notify_type.' = true');
+	$select -> execute(array(':number' => $number));
+	$return = ['notifyable' => false, 'name' => null];
+	if($select -> rowCount() > 0) {
+		// notify_actions enabled
+		$row  = $select -> fetch();
+		$return['notifyable'] = true;
+		$return['name'] = $row['name'];
+	}
+	return $return;
+}
+
+function sendWhatsAppMessage($wa, $number, $msg, $img = null) {
+	if($img == null) {
+		$wa -> sendMessage($number, $msg);
+	} else {
+		$wa -> sendMessage($number, $msg);
+		$wa -> sendMessageImage($number, $img);
 	}
 }
 

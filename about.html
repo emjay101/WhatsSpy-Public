@@ -2,7 +2,7 @@
 	<div class="col-md-12">
 		<div class="row">
 			<div class="col-md-12">
-				<div class="alert alert-warning" role="alert"><strong>Raspberry Pi users:</strong> Did you download the Raspberry Pi image before the 4th of march? <a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/rpi-fix" target="_blank">Please check for this problem.</a></div>
+				<!-- <div class="alert alert-warning" role="alert"><strong>Raspberry Pi users:</strong> Did you download the Raspberry Pi image before the 4th of march? <a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/rpi-fix" target="_blank">Please check for this problem.</a></div> -->
 				<div class="well whatsspy-header-box">
 					<div class="row">
 						<div class="col-md-8">
@@ -30,6 +30,24 @@
 										<tr>
 											<td><strong>Wiki page:</strong></td>
 											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/" target="_blank">Gitlab Wiki</a></td>
+										</tr>
+										<tr>
+											<td><strong>Enabled Notification agents:</strong></td>
+											<td>
+												<small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
+												<div data-ng-show="notificationOptionDisabled == false && agent.enabled == true" data-ng-repeat="(key, agent) in notificationSettings">
+													<br />
+										    		 <h4>{{agent.name}}</h4>
+										    		 <span data-ng-show="key != 'wa'">
+											    		 Reporting user actions: <strong>{{agent['notify-user']}}</strong><br />
+											    		 Reporting tracker actions: <strong>{{agent['notify-tracker']}}</strong>
+										    		 </span>
+										    		 <span data-ng-show="key == 'wa'">
+										    		 	Reporting user actions: <strong>{{agent['notify-user']}}</strong><br />
+										    		 	Reporting to: <strong>{{agent['key']}}</strong><br />
+										    		 </span>
+										    	</div>
+											</td>
 										</tr>
 									</tbody>
 								</table>

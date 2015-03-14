@@ -120,12 +120,21 @@ angular.module('whatsspyFilters', [])
 		}
 	};
 })
-.filter('notificationPhonenumber', function () {
+.filter('trackerReason', function () {
 	return function (value) {
-		if(value == null || value == '') {
-			return 'not set, please add this to config.php';
+		if(value == null) {
+			return 'not given';
 		} else {
 			return value;
+		}
+	};
+})
+.filter('enabledText', function () {
+	return function (value) {
+		if(value == true) {
+			return 'enabled';
+		} else {
+			return 'disabled';
 		}
 	};
 })
@@ -160,7 +169,7 @@ angular.module('whatsspyFilters', [])
         };
     })
 .filter('numberFilter', function () {
-	return function (contacts, phoneNumber, name) {
+	return function (contacts, phoneNumber, name, group) {
 		if(contacts == undefined) {
 			return null;
 		}
@@ -189,6 +198,11 @@ angular.module('whatsspyFilters', [])
 					result = true;
 				} else {
 					result = allowName;
+				}
+			}
+			if(group != null) {
+				if(contact['group_id'] != group) {
+					result = false;
 				}
 			}
 			return result;

@@ -275,6 +275,7 @@ CREATE TABLE tracker_history
 (
   start timestamp with time zone NOT NULL DEFAULT now(),
   "end" timestamp with time zone,
+  reason character varying(255),
   CONSTRAINT pk_tracker_history PRIMARY KEY (start)
 )
 WITH (
@@ -299,8 +300,39 @@ ALTER TABLE whatsspy_config
 GRANT ALL ON TABLE whatsspy_config TO whatsspy;
 
 INSERT INTO whatsspy_config (db_version)
-    VALUES (3);
+    VALUES (4);
 
+
+-- Add notification options
+  ALTER TABLE accounts RENAME notify_actions  TO notify_status;
+ALTER TABLE accounts
+  ADD COLUMN notify_statusmsg boolean NOT NULL DEFAULT false;
+ALTER TABLE accounts
+  ADD COLUMN notify_profilepic boolean NOT NULL DEFAULT false;
+CREATE INDEX index_account_notify_status
+    ON accounts (notify_status ASC NULLS LAST);
+  CREATE INDEX index_account_notify_statusmsg
+    ON accounts (notify_statusmsg ASC NULLS LAST);
+CREATE INDEX index_account_notify_profilepic
+   ON accounts (notify_profilepic ASC NULLS LAST);
+
+-- Add groups
+CREATE TABLE groups
+(
+  gid serial NOT NULL,
+  name character varying(255) NOT NULL,
+  CONSTRAINT pk_groups_gid PRIMARY KEY (gid)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE groups
+  OWNER TO postgres;
+GRANT ALL ON TABLE groups TO whatsspy;
+ALTER TABLE accounts
+  ADD COLUMN group_id integer;
+ALTER TABLE accounts
+  ADD CONSTRAINT fk_group_id FOREIGN KEY (group_id) REFERENCES groups (gid) ON UPDATE NO ACTION ON DELETE NO ACTION;
 
 
 -- Function: lastseen_privacy_update()
@@ -454,6 +486,11 @@ CREATE INDEX index_profilepic_privacy_history_number_changed_at_desc
 
 CREATE INDEX index_statusmessage_privacy_history_number_changed_at_desc
    ON statusmessage_privacy_history ("number", "changed_at" DESC);
+
+CREATE INDEX index_account_group_id
+                    ON accounts (group_id ASC NULLS LAST);
+CREATE INDEX index_account_id_group_id
+   ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);
 
 
 -- Trigger: trigger_lastseen on accounts

@@ -11,7 +11,11 @@ angular.module('whatsspyControllers', [])
 	$scope.newContact = {'countryCode': '0031', 'number': null, 'name': null};
 
 	// Edit name
-	$scope.editContact = {'id': null, 'name': null, 'notify_actions': null};
+	$scope.editContact = {'id': null, 'name': null, 'group_id': null, 'notify_status': null, 'notify_statusmsg': null, 'notify_profilepic': null};
+
+	// New group
+	$scope.newGroup = {'name': null};
+	$scope.filterGroup = null;
 
 	// Javascript page setup call
 	$('[data-toggle="tooltip"]').tooltip();
@@ -28,6 +32,7 @@ angular.module('whatsspyControllers', [])
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("+" + data.number + " set inactive!");
+					$('#editName').modal('hide');
 					$scope.refreshContent();
 				} else {
 					alertify.error(data.error);
@@ -68,13 +73,18 @@ angular.module('whatsspyControllers', [])
 	$scope.setEditContact = function($contact) {
 		$scope.editContact.id = $contact.id;
 		$scope.editContact.name = $contact.name;
-		$scope.editContact.notify_actions = $contact.notify_actions;
+		$scope.editContact.notify_status = $contact.notify_status;
+		$scope.editContact.notify_statusmsg = $contact.notify_statusmsg;
+		$scope.editContact.notify_profilepic = $contact.notify_profilepic;
+		$scope.editContact.group_id = $contact.group_id;
 	}
 
-	$scope.resetEditContact = function() {
-		$scope.editContact.id = null;
-		$scope.editContact.name = null;
-		$scope.editContact.notify_actions = null;
+	$scope.resetObject = function(obj) {
+		for (var property in obj) {
+          if (obj.hasOwnProperty(property)) {
+            	obj[property] = null;
+            }
+          }
 	}
 
 	$scope.editNameModal = function($contact) {
@@ -83,13 +93,13 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitAccountEdit = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_actions=' + $scope.editContact.notify_actions }).
+		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_status=' + $scope.editContact.notify_status + '&notify_statusmsg=' + $scope.editContact.notify_statusmsg + '&notify_profilepic=' + $scope.editContact.notify_profilepic + '&group_id=' + $scope.editContact.group_id}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
 					$('#editName').modal('hide');
-					$scope.resetEditContact();
-					$scope.refreshContent();
+					$scope.resetObject($scope.editContact);
+					$scope.refreshContent(true);
 				} else {
 					alertify.error(data.error);
 				}
@@ -105,8 +115,6 @@ angular.module('whatsspyControllers', [])
 				if(data.success == true) {
 					alertify.success("Contact added to WhatsSpy. Tracking will start in 5 minutes.");
 					$('#addNumber').modal('hide');
-					$scope.newPhoneNumber = null;
-					$scope.newName = null;
 					$rootScope.refreshContent();
 				} else {
 					alertify.error(data.error);
@@ -115,6 +123,47 @@ angular.module('whatsspyControllers', [])
 			error(function(data, status, headers, config) {
 				alertify.error("Could not contact the server.");
 			});
+	}
+
+	$scope.submitNewGroup = function() {
+		$http({method: 'GET', url: 'api/?whatsspy=addGroup&name=' + encodeURIComponent($scope.newGroup.name)}).
+			success(function(data, status, headers, config) {
+				if(data.success == true) {
+					alertify.success("New group added.");
+					$scope.resetObject($scope.newGroup);
+					$rootScope.refreshContent(true);
+				} else {
+					alertify.error(data.error);
+				}
+			}).
+			error(function(data, status, headers, config) {
+				alertify.error("Could not contact the server.");
+			});
+	}
+
+	$scope.deleteGroup = function(gid) {
+		$http({method: 'GET', url: 'api/?whatsspy=deleteGroup&gid=' + gid}).
+			success(function(data, status, headers, config) {
+				if(data.success == true) {
+					alertify.success("Group removed.");
+					$rootScope.refreshContent(true);
+				} else {
+					alertify.error(data.error);
+				}
+			}).
+			error(function(data, status, headers, config) {
+				alertify.error("Could not contact the server.");
+			});
+	}
+
+	$scope.getGroupUsers = function(gid) {
+		var count = 0;
+		for (var i = $rootScope.accounts.length - 1; i >= 0; i--) {
+			if($rootScope.accounts[i]['group_id'] == gid) {
+				count++;
+			}
+		};
+		return count;
 	}
 
 	$scope.$on('statusForNumberLoaded', function (event, $number) {
@@ -374,6 +423,11 @@ angular.module('whatsspyControllers', [])
 .controller('CompareController', function($scope, $rootScope, $q, $http, $timeout, VisDataSet) {
 
 	$scope.comparedAccounts = [];
+
+	$scope.filterGroup = null;
+
+	// Javascript page setup call
+	$('[data-toggle="tooltip"]').tooltip();
 
 	$scope.isNumberInComparison = function(id) {
 		for (var i = 0; i < $scope.comparedAccounts.length; i++) {
@@ -699,6 +753,7 @@ angular.module('whatsspyControllers', [])
 	$scope.timelineData = null;
 	$scope.lastRequiredSid = 0;
 	$rootScope.liveFeed = null;
+	$scope.filterGroup = null;
 
 	$scope.showActivityTimeline = true;
 	$scope.showStatusTimeline = true;
@@ -744,6 +799,9 @@ angular.module('whatsspyControllers', [])
 				result = $data[i].sid;
 			}
 		}
+		if(result == 0) {
+			result = $data[$data.length-1].sid;
+		}
 		return result;
 	}
 
@@ -786,11 +844,6 @@ angular.module('whatsspyControllers', [])
 		for(var i = 0; i < $data.activity.length; i++) {
 			$scope.timelineData.activity.push($data.activity[i]);
 		}
-		// Userstatus
-		for(var i = 0; i < $data.userstatus.length; i++) {
-			$scope.timelineData.userstatus.push($data.userstatus[i]);
-		}
-
 		$scope.timelineData.since = $data.since;
 	}
 
@@ -865,10 +918,15 @@ angular.module('whatsspyControllers', [])
 })
 .controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter) {
 	$scope.stats = null;
+	$scope.filterGroup = null;
 
 	$rootScope.inStatsPage = true;
 	$scope.$on('$routeChangeStart', function(next, current) { 
 		$rootScope.inStatsPage = false;
+	});
+
+	$scope.$watch('filterGroup', function() {
+		$scope.refreshContent();
 	});
 
 
@@ -902,36 +960,51 @@ angular.module('whatsspyControllers', [])
 		}
 	}
 
-	$rootScope.loadGlobalStats = function() {
+	$rootScope.loadGlobalStats = function(component) {
 		var deferred = $q.defer();
-		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats'}).
+		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats&component='+component+'&group='+$scope.filterGroup}).
 		success(function(data, status, headers, config) {
-			$scope.stats = data;
-			// Setup data structures for the GUI
-	        $scope.stats.generated = {};
-	        $scope.stats.generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_today},
-	        																					  {key: '7 days', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_7day},
-	                                                                                              {key: '14 days', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_14day},
-	                                                                                              {key: 'all time', id: 'dow', value: 'count', data: data.user_status_analytics_time.weekday_status_all}]);
-	        $scope.stats.generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_today},
-	        																				   {key: '7 days', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_7day},
-	                                                                                           {key: '14 days', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_14day},
-	                                                                                           {key: 'all time', id: 'hour', value: 'count', data: data.user_status_analytics_time.hour_status_all}]);
-	        $scope.stats.generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_today},
-	        																					 {key: '7 days', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_7day},
-	                                                                                             {key: '14 days', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_14day},
-	                                                                                             {key: 'all time', id: 'dow', value: 'minutes', data: data.user_status_analytics_time.weekday_status_all}]);
-	        $scope.stats.generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_today},
-	        																				  {key: '7 days', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_7day},
-	                                                                                          {key: '14 days', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_14day},
-	                                                                                          {key: 'all time', id: 'hour', value: 'minutes', data: data.user_status_analytics_time.hour_status_all}]);
-	        // Set default view
-        	$scope.stats.generated.showHour = false;
-        	$scope.stats.generated.showWeekday = true;
-        	$scope.stats.generated.showPieChart = 'today';
+			if($scope.stats == null) {
+				$scope.stats = {};
+			}
+			$scope.stats[component] = data;
 
-        	$scope.stats.generated.top10DayChoice = 'today';
-        	$scope.stats.generated.top10TimeChoice = 'alltime';
+			if(component == 'top10_users') {
+	        	if($scope.stats.generated == null) {
+		        	$scope.stats.generated = {};
+		    	}
+		    	$scope.stats.generated.top10DayChoice = 'today';
+	        	$scope.stats.generated.top10TimeChoice = 'alltime';
+			}
+
+
+
+			if(component == 'user_status_analytics_time') {
+				// Setup data structures for the GUI
+				if($scope.stats.generated == null) {
+		        	$scope.stats.generated = {};
+		    	}
+		        $scope.stats.generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data.weekday_status_today},
+		        																					  {key: '7 days', id: 'dow', value: 'count', data: data.weekday_status_7day},
+		                                                                                              {key: '14 days', id: 'dow', value: 'count', data: data.weekday_status_14day},
+		                                                                                              {key: 'all time', id: 'dow', value: 'count', data: data.weekday_status_all}]);
+		        $scope.stats.generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data.hour_status_today},
+		        																				   {key: '7 days', id: 'hour', value: 'count', data: data.hour_status_7day},
+		                                                                                           {key: '14 days', id: 'hour', value: 'count', data: data.hour_status_14day},
+		                                                                                           {key: 'all time', id: 'hour', value: 'count', data: data.hour_status_all}]);
+		        $scope.stats.generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data.weekday_status_today},
+		        																					 {key: '7 days', id: 'dow', value: 'minutes', data: data.weekday_status_7day},
+		                                                                                             {key: '14 days', id: 'dow', value: 'minutes', data: data.weekday_status_14day},
+		                                                                                             {key: 'all time', id: 'dow', value: 'minutes', data: data.weekday_status_all}]);
+		        $scope.stats.generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data.hour_status_today},
+		        																				  {key: '7 days', id: 'hour', value: 'minutes', data: data.hour_status_7day},
+		                                                                                          {key: '14 days', id: 'hour', value: 'minutes', data: data.hour_status_14day},
+		                                                                                          {key: 'all time', id: 'hour', value: 'minutes', data: data.hour_status_all}]);
+		        // Set default view
+	        	$scope.stats.generated.showHour = false;
+	        	$scope.stats.generated.showWeekday = true;
+	        	$scope.stats.generated.showPieChart = 'today';
+	        }
 
 			deferred.resolve(null);
 		}).
@@ -945,7 +1018,10 @@ angular.module('whatsspyControllers', [])
 	$scope.refreshContent = function() {
 		$rootScope.showLoader = true;
 		var promises = [];
-		promises[0] = $rootScope.loadGlobalStats();
+		promises[0] = $rootScope.loadGlobalStats('global_stats');
+		promises[1] = $rootScope.loadGlobalStats('user_status_analytics_user');
+		promises[2] = $rootScope.loadGlobalStats('user_status_analytics_time');
+		promises[3] = $rootScope.loadGlobalStats('top10_users');
 
 		$q.all(promises).then(function(greeting) {
 		$rootScope.showLoader = false;
@@ -956,8 +1032,8 @@ angular.module('whatsspyControllers', [])
 		});
 	}
 
-	// Call the setup
-	$scope.refreshContent();
+	// No need to call anymore, watch will do this.
+	//$scope.refreshContent();
 })
 .controller('AboutController', function($rootScope, $q, $scope, $http) {
 

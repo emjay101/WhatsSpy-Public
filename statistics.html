@@ -1,11 +1,39 @@
 <div class="row">
 	<div class="col-md-12">
 		<!-- panels here -->
-		<div class="whatsspy-no-information-data" data-ng-show="stats.global_stats.first_tracker_session == null">
+		<div class="whatsspy-no-information-data" data-ng-show="stats == null">
 			<span data-ng-show="showLoader == false">Not enough information available ...</span>
 			<span data-ng-show="showLoader == true">Loading information ...</span>
 		</div>
-		<span data-ng-show="stats.global_stats.first_tracker_session != null">
+		<span data-ng-show="stats != null">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-filter" aria-hidden="true"></span> Filter options</h3>
+						</div>
+						<div class="panel-body">
+							<div class="row">
+								<div class="col-md-12">
+									<select class="form-control" data-ng-model="filterGroup" data-ng-options="group.gid as group.name for group in groups" ></select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h3 class="panel-title"><span class="glyphicon glyphicon-education" aria-hidden="true"></span> Notes</h3>
+						</div>
+						<div class="panel-body">
+							All information on this page does not update. You can refresh by clicking the gray timestamp in "status".
+						</div>
+					</div>
+				</div>
+			</div>
+		</span>
+		<span data-ng-show="stats.global_stats != null">
 			<div class="row">
 				<div class="col-md-6">
 					<div class="panel panel-default">
@@ -47,7 +75,7 @@
 						        </tr>
 						      </tbody>
 						    </table>
-						    <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> All information on this page does not update. You can refresh by clicking the gray timestamp in "status".
+						    
 						</div>
 					</div>
 				</div>
@@ -104,6 +132,8 @@
 					</div>
 				</div>
 			</div>
+		</span>
+		<span data-ng-show="stats.user_status_analytics_user != null">
 			<div class="row">
 				<div class="col-md-12">
 					<div class="panel panel-default">
@@ -126,8 +156,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-count-all"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('count_all')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -144,8 +174,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-count-today"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('count_today')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -162,8 +192,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-count-7day"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('count_7day')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -180,8 +210,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-count-14day"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('count_14day')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -200,8 +230,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-time-all"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('seconds_all')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -218,8 +248,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-time-today"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('seconds_today')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -236,8 +266,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-time-7day"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('seconds_7day')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -254,8 +284,8 @@
 										<nvd3-pie-chart
 											data="stats.user_status_analytics_user"
 											id="pieChart-user-activities-time-14day"
-											width="300"
-											height="300"
+											width="600"
+											height="600"
 											x="xFunction()"
 											y="yFunction('seconds_14day')"
 											margin="{left:0,top:15,bottom:0,right:0}"
@@ -274,6 +304,8 @@
 					</div>
 				</div>
 			</div>
+		</span>
+		<span data-ng-show="stats.user_status_analytics_time != null">
 			<div class="row">
 				<div class="col-md-12">
 					<div class="panel panel-default">
@@ -365,6 +397,8 @@
 					</div>	
 				</div>
 			</div>
+		</span>
+		<span data-ng-show="stats.top10_users != null">
 			<div class="row">
 				<div class="col-md-12">
 					<div class="panel panel-default">

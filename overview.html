@@ -10,8 +10,10 @@
 						<input type="text" class="form-control" id="filterPhonenumber"data-ng-model="filterPhonenumber" ng-model-options="{debounce: 1000}" placeholder="Search by phone number ...">
 					</p>
 					<p>
-						<input type="text" class="form-control" id="filterName" data-ng-model="filterName"  ng-model-options="{debounce: 1000}" placeholder="Search by name ...">
-						<small><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Use <strong>&lt;name&gt;|&lt;name&gt;</strong> to filter on multiple names.</small>
+						<input type="text" class="form-control" id="filterName" data-ng-model="filterName"  ng-model-options="{debounce: 1000}" placeholder="Search by name ..." title="Use &lt;name&gt;|&lt;name&gt; to filter on multiple names." data-toggle="tooltip" data-placement="bottom">
+					</p>
+					<p>
+						<select class="form-control" data-ng-model="filterGroup" data-ng-options="group.gid as group.name for group in groups" ></select>
 					</p>
 				</div>
 			</div>	
@@ -35,38 +37,48 @@
 					<p>
 						<span class="btn btn-default" data-toggle="modal" data-target="#addNumber"><span class="glyphicon glyphicon-plus"></span> Add contact by phone number</span> 
 						<a class="btn btn-default" href="https://maikel.pro/service/whatsspy/?importGoogleContacts&warning" target="_blank"><span class="glyphicon glyphicon-refresh"></span> Import Google Contacts</a> 
+						<span class="btn btn-default" data-toggle="modal" data-target="#manageGroups"><span class="glyphicon glyphicon-pencil"></span> Manage groups</span> 
 					</p>
 				</div>
 			</div>
 		</div>
 		<div class="whatsspy-item-wrapper">	
-			<div class="panel panel-default" data-ng-repeat="number in accounts | numberFilter:filterPhonenumber:filterName">
+			<div class="panel panel-default" data-ng-repeat="number in accounts | numberFilter:filterPhonenumber:filterName:filterGroup">
 					<div class="panel-heading whatsspy-contact-head">
-						<div class="col-md-1 col-xs-10">
-							<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null && profilePicPath != null) && profilePicPath + number.profilepic + '.jpg' || ''}}" />
-							<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="number.profilepic == null" src="https://placehold.it/75x75" />
+						<div class="col-md-1 col-xs-5">
+							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null && profilePicPath != null) && profilePicPath + number.profilepic + '.jpg' || ''}}" />
+							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" data-ng-show="number.profilepic == null" src="https://placehold.it/150x150" />
 						</div>
-						<div class="col-md-6 col-xs-12">
+						<div class="col-md-6 hidden-xs">
 							<h3>{{number.name | emptyName}} <small class="contact_status">{{number.last_statusmessage}}</small></h3>
-							<span data-ng-show="number.since != null" class="label label-info">tracking since {{number.since | staticDatetime}}</span>
-							<!-- <span data-ng-show="number.records != null" class="label label-info">{{number.records}} status records</span> -->
-							<!-- <span data-ng-show="number.resultall != null" class="label label-info">online time: {{number.resultall}}</span> -->
+							<span data-ng-show="number.since != null" class="label label-info">tracking since {{::number.since | staticDatetime}}</span>
 							<span data-ng-show="number.latest_online != null" class="label label-info">last seen <span am-time-ago="number.latest_online"></span></span>
 						</div>
-						<div class="col-md-3 col-xs-12 whatsspy-contact-options">
+						<!-- Responsive small setup -->
+			    		<div class="col-xs-7 visible-xs">
+							<h3>{{number.name | emptyName}} <br /><small class="contact_status">{{number.last_statusmessage}}</small></h3>
+						</div>
+						<div class="row visible-xs">
+							<div class="col-xs-12">
+								<span data-ng-show="number.since != null" class="label label-info whatsspy-label-notifications">tracking since {{::number.since | staticDatetime}}</span>
+								<span data-ng-show="number.latest_online != null" class="label label-info whatsspy-label-notifications">last seen <span am-time-ago="number.latest_online"></span></span>
+							</div>
+						</div>
+						<!-- End responsive small setup -->
+						<div class="col-md-3 hidden-xs whatsspy-contact-options">
 								<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
 									<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
 									<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
 								</a>
 								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
 						</div>
-						<div class="col-md-2 col-xs-12 whatsspy-contact-phone">
+						<div class="col-md-2 hidden-xs whatsspy-contact-phone">
 							<div class="input-group">
 	            				<span class="input-group-addon">+</span>  
-				    			<input type="text" class="form-control" data-ng-value="number.id">
+				    			<input type="text" class="form-control" data-ng-value="::number.id">
 				    		</div>
 				    		<div class="whatsspy-contact-option-status">
-					    		<span data-ng-show="number.notify_actions == true"> 
+					    		<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true"> 
 					    			<span class="label label-danger whatsspy-label-notifications">
 					    				notifications enabled
 					    			</span>
@@ -74,6 +86,31 @@
 					    	</div>
 				    	</div>
 			    		<div class="clear"></div>
+			    		<!-- Responsive small setup -->
+			    		<div class="row visible-xs">
+			    			<div class="col-xs-12 whatsspy-account-responsive-small">
+								<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
+									<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
+									<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
+								</a>
+								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
+							</div>
+							<div class="col-xs-12 whatsspy-contact-phone">
+								<div class="input-group">
+		            				<span class="input-group-addon">+</span>  
+					    			<input type="text" class="form-control" data-ng-value="::number.id">
+					    		</div>
+					    		<div class="whatsspy-contact-option-status">
+						    		<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true"> 
+						    			<span class="label label-danger whatsspy-label-notifications">
+						    				notifications enabled
+						    			</span>
+						    		</span>
+						    	</div>
+					    	</div>
+					    	<div class="clear"></div>
+			    		</div>
+			    		<!-- End responsive small setup -->
 					</div>
 					<div class="panel-body" data-ng-show="accountData[number.id].showPanel == true">
 						<span data-ng-show="accountData[number.id].status.length < 1">
@@ -81,7 +118,7 @@
 						</span>
 						<span data-ng-show="accountData[number.id].status.length > 0">
 							<!-- Timeline information -->
-							<div data-ng-show="accountData[number.id] == null && number.records > 1" class="whatsspy-lazy-load-warning"> Click to load data</div>
+							<div data-ng-show="accountData[number.id] == null" class="whatsspy-lazy-load-warning"> Click to load data</div>
 							<div data-ng-show="accountData[number.id].timelineLoaded" class="whatsspy-number-timeline">
 								<vis-timeline data="accountData[number.id].timelineData" options="timelineOptions" events="graphEvents"></vis-timeline>
 							</div>
@@ -182,8 +219,8 @@
 														    	data="accountData[number.id].generated.chart_weekday_status_count_all"
 														        id="opened-overview-graph-weekday-{{number.id}}"
 														        tooltipcontent="barChartToolTip('weekday', 'times')"
-														        width="800"
-	        													height="300"
+														        width="700"
+	        													height="200"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -199,8 +236,8 @@
 														    	data="accountData[number.id].generated.chart_hour_status_count_all"
 														        id="opened-overview-graph-hour-{{number.id}}"
 														        tooltipcontent="barChartToolTip('hour', 'times')"
-														        width="800"
-	        													height="300"
+														        width="700"
+	        													height="200"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -231,8 +268,8 @@
 														    	data="accountData[number.id].generated.chart_weekday_status_time_all"
 														        id="time-overview-graph-weekday-{{number.id}}"
 														        tooltipcontent="barChartToolTip('weekday', 'minutes')"
-														        width="800"
-	        													height="300"
+														        width="700"
+	        													height="200"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -248,8 +285,8 @@
 														    	data="accountData[number.id].generated.chart_hour_status_time_all"
 														        id="time-overview-graph-hour-{{number.id}}"
 														        tooltipcontent="barChartToolTip('hour', 'minutes')"
-														        width="800"
-	        													height="300"
+														        width="700"
+	        													height="200"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -388,7 +425,7 @@
 		    </div>
 		  </div>
 		</form>
-		<small>The new contact will be verified as an WhatsApp user and added to the tracker within 5 minutes. After this you can find the contact in the overview list.</small>
+		<small>The new contact will be verified as an WhatsApp user and added to the tracker within 5-10 minutes. After this you can find the contact in the overview list.</small>
       </div>
       <div class="modal-footer">
 		<div class="whatsspy-contact-options">
@@ -411,7 +448,7 @@
       	<form class="form-horizontal">
 		  <div class="form-group">
 		    <label for="phoneNumber" class="col-sm-2 control-label">Phone number</label>
-		    <div class="col-sm-7 col-sm-offset-1">
+		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1">
 		    	<div class="row">
 	    			<div class="input-group ">
         				<span class="input-group-addon">+</span>  
@@ -422,7 +459,7 @@
 		  </div>
 		  <div class="form-group">
 		    <label for="name" class="col-sm-2 control-label">Contact name</label>
-		    <div class="col-sm-7 col-sm-offset-1">
+		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1">
 		    	<div class="row">
 	    			<div class="input-group"> 
 	    				<div class="input-group-addon"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></div>
@@ -432,18 +469,44 @@
 		    </div>
 		  </div>
 		  <div class="form-group">
-		    <label for="name" class="col-sm-2 control-label">Notifications via WhatsApp</label>
-		    <div class="col-sm-7 col-sm-offset-1">
+		    <label for="name" class="col-sm-2 control-label">Group</label>
+		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1">
 		    	<div class="row">
 	    			<div class="input-group"> 
-	    				<span data-ng-show="editContact.notify_actions == false">
-	    					<button type="button" class="btn btn-primary" data-ng-click="editContact.notify_actions = true">Enable notifications</button>
-	    				</span>
-	    				<span data-ng-show="editContact.notify_actions == true">
-	    					<button type="button" class="btn btn-success" data-ng-click="editContact.notify_actions = false">Disable notifications</button>
-	    				</span>
+	    				<div class="input-group-addon"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span></div>
+				      	<select class="form-control" data-ng-model="editContact.group_id" data-ng-options="group.gid as group.name for group in groups" ><option value="null">No group</option></select>
 				    </div>
-				    <small>Sending notifications to <strong>{{userNotificationPhonenumber | notificationPhonenumber}}</strong>. You will recieve messages for online status, status message changes and profile picture changes. Do not enable notifications for too much people (10+), this might cause a WhatsApp ban for spamming.</small>
+		    	</div>
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="name" class="col-sm-2 control-label">Notifications</label>
+		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1" data-ng-disabled="isNotificationEnabled();">
+		    	<div class="row">
+	    			<div class="input-group"> 
+	    				<button type="button" class="btn btn-primary whatsspy-btn-notify col-xs-12" data-ng-click="editContact.notify_status = getOpposite(editContact.notify_status);" data-ng-disabled="notificationOptionDisabled">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="editContact.notify_status == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_status == false"></span>
+	    					 Coming online
+	    				</button>
+	    				<button type="button" class="btn btn-primary whatsspy-btn-notify col-xs-12" data-ng-click="editContact.notify_statusmsg = getOpposite(editContact.notify_statusmsg);" data-ng-disabled="notificationOptionDisabled">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="editContact.notify_statusmsg == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_statusmsg == false"></span>
+	    					Status message change
+	    				</button>
+	    				<button type="button" class="btn btn-primary whatsspy-btn-notify col-xs-12" data-ng-click="editContact.notify_profilepic = getOpposite(editContact.notify_profilepic);" data-ng-disabled="notificationOptionDisabled">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="editContact.notify_profilepic == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_profilepic == false"></span>
+	    					Profile picture change
+	    				</button>
+				    </div>
+				    <small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
+				    <small data-ng-show="notificationOptionDisabled == false">
+				    	Sending notifications for user actions via 
+				    	<span data-ng-repeat="(key, agent) in notificationSettings" data-ng-show="agent.enabled == true && agent['notify-user'] == true">
+				    		<strong>{{agent.name}}</strong> <span data-ng-hide="$last">and</span> 
+				    	</span>
+				    </small>
 		    	</div>
 		    </div>
 		  </div>
@@ -454,8 +517,62 @@
       	<div class="whatsspy-contact-options">
 	      	<button type="submit" data-ng-click="submitAccountEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save contact</button> 
 			<a class="btn btn-warning" title="Do not track the user, but keep any status/privacy records of this person." data-toggle="tooltip" data-placement="bottom" data-ng-click="setNumberInactive(editContact.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a> 
-			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteAccount(editContact.id);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact and all it's history</a>
+			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteAccount(editContact.id);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact (!)</a>
 		</div>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="manageGroups" tabindex="-1" role="dialog" aria-labelledby="manageGroupsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="manageGroupsLabel">Manage Groups</h4>
+      </div>
+      <div class="modal-body">
+      	<h4>Existing groups</h4>
+      	<form class="form-horizontal">
+      		<span data-ng-show="groups.length > 1">
+			  	<div class="form-group" data-ng-repeat="group in groups" data-ng-show="group.gid != null">
+					<div class="col-sm-3 col-xs-5">
+						<div class="input-group"> 
+		    				<div class="input-group-addon"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span></div>
+					      	<input type="text" class="form-control" id="name" data-ng-value="group.name" disabled="disabled">
+						</div>
+					</div>
+					<div class="col-sm-3 col-xs-3">
+						Users in this group: <strong>{{getGroupUsers(group.gid)}}</strong>
+					</div>
+					<div class="col-sm-4 col-xs-4">
+						<a class="btn btn-danger" title="Deleting the group will not delete the users in this group." data-ng-click="deleteGroup(group.gid);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete group</a>
+					</div>
+				</div>
+				<small>Deleting the group will not delete the users in this group.</small>
+			</span>
+			<span data-ng-show="groups.length == 1">
+				No groups defined yet...
+			</span>
+		</form>
+		<h4>Create groups</h4>
+		<form class="form-horizontal">
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">Group name</label>
+				<div class="col-sm-5">
+					<input type="text" class="form-control" id="name" data-ng-model="newGroup.name" placeholder="name of the group (required)">
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">Create group</label>
+				<div class="col-sm-5">
+					<button type="submit" data-ng-click="submitNewGroup();" class="btn btn-success">Create group</button>
+				</div>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>

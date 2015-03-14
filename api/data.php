@@ -19,6 +19,8 @@ $dbTables = ['accounts',
 // Instead of stateless this improves the performance.
 $global_timezone_digits = null;
 
+$application_name = 'WhatsSpy Public';
+
 // Timing for the tracker
 // 		DEFAULT CONFIGURATION:
 //		- Online/Offline status in realtime.

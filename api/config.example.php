@@ -7,7 +7,9 @@
 */
 
 
-/** General authentication info **/
+// -------------------------------------------------
+// Required authentication & general information
+// -------------------------------------------------
 
 // Postgres database user & password.
 $dbAuth = 			['host' => 'localhost',
@@ -30,42 +32,44 @@ $whatsappAuth = 	['number' => '',
 // Check for all timezones: http://php.net/manual/en/timezones.php
 date_default_timezone_set('Europe/Amsterdam');
 
-
+// -------------------------------------------------
+// You can edit beyond this point, but all options below are optional.
+// -------------------------------------------------
 
 // Location to store the profile pictures.
 // This path has to be absolute and the user running the tracker needs write access.
+// If you installed whatsspy in /var/www/whatsspy you do not need to change this.
 // include the last / in the path!
 $whatsspyProfilePath = '/var/www/whatsspy/images/profilepicture/';
 
 // Relative or absolute path for the web-user.
 // THIS PATH IS FOR USERS ACCESSING THE PROFILE PICTURES (path here above) FROM THE WEB.
 // NOTE: usually it is enough to use $whatsspyProfilePath and remove the /var/www
+// If you installed whatsspy in /var/www/whatsspy you do not need to change this.
 // include the last / in the path!
 $whatsspyWebProfilePath = '/whatsspy/images/profilepicture/';
 
-// -------------------------------------------------
-// You can edit beyond this point, but all options below are optional.
-// -------------------------------------------------
-
-// Set NMA key for notifications about the tracker,
-// Check notifymyandroid.com for more information.
-// OPTIONAL
-$whatsspyNMAKey = 	'';
-
-// You can also set an key for LiveNotifier
-// OPTIONAL
-$whatsspyLNKey = '';
-
-// Set this varible to recieve notficiations via WhatsApp on your phone.
-// In the GUI you can enable user specific tracking of activities etc.
-// On default no actions will be sent of any tracking contact. In the UI you need to enable this for a specific contact under "edit".
-// USE <countrycode><phonenumber> and do not use prefix 0's in countrycode and phonenumber
-// (eg. 0031 0611223300 will become 31 611223300)
-// DO NOT use any special chars (spaces, + etc), only type the number (eg. '31611223300')
-// NOTE: If you change this meanwhile the tracker is running, you need to restart the tracker.
-// NOTE2: If you don't use this, please leave it empty. This greatly reduces queries to PostgreSQL.
-// OPTIONAL
-$whatsspyWhatsAppUserNotification = '';
+//	Notifications about tracker and users.
+//
+//	If you want to recieve information about the tracker status (and specific events of users) you can enable this here. Enter the API key or phonenumber and set enabled to true.
+//  NOTE: WhatsApp phonenumber cannot recieve tracker notifications (since WhatsApp connection might be down).
+$whatsspyNotificatons = 	[// NotifyMyAndroid (notifymyandroid.com)
+							 'nma' => ['enabled' 		=> false,	
+									   'key' 			=> '',
+									   'name' 			=> 'NotifyMyAndroid',
+									   'notify-tracker' => true,
+									   'notify-user' 	=> false],	
+							 // LiveNotifier (livenotifier.net)		   
+							 'ln' =>  ['enabled' 		=> false,	
+									   'key' 			=> '',
+									   'name' 			=> 'LiveNotifier',
+									   'notify-tracker' => true,
+									   'notify-user' 	=> false],
+							 // WhatsApp phonenumber
+							 'wa' =>  ['enabled' 		=> false,	
+									   'key' 			=> '',		// Enter <countrycode><phonenumber> here without prefix 0's and no special chars.
+									   'name' 			=> 'WhatsApp',
+									   'notify-user' 	=> true]];
 
 // -------------------------------------------------
 // You don't need to edit beyond this point

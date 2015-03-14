@@ -79,14 +79,13 @@ header {
 
 #status {
 	float: right;
-	margin-right: 15px;
 	height: 105px;
 	margin-top: 25px;
 	border-radius: 6px;
 	display: inline-block;
 	color:white;
 	padding: 15px;
-	width: 130px;
+	width: 100%;
 	text-align: center;
 	white-space: nowrap;
 	background-color: #2B2B2B;
@@ -165,12 +164,20 @@ header {
 	font-size: 15px;
 	color: #5E5E5E;
 }
+.bootstrap-select {
+	width: 100%;
+}
 
 /**
   *  Whatsspy
   */
 .whatsspy-header-box {
-	min-height:210px;
+	min-height:200px;
+	padding-bottom: 0px;
+}
+.whatsspy-header-box-stats {
+	min-height:120px;
+	padding-bottom: 0px;
 }
 .whatsspy-analytics-th {
 	width: 50%;
@@ -188,6 +195,11 @@ header {
 }
 .whatsspy-tab-info-overview {
 	min-height: 300px;
+}
+
+.whatsspy-btn-notify {
+	margin-right: 5px;
+	margin-bottom: 10px;
 }
 
 .whatsspy-tab-status-msg {
@@ -246,7 +258,7 @@ header {
 }
 
 .whatsspy-contact-options {
-	text-align: right;
+	text-align: left;
 }
 
 .whatsspy-number-timeline-load {
@@ -318,6 +330,20 @@ header {
 	display: inline-block;
 	text-align: center;
 }
+
+.whatsspy-group-badge {
+	float: left;
+}
+
+.whatsspy-profile-pic {
+	max-width: 100px;
+	width: 100%;
+}
+.whatsspy-account-responsive-small {
+	margin-bottom: 10px;
+	margin-top: 10px;
+}
+
 
 
 /**

@@ -52,7 +52,7 @@ function signal_handler($signal) {
 			}
 
         	// Update tracker session
-			$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW() WHERE "end" IS NULL;');
+			$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW(), "reason" = \'Normal shutdown\' WHERE "end" IS NULL;');
 			$end_tracker_session->execute();
 			// End any running record where an user is online
 			$end_user_session = $DBH->prepare('UPDATE status_history
@@ -96,7 +96,7 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 // - the user comes online/offline
 // - the first time you send a subscription.
 function onPresenceReceived($mynumber, $from, $type) {
-	global $DBH, $wa, $crawl_time;
+	global $DBH, $wa, $crawl_time, $whatsspyNotificatons;
 	$number = explode("@", $from)[0];
 	// $type is either "available" or "unavailable"
 	$status = ($type == 'available' ? true : false);
@@ -116,7 +116,11 @@ function onPresenceReceived($mynumber, $from, $type) {
 							   ':number' => $number,
 							   ':start' => date('c', $real_time)));
 		tracker_log('  -[poll] '.$number.' is now '.$type.'.');
-		checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
+
+		sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
+																	'description' => ':name is now '.$type.'.',
+																	'number' => $number,
+																	'notify_type' => 'status']);
 	} else {
 		$row  = $latest_status -> fetch();
 		# Latest status is the same as the current status       : Do nothing
@@ -152,7 +156,10 @@ function onPresenceReceived($mynumber, $from, $type) {
 									':start' => date('c', $real_time)));
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 			if($type == 'available') {
-				checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name is now '.$type.'.');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
+																			'description' => ':name is now '.$type.'.',
+																			'number' => $number,
+																			'notify_type' => 'status']);
 			}
 		}
 	}
@@ -160,7 +167,7 @@ function onPresenceReceived($mynumber, $from, $type) {
 
 // retrieve profile pics
 function onGetProfilePicture($mynumber, $from, $type, $data) {
-	global $DBH, $wa, $whatsspyProfilePath, $whatsspyNMAKey, $whatsspyLNKey;
+	global $DBH, $wa, $whatsspyProfilePath, $whatsspyNotificatons;
 	$number = explode("@", $from)[0];
 	tracker_log('  -[profile-pic] Processing profile picture of '.$number.'.');
 	if($type == 'image') {
@@ -186,7 +193,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			        fclose($fp);
 			    } else {
 			    	tracker_log('  -[profile-pic] Could not write '. $filename .' to disk!');
-			    	sendMessage('Tracker Exception!', 'Could not write '. $filename .' to disk!', $whatsspyNMAKey, $whatsspyLNKey);
+			    	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => 'Could not write '. $filename .' to disk!']);
 			    }
 			}
 			// Update database
@@ -196,7 +203,11 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			$insert->execute(array(':hash' => $hash,
 								   ':number' => $number));
 			tracker_log('  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').');
-			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new profile picture.', $filename);
+			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name profile picture', 
+																		'description' => ':name has a new profile picture.',
+																		'image' => $filename,
+																		'number' => $number,
+																		'notify_type' => 'profilepic']);
 		}
 		// Update privacy
 		$privacy_status = $DBH->prepare('SELECT "profilepic_privacy" FROM accounts WHERE "id"=:number');
@@ -215,7 +226,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 
 // Retrieve status messages of users
 function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
-	global $DBH, $wa;
+	global $DBH, $wa, $whatsspyNotificatons;
 	$number = explode("@", $from)[0];
 	$privacy_enabled = ($time == null ? true : false);
 
@@ -235,7 +246,10 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 								   ':number' => $number,
 								   ':time' => (string)$time));
 			tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
-			checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new status message: \''.$data.'\'.');
+			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
+																		'description' => ':name has a new status message: \''.$data.'\'.',
+																		'number' => $number,
+																		'notify_type' => 'statusmsg']);
 		} else {
 			// User has known records, use the current insertion time
 
@@ -251,7 +265,10 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 				$insert->execute(array(':status' => $data,
 									   ':number' => $number));
 				tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
-				checkAndSendWhatsAppNotify($DBH, $wa, $number, ':name has a new status message: \''.$data.'\'.');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
+																			'description' => ':name has a new status message: \''.$data.'\'.',
+																			'number' => $number,
+																			'notify_type' => 'statusmsg']);
 			}
 		}
 	}
@@ -444,7 +461,7 @@ function startTrackerHistory() {
 											SET "end" = :end WHERE "end" IS NULL AND "status" = true;');
 		$end_user_session->execute(array(':end' => $latest_known_record));
 		// Update tracker records
-		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = :end WHERE "end" IS NULL;');
+		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = :end, "reason" = \'Improper shutdown.\' WHERE "end" IS NULL;');
 		$end_tracker_session->execute(array(':end' => $latest_known_record));
 	}
 
@@ -485,14 +502,15 @@ function calculateTick($time) {
   *     - User status message (and changes)
   */
 function track() {
-	global $DBH, $wa, $tracking_ticks, $tracking_numbers, $whatsspyNMAKey, $whatsspyLNKey, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
+	global $DBH, $wa, $tracking_ticks, $tracking_numbers, $whatsspyNotificatons, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
 
 	$crawl_time = time();
 	setupWhatsappHandler();
 	retrieveTrackingUsers();
 	tracker_log('[init] Started tracking with phonenumber ' . $whatsappAuth['number']);
 	startTrackerHistory();
-	sendMessage('WhatsSpy Public has started tracking!', 'tracker has started tracking '.count($tracking_numbers). ' users.', $whatsspyNMAKey, $whatsspyLNKey);
+	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'WhatsSpy Public has started tracking!', 'description' => 'tracker has started tracking '.count($tracking_numbers). ' users.']);
+
 	while(true){
 		$crawl_time = time();
 		// Socket read
@@ -608,8 +626,8 @@ do {
 		$DBH = null;
 		$DBH = setupDB($dbAuth);
 		// Update tracker session
-		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW() WHERE "end" IS NULL;');
-		$end_tracker_session->execute();
+		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW(), "reason" = :error WHERE "end" IS NULL;');
+		$end_tracker_session->execute(array(':error' => 'Error: '.$e->getMessage()));
 		// End any running record where an user is online
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
@@ -621,7 +639,7 @@ do {
 		if($whatsappAuth['debug']) {
 			print_r($e);
 		}
-		sendMessage('Tracker Exception!', $e->getMessage(), $whatsspyNMAKey, $whatsspyLNKey);
+		sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => $e->getMessage()]);
 	}
 
 	if($last_error == 'Connection Closed!') {

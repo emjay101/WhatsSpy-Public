@@ -32,7 +32,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.3.7';
+  $rootScope.version = '1.4.0';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -48,8 +48,9 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   // This data is required for this whole Angularjs Application
   $rootScope.accounts = [];
   $rootScope.pendingAccounts = [];
+  $rootScope.groups = null;
   $rootScope.profilePicPath = null;
-  $rootScope.userNotificationPhonenumber = null;
+  $rootScope.notificationSettings = null;
   $rootScope.trackerStart = null;
   $rootScope.loadedTime = null;
   $rootScope.newestVersion = null;
@@ -73,10 +74,12 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
         } else {
           $rootScope.accounts = data.accounts;
           $rootScope.pendingAccounts = data.pendingAccounts;
+          $rootScope.groups = data.groups;
           $rootScope.tracker = data.tracker;
           $rootScope.trackerStart = data.trackerStart;
           $rootScope.profilePicPath = data.profilePicPath;
-          $rootScope.userNotificationPhonenumber = data.userNotificationPhonenumber;
+          $rootScope.notificationSettings = data.notificationSettings;
+          $rootScope.setNotificationOptions(data.notificationSettings);
           $rootScope.loadedTime = moment();
         }
         deferred.resolve(null);
@@ -212,9 +215,36 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
   }
 
+  $rootScope.setNotificationOptions = function(settings) {
+    var disabled = true;
+    if(settings == null) {
+      $rootScope.notificationOptionDisabled = true;
+    } else {
+      for (var agent in settings) {
+          if (settings.hasOwnProperty(agent)) {
+            if(settings[agent].enabled == true) {
+              disabled = false;
+              break;
+            }
+          }
+      }
+      $rootScope.notificationOptionDisabled = disabled;
+    }
+  }
+
+  $rootScope.getOpposite = function(bool) {
+    if(bool == true) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
 
   // Get all the required information
-  $rootScope.refreshContent = function() {
+  // @variable slack set this to true to only fetch the global information and not new timelines etc.
+  $rootScope.refreshContent = function(slack) {
+    slack = typeof slack !== 'undefined' ? slack : false;
     $rootScope.showLoader = true;
     var promises = [];
     promises[0] = $rootScope.getAccounts();
@@ -224,10 +254,13 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
 
     if($rootScope.inStatsPage == true) {
-      promises[2] = $rootScope.loadGlobalStats();
+      promises[2] = $rootScope.loadGlobalStats('global_stats');
+      promises[3] = $rootScope.loadGlobalStats('user_status_analytics_user');
+      promises[4] = $rootScope.loadGlobalStats('user_status_analytics_time');
+      promises[5] = $rootScope.loadGlobalStats('top10_users');
     }
     // Load any new status
-    if(Object.keys($rootScope.accountData).length > 0) {
+    if(Object.keys($rootScope.accountData).length > 0 && slack == false) {
       var k;
       for (k in $rootScope.accountData) {
         if (Object.prototype.hasOwnProperty.call($rootScope.accountData, k)) {
