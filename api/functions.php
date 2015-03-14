@@ -302,12 +302,12 @@ function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
 
 	foreach ($whatsspyNotificatons as $name => $notificationAgent) {
 		if($notificationAgent['enabled'] == true) {
-			if($type == 'tracker' && $notificationAgent['notify-tracker'] == true) {
+			if($type == 'tracker' && @$notificationAgent['notify-tracker'] == true) {
 				// Tracker notification can be sent.
 				if($name == 'nma') {
 					sendNMAMessage($notificationAgent['key'], $application_name, $data['title'], $data['description'], '2');
 				} else if($name == 'ln') {
-					sendLNMessage($notificationAgent['key'], $data['title'], $data['description'], $data['image']);
+					sendLNMessage($notificationAgent['key'], $data['title'], $data['description'], @$data['image']);
 				}
 			} else if($type == 'user' && $notificationAgent['notify-user'] == true) {
 				// User notification can be sent.
