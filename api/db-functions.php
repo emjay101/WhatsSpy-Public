@@ -109,7 +109,7 @@ function checkDBMigration($DBH) {
 						    VALUES (3);';
 		$upgrade = $DBH->exec($sql_update);
 
-		if(!$upgrade) {
+		if($DBH->errorCode() != '00000') {
 			echo 'The following error occured when trying to upgrade DB:';
 			print_r($DBH->errorInfo());
 			exit();
@@ -171,8 +171,7 @@ function checkDBMigration($DBH) {
 
    								UPDATE whatsspy_config SET db_version = 4;
 							   ');
-
-		if(!$upgrade) {
+		if($DBH->errorCode() != '00000') {
 			echo 'The following error occured when trying to upgrade DB:';
 			print_r($DBH->errorInfo());
 			exit();
