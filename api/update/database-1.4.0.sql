@@ -37,3 +37,5 @@ ALTER TABLE accounts
    									ON accounts (group_id ASC NULLS LAST);
 CREATE INDEX index_account_id_group_id
    ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);
+
+UPDATE whatsspy_config SET db_version = 4;
