@@ -169,17 +169,13 @@ function checkDBMigration($DBH) {
    								CREATE INDEX index_account_id_group_id
    									ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);
 
-
+   								UPDATE whatsspy_config SET db_version = 4;
 							   ');
 
 		if(!$upgrade) {
 			echo 'The following error occured when trying to upgrade DB:';
 			print_r($DBH->errorInfo());
 			exit();
-		} else {
-			// Update DB
-			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 4;');
-			$update -> execute();
 		}
 	}
 }
