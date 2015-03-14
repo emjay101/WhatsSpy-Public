@@ -157,7 +157,7 @@ function checkDBMigration($DBH) {
 								  OIDS=FALSE
 								);
 								ALTER TABLE groups
-								  OWNER TO postgres;
+								  OWNER TO whatsspy;
 								GRANT ALL ON TABLE groups TO whatsspy;
 								ALTER TABLE accounts
 								  ADD COLUMN group_id integer;

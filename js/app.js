@@ -69,7 +69,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     $http({method: 'GET', url: 'api/?whatsspy=getStats'}).
       success(function(data, status, headers, config) {
         if(typeof data == 'string') {
-          alertify.error('An error occured, please check your configuration:'+data);
+          alertify.error('An error occured, please check your configuration:' + data);
           $rootScope.error = true;
         } else {
           $rootScope.accounts = data.accounts;
