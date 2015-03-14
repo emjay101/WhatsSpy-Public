@@ -176,11 +176,11 @@ function checkDBMigration($DBH) {
 			echo 'The following error occured when trying to upgrade DB:';
 			print_r($DBH->errorInfo());
 			exit();
+		} else {
+			// Update DB
+			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 4;');
+			$update -> execute();
 		}
-
-		// Update DB
-		$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 4;');
-		$update -> execute();
 	}
 }
 /**
