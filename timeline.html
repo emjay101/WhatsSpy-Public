@@ -108,7 +108,7 @@
 					  		<h3 class="panel-title">New profile photo for {{item.name | emptyName}}</h3> ({{item.id}})
 					  	</div>
 					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
-					  		{{item.changed_at | staticDatetime}}
+					  		{{item.changed_at | staticDatetime}} <span class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="Detecting profile picture changes can take 0-4 hours."></span>
 					  	</div>
 					  	<div class="clear"></div>
 					  	</div>
@@ -126,7 +126,7 @@
 					  		<h3 class="panel-title">{{item.name | emptyName}} changed his privacy setting</h3> ({{item.id}})
 					  	</div>
 					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
-					  		{{item.changed_at | staticDatetime}}
+					  		{{item.changed_at | staticDatetime}} <span class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="Detecting privacy changes can take 0-2 hours."></span>
 					  	</div>
 					  	<div class="clear"></div>
 					  	</div>

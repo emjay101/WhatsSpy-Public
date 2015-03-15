@@ -52,7 +52,7 @@
 						<div class="col-md-6 hidden-xs">
 							<h3>{{number.name | emptyName}} <small class="contact_status">{{number.last_statusmessage}}</small></h3>
 							<span data-ng-show="number.since != null" class="label label-info">tracking since {{::number.since | staticDatetime}}</span>
-							<span data-ng-show="number.latest_online != null" class="label label-info">last seen <span am-time-ago="number.latest_online"></span></span>
+							<span data-ng-show="number.latest_online != null" class="label label-info" title="{{number.latest_online | staticDatetime}}">last seen <span am-time-ago="number.latest_online"></span></span>
 							<span data-ng-show="number.group_id != null" class="label label-default">{{getGroupName(number.group_id)}}</span>
 						</div>
 						<!-- Responsive small setup -->
