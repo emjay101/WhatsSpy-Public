@@ -5,7 +5,7 @@
 //  app.js - AngularJS application
 // -----------------------------------------------------------------------
 
-angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyControllers', 'angularMoment', 'nvd3ChartDirectives'])
+angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyControllers', 'angularMoment', 'nvd3ChartDirectives', 'ui.multiselect'])
 .config(function($routeProvider, $locationProvider) {
   $routeProvider
   .when('/overview', {
@@ -32,7 +32,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.4.0';
+  $rootScope.version = '1.4.1';
 
   $('[data-toggle="tooltip"]').tooltip();
 

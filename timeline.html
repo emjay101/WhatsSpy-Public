@@ -13,7 +13,7 @@
 						<input type="text" class="form-control" id="filterName" data-ng-model="filterName"  ng-model-options="{debounce: 1000}" placeholder="Search by name ..." title="Use &lt;name&gt;|&lt;name&gt; to filter on multiple names." data-toggle="tooltip" data-placement="bottom">
 					</p>
 					<p>
-						<select class="form-control" data-ng-model="filterGroup" data-ng-options="group.gid as group.name for group in groups" ><option value="null">No group</option></select>
+						<select class="form-control" data-ng-model="filterGroup" data-ng-options="group.gid as group.name for group in groups" ></select>
 					</p>
 				</div>
 			</div>	
@@ -28,6 +28,15 @@
 					<p>
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Unlike the overview and comparison page, this information is live.
 					</p>
+					<br />
+					<br />
+					<p>
+						<button type="button" class="btn btn-default" data-ng-click="notifyAnySound = getOpposite(notifyAnySound);">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="notifyAnySound == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="notifyAnySound == false"></span>
+	    					Play sound for any event instead of user-specific
+	    				</button>
+	    			</p>
 				</div>
 			</div>
 		</div>

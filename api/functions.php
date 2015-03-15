@@ -287,12 +287,35 @@ function removeGroup($gid) {
 	global $DBH;
 
 	// Update accounts
-	$update = $DBH->prepare('UPDATE accounts SET group_id = NULL WHERE group_id = :gid');
+	$update = $DBH->prepare('DELETE FROM accounts_to_groups WHERE gid = :gid');
 	$update->execute(array(':gid' => $gid));
 
 	$delete = $DBH->prepare('DELETE FROM groups
 								WHERE gid = :gid;');
 	$delete->execute(array(':gid' => $gid));
+}
+
+function removeUserInGroup($gid, $number) {
+	global $DBH;
+
+	// Update accounts
+	$delete = $DBH->prepare('DELETE FROM accounts_to_groups WHERE number = :number AND gid = :gid');
+	$delete->execute(array(':number' => $number, ':gid' => $gid));
+}
+
+function insertUserInGroup($gid, $number) {
+	global $DBH;
+	// Update accounts
+	$insert = $DBH->prepare('INSERT INTO accounts_to_groups (number, gid) VALUES (:number, :gid)');
+	$insert->execute(array(':number' => $number, ':gid' => $gid));
+}
+
+function getGroupsFromNumber($number) {
+	global $DBH;
+	
+	$select_groups = $DBH->prepare('SELECT gid FROM accounts_to_groups WHERE number = :number ORDER BY gid ASC');
+	$select_groups -> execute(array(':number' => $number));
+	return $select_groups->fetchAll(PDO::FETCH_ASSOC);
 }
 
 

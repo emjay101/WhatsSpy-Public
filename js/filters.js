@@ -111,6 +111,20 @@ angular.module('whatsspyFilters', [])
 		}
 	};
 })
+.filter('noGroupFilter', function () {
+	return function (groups) {
+		if(groups == null) {
+			return null;
+		}
+		var realGroups = [];
+		for (var i = groups.length - 1; i >= 0; i--) {
+			if(groups[i]['gid'] != null) {
+				realGroups.push(groups[i]);
+			}
+		};
+		return realGroups;
+	};
+})
 .filter('privacy', function () {
 	return function (value) {
 		if(value == false) {
@@ -201,8 +215,13 @@ angular.module('whatsspyFilters', [])
 				}
 			}
 			if(group != null) {
-				if(contact['group_id'] != group) {
-					result = false;
+				result = false;
+				if(contact.groups.length != 0) {
+					for (var i = contact.groups.length - 1; i >= 0; i--) {
+						if(contact.groups[i].gid == group) {
+							result = true;
+						}
+					};
 				}
 			}
 			return result;

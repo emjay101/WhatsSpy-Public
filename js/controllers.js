@@ -11,7 +11,7 @@ angular.module('whatsspyControllers', [])
 	$scope.newContact = {'countryCode': '0031', 'number': null, 'name': null};
 
 	// Edit name
-	$scope.editContact = {'id': null, 'name': null, 'group_id': null, 'notify_status': null, 'notify_statusmsg': null, 'notify_profilepic': null};
+	$scope.editContact = {'id': null, 'name': null, 'groups': null, 'notify_status': null, 'notify_statusmsg': null, 'notify_profilepic': null, 'notify_timeline': null};
 
 	// New group
 	$scope.newGroup = {'name': null};
@@ -76,7 +76,8 @@ angular.module('whatsspyControllers', [])
 		$scope.editContact.notify_status = $contact.notify_status;
 		$scope.editContact.notify_statusmsg = $contact.notify_statusmsg;
 		$scope.editContact.notify_profilepic = $contact.notify_profilepic;
-		$scope.editContact.group_id = $contact.group_id;
+		$scope.editContact.notify_timeline = $contact.notify_timeline;
+		$scope.editContact.groups = $contact.groups;
 	}
 
 	$scope.resetObject = function(obj) {
@@ -93,7 +94,13 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitAccountEdit = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_status=' + $scope.editContact.notify_status + '&notify_statusmsg=' + $scope.editContact.notify_statusmsg + '&notify_profilepic=' + $scope.editContact.notify_profilepic + '&group_id=' + $scope.editContact.group_id}).
+		var groupArray = '';
+		for (var i = $scope.editContact.groups.length - 1; i >= 0; i--) {
+				groupArray= groupArray+$scope.editContact.groups[i].gid+',';
+			};
+		groupArray = groupArray.substring(0, groupArray.length - 1);
+
+		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_status=' + $scope.editContact.notify_status + '&notify_statusmsg=' + $scope.editContact.notify_statusmsg + '&notify_profilepic=' + $scope.editContact.notify_profilepic + '&notify_timeline=' + $scope.editContact.notify_timeline + '&groups=' + groupArray}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
@@ -159,11 +166,17 @@ angular.module('whatsspyControllers', [])
 	$scope.getGroupUsers = function(gid) {
 		var count = 0;
 		for (var i = $rootScope.accounts.length - 1; i >= 0; i--) {
-			if($rootScope.accounts[i]['group_id'] == gid) {
-				count++;
-			}
+			for (var y = $rootScope.accounts[i].groups.length - 1; y >= 0; y--) {
+				if($rootScope.accounts[i].groups[y].gid == gid) {
+					count++;
+				}
+			};
 		};
 		return count;
+	}
+
+	$scope.getRealGroups = function() {
+		return $filter('noGroupFilter')($rootScope.groups);
 	}
 
 	$scope.getGroupName = function(gid) {
@@ -763,6 +776,9 @@ angular.module('whatsspyControllers', [])
 	$rootScope.liveFeed = null;
 	$scope.filterGroup = null;
 
+	$scope.notificationPlayer = document.getElementById("notification");
+	$scope.notifyAnySound = false;
+
 	$scope.showActivityTimeline = true;
 	$scope.showStatusTimeline = true;
 
@@ -807,10 +823,16 @@ angular.module('whatsspyControllers', [])
 				result = $data[i].sid;
 			}
 		}
-		if(result == 0) {
+		if(result == 0 && $data.length > 0) {
 			result = $data[$data.length-1].sid;
 		}
 		return result;
+	}
+
+	$scope.notifyForObj = function($obj) {
+		if($scope.notifyAnySound == true || $obj.notify_timeline == true) {
+			$scope.notificationPlayer.play();
+		}
 	}
 
 
@@ -822,6 +844,7 @@ angular.module('whatsspyControllers', [])
 			$data.activity[i].new = true;
 			$scope.setStatusTimeout($data.activity[i]);
 			$scope.timelineData.activity.unshift($data.activity[i]);
+			$scope.notifyForObj($data.activity[i]);
 		}
 		// Userstatus
 		for(var i = 0; i < $data.userstatus.length; i++) {
@@ -837,6 +860,7 @@ angular.module('whatsspyControllers', [])
 				if($scope.timelineData.userstatus.length > 200) {
 					$scope.timelineData.userstatus.pop();
 				}
+				$scope.notifyForObj($data.userstatus[i]);
 			} 
 			if($data.userstatus[i].end == null) {
 				$scope.lastRequiredSid = $data.userstatus[i].sid;

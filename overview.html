@@ -49,47 +49,94 @@
 							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null && profilePicPath != null) && profilePicPath + number.profilepic + '.jpg' || ''}}" />
 							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" data-ng-show="number.profilepic == null" src="https://placehold.it/150x150" />
 						</div>
-						<div class="col-md-6 hidden-xs">
-							<h3>{{number.name | emptyName}} <small class="contact_status">{{number.last_statusmessage}}</small></h3>
-							<span data-ng-show="number.since != null" class="label label-info">tracking since {{::number.since | staticDatetime}}</span>
-							<span data-ng-show="number.latest_online != null" class="label label-info" title="{{number.latest_online | staticDatetime}}">last seen <span am-time-ago="number.latest_online"></span></span>
-							<span data-ng-show="number.group_id != null" class="label label-default">{{getGroupName(number.group_id)}}</span>
+						<div class="col-md-11">
+							<div class="row">
+								<div class="col-md-6 hidden-xs">
+									<h3>{{number.name | emptyName}} <small class="contact_status">{{number.last_statusmessage}}</small></h3>
+								</div>
+								<!-- Responsive small setup -->
+								<div class="col-md-6 visible-xs">
+									<h3>{{number.name | emptyName}} <br /><small class="contact_status">{{number.last_statusmessage}}</small></h3>
+								</div>
+								<!-- END responsive small setup -->
+								<div class="col-md-3 hidden-xs whatsspy-contact-options">
+									<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
+										<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
+										<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
+									</a>
+									<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
+								</div>
+								<div class="col-md-3 hidden-xs whatsspy-contact-phone">
+									<div class="input-group">
+			            				<span class="input-group-addon">+</span>  
+						    			<input type="text" class="form-control" data-ng-value="::number.id">
+						    		</div>
+								</div>
+								<!-- Responsive small setup -->
+								<div class="col-xs-12 visible-xs whatsspy-contact-phone-xs">
+									<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
+										<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
+										<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
+									</a>
+									<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
+									<div class="input-group">
+			            				<span class="input-group-addon">+</span>  
+						    			<input type="text" class="form-control" data-ng-value="::number.id">
+						    		</div>
+								</div>
+								<!-- END responsive small setup -->
+							</div>
+							<div class="row">
+								<div class="col-md-9 hidden-xs">
+									<span data-ng-show="number.since != null" class="label label-info">tracking since {{::number.since | staticDatetime}}</span>
+									<span data-ng-show="number.latest_online != null" class="label label-info whatsspy-label-last-seen" title="{{number.latest_online | staticDatetime}}">last seen <span am-time-ago="number.latest_online"></span></span>
+									<span data-ng-repeat="group in number.groups">
+										<span class="label label-default">{{getGroupName(group.gid)}}</span> 
+									</span>
+								</div>
+								<!-- Responsive small setup -->
+								<div class="col-md-9 visible-xs">
+									<span data-ng-show="number.since != null" class="label label-info whatsspy-label-notifications">tracking since {{::number.since | staticDatetime}}</span>
+									<span data-ng-show="number.latest_online != null" class="label label-info whatsspy-label-notifications" title="{{number.latest_online | staticDatetime}}">last seen <span am-time-ago="number.latest_online"></span></span>
+									<span data-ng-repeat="group in number.groups">
+										<span class="label label-default whatsspy-label-notifications">{{getGroupName(group.gid)}}</span> 
+									</span>
+								</div>
+								<!-- END responsive small setup -->
+								<div class="col-md-3 whatsspy-contact-phone">
+									<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true"> 
+						    			<span class="label label-danger whatsspy-label-notifications">
+						    				notifications enabled
+						    			</span>
+						    		</span>
+								</div>
+							</div>
 						</div>
+						<div class="clear"></div>
 						<!-- Responsive small setup -->
-			    		<div class="col-xs-7 visible-xs">
+<!-- 			    		<div class="col-xs-7 visible-xs">
 							<h3>{{number.name | emptyName}} <br /><small class="contact_status">{{number.last_statusmessage}}</small></h3>
 						</div>
 						<div class="row visible-xs">
 							<div class="col-xs-12">
 								<span data-ng-show="number.since != null" class="label label-info whatsspy-label-notifications">tracking since {{::number.since | staticDatetime}}</span>
 								<span data-ng-show="number.latest_online != null" class="label label-info whatsspy-label-notifications">last seen <span am-time-ago="number.latest_online"></span></span>
-								<span data-ng-show="number.group_id != null" class="label label-default whatsspy-label-notifications">{{getGroupName(number.group_id)}}</span>
+								<span data-ng-repeat="group in number.groups" class="label label-default whatsspy-label-notifications">{{getGroupName(group.gid)}}</span>
 							</div>
-						</div>
+						</div> -->
 						<!-- End responsive small setup -->
-						<div class="col-md-3 hidden-xs whatsspy-contact-options">
-								<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
-									<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
-									<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
-								</a>
-								<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" title="Set inactive"></span> Edit</a>
+<!-- 						<div class="col-md-3 hidden-xs whatsspy-contact-options">
+								
 						</div>
 						<div class="col-md-2 hidden-xs whatsspy-contact-phone">
-							<div class="input-group">
-	            				<span class="input-group-addon">+</span>  
-				    			<input type="text" class="form-control" data-ng-value="::number.id">
-				    		</div>
+							
 				    		<div class="whatsspy-contact-option-status">
-					    		<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true"> 
-					    			<span class="label label-danger whatsspy-label-notifications">
-					    				notifications enabled
-					    			</span>
-					    		</span>
+					    		
 					    	</div>
 				    	</div>
-			    		<div class="clear"></div>
+			    		<div class="clear"></div> -->
 			    		<!-- Responsive small setup -->
-			    		<div class="row visible-xs">
+<!-- 			    		<div class="row visible-xs">
 			    			<div class="col-xs-12 whatsspy-account-responsive-small">
 								<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
 									<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
@@ -111,7 +158,7 @@
 						    	</div>
 					    	</div>
 					    	<div class="clear"></div>
-			    		</div>
+			    		</div> -->
 			    		<!-- End responsive small setup -->
 					</div>
 					<div class="panel-body" data-ng-show="accountData[number.id].showPanel == true">
@@ -471,12 +518,12 @@
 		    </div>
 		  </div>
 		  <div class="form-group">
-		    <label for="name" class="col-sm-2 control-label">Group</label>
+		    <label for="name" class="col-sm-2 control-label">Groups</label>
 		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1">
 		    	<div class="row">
 	    			<div class="input-group"> 
 	    				<div class="input-group-addon"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span></div>
-				      	<select class="form-control" data-ng-model="editContact.group_id" data-ng-options="group.gid as group.name for group in groups" ><option value="null">No group</option></select>
+				      	<multiselect class="whatsspy-group-select" data-ng-model="editContact.groups" data-options="group.gid as group.name for group in getRealGroups()" data-multiple="true" data-compare-by="gid" scroll-after-rows="10"></multiselect>
 				    </div>
 		    	</div>
 		    </div>
@@ -501,14 +548,21 @@
 	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_profilepic == false"></span>
 	    					Profile picture change
 	    				</button>
+					    <small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
+					    <small data-ng-show="notificationOptionDisabled == false">
+					    	Sending notifications for user actions via 
+					    	<span data-ng-repeat="(key, agent) in notificationSettings" data-ng-show="agent.enabled == true && agent['notify-user'] == true">
+					    		<strong>{{agent.name}}</strong> <span data-ng-hide="$last">and</span> 
+					    	</span>
+					    </small>
+					    <br />
+					    <br />
+	    				<button type="button" class="btn btn-primary whatsspy-btn-notify col-xs-12" data-ng-click="editContact.notify_timeline = getOpposite(editContact.notify_timeline);">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="editContact.notify_timeline == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_timeline == false"></span>
+	    					 Timeline sound notifications (if open)
+	    				</button>
 				    </div>
-				    <small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
-				    <small data-ng-show="notificationOptionDisabled == false">
-				    	Sending notifications for user actions via 
-				    	<span data-ng-repeat="(key, agent) in notificationSettings" data-ng-show="agent.enabled == true && agent['notify-user'] == true">
-				    		<strong>{{agent.name}}</strong> <span data-ng-hide="$last">and</span> 
-				    	</span>
-				    </small>
 		    	</div>
 		    </div>
 		  </div>

@@ -258,7 +258,7 @@ header {
 }
 
 .whatsspy-contact-options {
-	text-align: left;
+	text-align: right;
 }
 
 .whatsspy-number-timeline-load {
@@ -272,11 +272,16 @@ header {
 	cursor: pointer;
 }
 
-.whatsspy-contact-title {
-
+.whatsspy-contact-phone-xs {
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
-.whatsspy-contact-phone {
+.whatsspy-contact-phone-xs .input-group {
+	padding-top: 5px;
+}
 
+.whatsspy-label-last-seen {
+	width: 135px !important;
 }
 
 .whatsspy-number-timeline {
@@ -344,6 +349,15 @@ header {
 	margin-top: 10px;
 }
 
+.whatsspy-group-select .btn-group,
+.whatsspy-group-select button,
+.whatsspy-group-select .dropdown-menu {
+	width: 100%;
+}
+
+.whatsspy-group-divider {
+	margin-top: 2px;
+}
 
 
 /**

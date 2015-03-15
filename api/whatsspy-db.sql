@@ -300,7 +300,7 @@ ALTER TABLE whatsspy_config
 GRANT ALL ON TABLE whatsspy_config TO whatsspy;
 
 INSERT INTO whatsspy_config (db_version)
-    VALUES (4);
+    VALUES (5);
 
 
 -- Add notification options
@@ -333,6 +333,28 @@ ALTER TABLE accounts
   ADD COLUMN group_id integer;
 ALTER TABLE accounts
   ADD CONSTRAINT fk_group_id FOREIGN KEY (group_id) REFERENCES groups (gid) ON UPDATE NO ACTION ON DELETE NO ACTION;
+
+CREATE TABLE accounts_to_groups
+(
+  "number" character(50) NOT NULL,
+  gid integer NOT NULL,
+  CONSTRAINT pk_account_to_group PRIMARY KEY (number, gid)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE accounts_to_groups
+  OWNER TO whatsspy;
+
+
+INSERT INTO accounts_to_groups (number, gid) (SELECT id, group_id FROM ACCOUNTS WHERE group_id IS NOT NULL);
+
+ALTER TABLE accounts
+  DROP COLUMN group_id;
+
+ALTER TABLE accounts
+  ADD COLUMN notify_timeline boolean NOT NULL DEFAULT false;
+
 
 
 -- Function: lastseen_privacy_update()
