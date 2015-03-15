@@ -347,7 +347,7 @@ ALTER TABLE accounts_to_groups
   OWNER TO whatsspy;
 
 
-INSERT INTO accounts_to_groups (number, gid) (SELECT id, group_id FROM ACCOUNTS WHERE group_id IS NOT NULL);
+INSERT INTO accounts_to_groups (number, gid) (SELECT id, group_id FROM accounts WHERE group_id IS NOT NULL);
 
 ALTER TABLE accounts
   DROP COLUMN group_id;

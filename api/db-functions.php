@@ -168,13 +168,14 @@ function checkDBMigration($DBH) {
    									ON accounts (group_id ASC NULLS LAST);
    								CREATE INDEX index_account_id_group_id
    									ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);
-
-   								UPDATE whatsspy_config SET db_version = 4;
 							   ');
 		if($DBH->errorCode() != '00000') {
 			echo 'The following error occured when trying to upgrade DB:';
 			print_r($DBH->errorInfo());
 			exit();
+		} else {
+			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 4;');
+			$update -> execute();
 		}
 	} else if($row['db_version'] == 4) {
 		// Added mulitple groups
@@ -191,20 +192,21 @@ function checkDBMigration($DBH) {
 								  OWNER TO whatsspy;
 
 
-								INSERT INTO accounts_to_groups (number, gid) (SELECT id, group_id FROM ACCOUNTS WHERE group_id IS NOT NULL);
+								INSERT INTO accounts_to_groups (number, gid) (SELECT id, group_id FROM accounts WHERE group_id IS NOT NULL);
 
 								ALTER TABLE accounts
 								  DROP COLUMN group_id;
 
 								ALTER TABLE accounts
   									ADD COLUMN notify_timeline boolean NOT NULL DEFAULT false;
-
-								UPDATE whatsspy_config SET db_version = 5;
 							   ');
 		if($DBH->errorCode() != '00000') {
 			echo 'The following error occured when trying to upgrade DB:';
 			print_r($DBH->errorInfo());
 			exit();
+		} else {
+			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 5;');
+			$update -> execute();
 		}
 	}
 }
