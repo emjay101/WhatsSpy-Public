@@ -343,9 +343,9 @@ function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
 					if($name == 'nma') {
 						sendNMAMessage($notificationAgent['key'], $application_name, $filteredTitle, $filteredDesc, '1');
 					} else if($name == 'ln') {
-						sendLNMessage($notificationAgent['key'], $filteredTitle, $filteredDesc, $data['image']);
+						sendLNMessage($notificationAgent['key'], $filteredTitle, $filteredDesc, @$data['image']);
 					} else if($name == 'wa') {
-						sendWhatsAppMessage($wa, $notificationAgent['key'], $filteredDesc, $data['image']);
+						sendWhatsAppMessage($wa, $notificationAgent['key'], $filteredDesc, @$data['image']);
 					}
 				}
 			}
