@@ -19,6 +19,18 @@ function setupDB($dbAuth) {
 }
 
 /**
+  *		Do a tracker_log incase anything went wrong with a query.
+  */
+function checkDatabaseInsert($query) {
+	global $DBH;
+	if(!$query) {
+		$e_code = $DBH->errorInfo()[2];
+		$e_msg = $DBH->errorInfo()[2];
+		tracker_log('[error] Database exception: code: '.$e_code.', message: '.$e_msg);
+	}
+}
+
+/**
   *		Alter the database in case any updates are present.
   */
 function checkDBMigration($DBH) {

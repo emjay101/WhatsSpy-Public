@@ -831,7 +831,11 @@ angular.module('whatsspyControllers', [])
 
 	$scope.notifyForObj = function($obj) {
 		if($scope.notifyAnySound == true || $obj.notify_timeline == true) {
-			$scope.notificationPlayer.play();
+			try {
+				$scope.notificationPlayer.play();
+			} catch(e) {
+				console.log(e);
+			}
 		}
 	}
 

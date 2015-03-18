@@ -57,7 +57,7 @@ function signal_handler($signal) {
 			// End any running record where an user is online
 			$end_user_session = $DBH->prepare('UPDATE status_history
 												SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
-			$end_user_session->execute();
+			checkDatabaseInsert($end_user_session->execute());
 			// Reset DB connection
 			$DBH = null;
 			$wa -> disconnect();
@@ -86,7 +86,7 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 	if($row['lastseen_privacy'] == true) {
 		$update = $DBH->prepare('UPDATE accounts
 								SET "lastseen_privacy" = false WHERE "id" = :number;');
-		$update->execute(array(':number' => $number));
+		checkDatabaseInsert($update->execute(array(':number' => $number)));
 		tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option DISABLED! ');
 	}
 }
@@ -112,11 +112,10 @@ function onPresenceReceived($mynumber, $from, $type) {
 		}
 	  	$insert = $DBH->prepare('INSERT INTO status_history ("status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
-		$insert->execute(array(':status' => (int)$status,
-							   ':number' => $number,
-							   ':start' => date('c', $real_time)));
+		checkDatabaseInsert($insert->execute(array(':status' => (int)$status,
+												   ':number' => $number,
+												   ':start' => date('c', $real_time))));
 		tracker_log('  -[poll] '.$number.' is now '.$type.'.');
-
 		sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
 																	'description' => ':name is now '.$type.'.',
 																	'number' => $number,
@@ -144,16 +143,17 @@ function onPresenceReceived($mynumber, $from, $type) {
 									SET "end" = :end WHERE number = :number
 														AND sid = :sid;');
 
-			$update->execute(array(':number' => $number,
-							   ':sid' => $row['sid'],
-							   ':end' => date('c', $real_time)));
+			checkDatabaseInsert($update->execute(array(':number' => $number,
+													   ':sid' => $row['sid'],
+													   ':end' => date('c', $real_time))));
 			# Create new record
 			$insert = $DBH->prepare('INSERT INTO status_history (
 			            			"status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
-			$insert->execute(array(':status' => (int)$status,
-									':number' => $number,
-									':start' => date('c', $real_time)));
+			checkDatabaseInsert($insert->execute(array(':status' => (int)$status,
+														':number' => $number,
+														':start' => date('c', $real_time))));
+
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
 			if($type == 'available') {
 				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
@@ -200,8 +200,8 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 		    $insert = $DBH->prepare('INSERT INTO profilepicture_history (
 			            			"number", hash, changed_at)
 			   						 VALUES (:number, :hash, NOW());');
-			$insert->execute(array(':hash' => $hash,
-								   ':number' => $number));
+			checkDatabaseInsert($insert->execute(array(':hash' => $hash,
+													   ':number' => $number)));
 			tracker_log('  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').');
 			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name profile picture', 
 																		'description' => ':name has a new profile picture.',
@@ -216,7 +216,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 		if($row['profilepic_privacy'] == true) {
 			$update = $DBH->prepare('UPDATE accounts
 									SET "profilepic_privacy" = false WHERE "id" = :number;');
-			$update->execute(array(':number' => $number));
+			checkDatabaseInsert($update->execute(array(':number' => $number)));
 			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED!');
 		}
 	} else {
@@ -242,9 +242,10 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 			$insert = $DBH->prepare('INSERT INTO statusmessage_history (
 			            			"number", status, changed_at)
 			   						 VALUES (:number, :status, to_timestamp(:time));');
-			$insert->execute(array(':status' => $data,
-								   ':number' => $number,
-								   ':time' => (string)$time));
+			checkDatabaseInsert($insert->execute(array(':status' => $data,
+													   ':number' => $number,
+													   ':time' => (string)$time)));
+
 			tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
 			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
 																		'description' => ':name has a new status message: \''.$data.'\'.',
@@ -262,8 +263,9 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 				$insert = $DBH->prepare('INSERT INTO statusmessage_history (
 				            			"number", status, changed_at)
 				   						 VALUES (:number, :status, NOW());');
-				$insert->execute(array(':status' => $data,
-									   ':number' => $number));
+				checkDatabaseInsert($insert->execute(array(':status' => $data,
+														   ':number' => $number)));
+
 				tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
 				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
 																			'description' => ':name has a new status message: \''.$data.'\'.',
@@ -280,7 +282,8 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	if($privacy_enabled != (boolean)$row['statusmessage_privacy']) {
 		$update = $DBH->prepare('UPDATE accounts
 								SET "statusmessage_privacy" = :privacy WHERE "id" = :number;');
-		$update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled));
+		checkDatabaseInsert($update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled)));
+
 		if($privacy_enabled) {
 			tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! ');
 		} else {
@@ -301,7 +304,7 @@ function onSyncResultNumberCheck($result) {
 		$number = explode("@", $number)[0];
 		$update = $DBH->prepare('UPDATE accounts
 										SET "verified" = true WHERE "id" = :number;');
-		$update->execute(array(':number' => $number));
+		checkDatabaseInsert($update->execute(array(':number' => $number)));
 		// Add user to the current tracking system
 		array_push($tracking_numbers, $number);
 		// Add call for event listener
@@ -316,7 +319,7 @@ function onSyncResultNumberCheck($result) {
 		$number = explode("@", $number)[0];
 		$update = $DBH->prepare('UPDATE accounts
 										SET "active" = false WHERE "id" = :number;');
-		$update->execute(array(':number' => $number));
+		checkDatabaseInsert($update->execute(array(':number' => $number)));
 		tracker_log('  -[verified] Number '.$number.' is NOT a WhatsApp user.');
 	}
 }
@@ -331,7 +334,7 @@ function onGetError($mynumber, $from, $id, $data ) {
         	$number = explode("@", $from)[0];
 			$update = $DBH->prepare('UPDATE accounts
 										SET "lastseen_privacy" = true WHERE "id" = :number;');
-			$update->execute(array(':number' => $number));
+			checkDatabaseInsert($update->execute(array(':number' => $number)));
 			tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! ');
         } else if($data->getAttribute("code") == '404') {
         	tracker_log('  -[lastseen] cannot determine lastseen, ignoring request.');
@@ -347,7 +350,7 @@ function onGetError($mynumber, $from, $id, $data ) {
         	$number = explode("@", $from)[0];
 			$update = $DBH->prepare('UPDATE accounts
 										SET "profilepic_privacy" = true WHERE "id" = :number;');
-			$update->execute(array(':number' => $number));
+			checkDatabaseInsert($update->execute(array(':number' => $number)));
 			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option ENABLED! ');
         } else if($data->getAttribute("code") == '404') {
         	// No profile picture
@@ -459,14 +462,14 @@ function startTrackerHistory() {
 		// End any running record where an user is online
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = :end WHERE "end" IS NULL AND "status" = true;');
-		$end_user_session->execute(array(':end' => $latest_known_record));
+		checkDatabaseInsert($end_user_session->execute(array(':end' => $latest_known_record)));
 		// Update tracker records
 		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = :end, "reason" = \'Improper shutdown.\' WHERE "end" IS NULL;');
-		$end_tracker_session->execute(array(':end' => $latest_known_record));
+		checkDatabaseInsert($end_tracker_session->execute(array(':end' => $latest_known_record)));
 	}
 
 	$start_tracker_session = $DBH->prepare('INSERT INTO tracker_history ("start") VALUES (NOW());');
-	$start_tracker_session->execute();
+	checkDatabaseInsert($start_tracker_session->execute());
 }
 
 function checkLastSeen($number) {
@@ -627,11 +630,11 @@ do {
 		$DBH = setupDB($dbAuth);
 		// Update tracker session
 		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW(), "reason" = :error WHERE "end" IS NULL;');
-		$end_tracker_session->execute(array(':error' => 'Error: '.$e->getMessage()));
+		checkDatabaseInsert($end_tracker_session->execute(array(':error' => 'Error: '.$e->getMessage())));
 		// End any running record where an user is online
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
-		$end_user_session->execute();
+		checkDatabaseInsert($end_user_session->execute());
 
 		$last_error = $e->getMessage();
 
