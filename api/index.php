@@ -41,7 +41,7 @@ switch($_GET['whatsspy']) {
 		if(isset($_GET['number'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
 			$update = $DBH->prepare('UPDATE accounts
-										SET "active" = false WHERE id = :id;');
+										SET "active" = false, "notify_status" = false, "notify_statusmsg" = false, "notify_profilepic" = false, "notify_timeline" = false WHERE id = :id;');
 			$update->execute(array(':id' => $number));
 			$result = ['success' => true, 'number' => $number];
 			echo json_encode($result);
