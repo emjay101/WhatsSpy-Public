@@ -86,8 +86,9 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 	if($row['lastseen_privacy'] == true) {
 		$update = $DBH->prepare('UPDATE accounts
 								SET "lastseen_privacy" = false WHERE "id" = :number;');
-		checkDatabaseInsert($update->execute(array(':number' => $number)));
-		tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option DISABLED! ');
+		if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
+			tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option DISABLED! ');
+		}
 	}
 }
 
@@ -112,14 +113,15 @@ function onPresenceReceived($mynumber, $from, $type) {
 		}
 	  	$insert = $DBH->prepare('INSERT INTO status_history ("status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
-		checkDatabaseInsert($insert->execute(array(':status' => (int)$status,
+		if(checkDatabaseInsert($insert->execute(array(':status' => (int)$status,
 												   ':number' => $number,
-												   ':start' => date('c', $real_time))));
-		tracker_log('  -[poll] '.$number.' is now '.$type.'.');
-		sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
-																	'description' => ':name is now '.$type.'.',
-																	'number' => $number,
-																	'notify_type' => 'status']);
+												   ':start' => date('c', $real_time))))) {
+			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
+			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
+																		'description' => ':name is now '.$type.'.',
+																		'number' => $number,
+																		'notify_type' => 'status']);
+		}
 	} else {
 		$row  = $latest_status -> fetch();
 		# Latest status is the same as the current status       : Do nothing
@@ -150,16 +152,17 @@ function onPresenceReceived($mynumber, $from, $type) {
 			$insert = $DBH->prepare('INSERT INTO status_history (
 			            			"status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
-			checkDatabaseInsert($insert->execute(array(':status' => (int)$status,
+			if(checkDatabaseInsert($insert->execute(array(':status' => (int)$status,
 														':number' => $number,
-														':start' => date('c', $real_time))));
+														':start' => date('c', $real_time))))) {
 
-			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
-			if($type == 'available') {
-				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
-																			'description' => ':name is now '.$type.'.',
-																			'number' => $number,
-																			'notify_type' => 'status']);
+				tracker_log('  -[poll] '.$number.' is now '.$type.'.');
+				if($type == 'available') {
+					sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
+																				'description' => ':name is now '.$type.'.',
+																				'number' => $number,
+																				'notify_type' => 'status']);
+				}
 			}
 		}
 	}
@@ -200,14 +203,15 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 		    $insert = $DBH->prepare('INSERT INTO profilepicture_history (
 			            			"number", hash, changed_at)
 			   						 VALUES (:number, :hash, NOW());');
-			checkDatabaseInsert($insert->execute(array(':hash' => $hash,
-													   ':number' => $number)));
-			tracker_log('  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').');
-			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name profile picture', 
-																		'description' => ':name has a new profile picture.',
-																		'image' => $filename,
-																		'number' => $number,
-																		'notify_type' => 'profilepic']);
+			if(checkDatabaseInsert($insert->execute(array(':hash' => $hash,
+													   ':number' => $number)))) {
+				tracker_log('  -[profile-pic] Inserted new profile picture for '.$number.' ('.$hash.').');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name profile picture', 
+																			'description' => ':name has a new profile picture.',
+																			'image' => $filename,
+																			'number' => $number,
+																			'notify_type' => 'profilepic']);
+			}
 		}
 		// Update privacy
 		$privacy_status = $DBH->prepare('SELECT "profilepic_privacy" FROM accounts WHERE "id"=:number');
@@ -216,8 +220,9 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 		if($row['profilepic_privacy'] == true) {
 			$update = $DBH->prepare('UPDATE accounts
 									SET "profilepic_privacy" = false WHERE "id" = :number;');
-			checkDatabaseInsert($update->execute(array(':number' => $number)));
-			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED!');
+			if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
+				tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED!');
+			}
 		}
 	} else {
 		tracker_log('  -[profile-pic] Previews not implemented.');
@@ -242,15 +247,15 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 			$insert = $DBH->prepare('INSERT INTO statusmessage_history (
 			            			"number", status, changed_at)
 			   						 VALUES (:number, :status, to_timestamp(:time));');
-			checkDatabaseInsert($insert->execute(array(':status' => $data,
+			if(checkDatabaseInsert($insert->execute(array(':status' => $data,
 													   ':number' => $number,
-													   ':time' => (string)$time)));
-
-			tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
-			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
-																		'description' => ':name has a new status message: \''.$data.'\'.',
-																		'number' => $number,
-																		'notify_type' => 'statusmsg']);
+													   ':time' => (string)$time)))) {
+				tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
+																			'description' => ':name has a new status message: \''.$data.'\'.',
+																			'number' => $number,
+																			'notify_type' => 'statusmsg']);
+			}
 		} else {
 			// User has known records, use the current insertion time
 
@@ -263,14 +268,15 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 				$insert = $DBH->prepare('INSERT INTO statusmessage_history (
 				            			"number", status, changed_at)
 				   						 VALUES (:number, :status, NOW());');
-				checkDatabaseInsert($insert->execute(array(':status' => $data,
-														   ':number' => $number)));
+				if(checkDatabaseInsert($insert->execute(array(':status' => $data,
+														   ':number' => $number)))) {
 
-				tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
-				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
-																			'description' => ':name has a new status message: \''.$data.'\'.',
-																			'number' => $number,
-																			'notify_type' => 'statusmsg']);
+					tracker_log('  -[status-msg] Inserted new status message for '.$number.' ('.$data.').');
+					sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status message', 
+																				'description' => ':name has a new status message: \''.$data.'\'.',
+																				'number' => $number,
+																				'notify_type' => 'statusmsg']);
+				}
 			}
 		}
 	}
@@ -282,12 +288,12 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 	if($privacy_enabled != (boolean)$row['statusmessage_privacy']) {
 		$update = $DBH->prepare('UPDATE accounts
 								SET "statusmessage_privacy" = :privacy WHERE "id" = :number;');
-		checkDatabaseInsert($update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled)));
-
-		if($privacy_enabled) {
-			tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! ');
-		} else {
-			tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option DISABLED! ');
+		if(checkDatabaseInsert($update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled)))) {
+			if($privacy_enabled) {
+				tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! ');
+			} else {
+				tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option DISABLED! ');
+			}
 		}
 	}
 
@@ -334,8 +340,9 @@ function onGetError($mynumber, $from, $id, $data ) {
         	$number = explode("@", $from)[0];
 			$update = $DBH->prepare('UPDATE accounts
 										SET "lastseen_privacy" = true WHERE "id" = :number;');
-			checkDatabaseInsert($update->execute(array(':number' => $number)));
-			tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! ');
+			if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
+				tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! ');
+			}
         } else if($data->getAttribute("code") == '404') {
         	tracker_log('  -[lastseen] cannot determine lastseen, ignoring request.');
         } else {
@@ -350,8 +357,9 @@ function onGetError($mynumber, $from, $id, $data ) {
         	$number = explode("@", $from)[0];
 			$update = $DBH->prepare('UPDATE accounts
 										SET "profilepic_privacy" = true WHERE "id" = :number;');
-			checkDatabaseInsert($update->execute(array(':number' => $number)));
-			tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option ENABLED! ');
+			if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
+				tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option ENABLED! ');
+			}
         } else if($data->getAttribute("code") == '404') {
         	// No profile picture
         } else {

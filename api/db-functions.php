@@ -26,8 +26,12 @@ function checkDatabaseInsert($query) {
 	if(!$query) {
 		$e_code = $DBH->errorInfo()[1];
 		$e_msg = $DBH->errorInfo()[2];
-		tracker_log('[error] Database exception: code: '.$e_code.', message: '.$e_msg);
-	}
+		// Database constraint
+		if($e_code != 7) {
+			tracker_log('[error] Database exception: code: '.$e_code.', message: '.$e_msg);
+		}
+	}	
+	return $query;
 }
 
 /**
