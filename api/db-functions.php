@@ -24,7 +24,7 @@ function setupDB($dbAuth) {
 function checkDatabaseInsert($query) {
 	global $DBH;
 	if(!$query) {
-		$e_code = $DBH->errorInfo()[2];
+		$e_code = $DBH->errorInfo()[1];
 		$e_msg = $DBH->errorInfo()[2];
 		tracker_log('[error] Database exception: code: '.$e_code.', message: '.$e_msg);
 	}
