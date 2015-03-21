@@ -1,34 +1,44 @@
 <div class="row">
 	<div class="col-md-12" data-ng-show="accounts != null">
 		<div class="row">	
-			<div class="col-md-3">
+			<div class="col-md-4">
 				<div class="well whatsspy-header-box whatsspy-compare-panel whatsspy-compare-panel-add">
-					<h4><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Select Canidates</h4>
-					<br />
+					<h4><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Select candidate(s)</h4>
 					<br />
 					<p>
-						<select ng-model="selectOption" ng-options="account as account.name for account in accounts"></select>
+						<h4>Add user to comparison</h4>
+						<table class="table table-align-left">
+							<tbody>
+								<tr>
+									<td>
+										<select class="form-control" ng-model="selectUserOption" ng-options="account as account.name for account in accounts"></select>
+									</td>
+									<td class="whatsspy-compare-add">
+										<button class="btn btn-default" data-ng-click="addUserToComparison(selectUserOption)">Add</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>Add group to comparison</h4>
+						<table class="table table-align-left">
+							<tbody>
+								<tr>
+									<td>
+										<select class="form-control" data-ng-model="selectGroupOption" data-ng-options="group.gid as group.name for group in groups | noGroupFilter" ></select>
+									</td>
+									<td class="whatsspy-compare-add">
+										<button class="btn btn-default" data-ng-click="addGroupToComparison(selectGroupOption)">Add</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</p>
 					<p>
-						<span data-ng-show="selectOption != null">
-							<table class="table table-align-left">
-								<tbody>
-									<tr>
-										<td><strong>Number:</strong></td>
-										<td>{{selectOption.id | emptyField}}</td>
-									</tr>
-									<tr>
-										<td><strong>Name:</strong></td>
-										<td>{{selectOption.name | emptyField}}</td>
-									</tr>
-								</tbody>
-							</table>
-						</span>
-						<button class="btn btn-default" data-ng-click="addToComparison(selectOption)">Add to comparison</button>
+						<small>Loading large groups may cause a temporary browser freeze due to the vast amount of information.</small>
 					</p>
 				</div>
 			</div>
-			<div class="col-md-9">
+			<div class="col-md-8">
 				<div class="well whatsspy-header-box whatsspy-compare-panel">
 					<h4><span class="glyphicon glyphicon-list" aria-hidden="true"></span> Current candidates in the comparison:</h4>
 					<div class="whatsspy-scrollable-table-compare">
@@ -43,20 +53,25 @@
 								<tr data-ng-repeat="account in comparedAccounts">
 									<td>
 										<div class="row">
-											<div class="col-md-2">
+											<div class="col-md-2 hidden-xs">
 												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{account.profilepic_updated | staticDatetime}}" data-ng-show="account.profilepic != null" data-ng-src="{{(account.profilepic != null && profilePicPath != null) && profilePicPath + account.profilepic + '.jpg' || ''}}" />
-												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="account.profilepic == null" src="https://placehold.it/100x100" />
+												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="account.profilepic == null" src="https://placehold.it/175x175" />
 											</div>
+
 											<div class="col-md-10">
-												<strong>{{account.name}}</strong><br />
-												({{account.id}})<br />
+												<strong>{{account.name}}</strong>
+												({{account.id}})
+												<span data-ng-repeat="group in account.groups">
+													<span class="label label-default">{{getGroupName(group.gid)}}</span>
+												</span>
+												<br />
 												<br />
 												<span data-ng-show="account.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">last seen : contacts*</span>
 												<span data-ng-show="account.profilepic_privacy == false" class="label label-success">last seen : everyone</span>
-												<span data-ng-show="account.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">profile pic : contacts*</span>
-												<span data-ng-show="account.profilepic_privacy == false" class="label label-success">profile pic : everyone</span>
 												<span data-ng-show="account.statusmessage_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">status messages : contacts*</span>
 												<span data-ng-show="account.statusmessage_privacy == false" class="label label-success">status messages : everyone</span>
+												<span data-ng-show="account.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">profile pic : contacts*</span>
+												<span data-ng-show="account.profilepic_privacy == false" class="label label-success">profile pic : everyone</span>
 											</div>
 										</div>
 									</td>

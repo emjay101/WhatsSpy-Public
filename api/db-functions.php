@@ -117,9 +117,6 @@ function checkDBMigration($DBH) {
 						WITH (
 						  OIDS = FALSE
 						);
-						ALTER TABLE whatsspy_config
-						  OWNER TO whatsspy;
-						GRANT ALL ON TABLE whatsspy_config TO whatsspy;
 
 						INSERT INTO whatsspy_config (db_version)
 						    VALUES (3);';
@@ -172,9 +169,6 @@ function checkDBMigration($DBH) {
 								WITH (
 								  OIDS=FALSE
 								);
-								ALTER TABLE groups
-								  OWNER TO whatsspy;
-								GRANT ALL ON TABLE groups TO whatsspy;
 								ALTER TABLE accounts
 								  ADD COLUMN group_id integer;
 								ALTER TABLE accounts
@@ -204,10 +198,6 @@ function checkDBMigration($DBH) {
 								WITH (
 								  OIDS=FALSE
 								);
-								ALTER TABLE accounts_to_groups
-								  OWNER TO whatsspy;
-
-
 								INSERT INTO accounts_to_groups (number, gid) (SELECT id, group_id FROM accounts WHERE group_id IS NOT NULL);
 
 								ALTER TABLE accounts

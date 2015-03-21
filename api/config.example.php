@@ -53,23 +53,29 @@ $whatsspyWebProfilePath = '/whatsspy/images/profilepicture/';
 //
 //	If you want to recieve information about the tracker status (and specific events of users) you can enable this here. Enter the API key or phonenumber and set enabled to true.
 //  NOTE: WhatsApp phonenumber cannot recieve tracker notifications (since WhatsApp connection might be down).
-$whatsspyNotificatons = 	[// NotifyMyAndroid (notifymyandroid.com)
-							 'nma' => ['enabled' 		=> false,	
-									   'key' 			=> '',
-									   'name' 			=> 'NotifyMyAndroid',
-									   'notify-tracker' => true,
-									   'notify-user' 	=> false],	
-							 // LiveNotifier (livenotifier.net)		   
-							 'ln' =>  ['enabled' 		=> false,	
-									   'key' 			=> '',
-									   'name' 			=> 'LiveNotifier',
-									   'notify-tracker' => true,
-									   'notify-user' 	=> false],
-							 // WhatsApp phonenumber
-							 'wa' =>  ['enabled' 		=> false,	
-									   'key' 			=> '',		// Enter <countrycode><phonenumber> here without prefix 0's and no special chars.
-									   'name' 			=> 'WhatsApp',
-									   'notify-user' 	=> true]];
+$whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
+						 'nma' => 	['enabled' 			=> false,	
+								   	 'key' 				=> '',
+								   	 'name' 			=> 'NotifyMyAndroid',
+								   	 'notify-tracker' 	=> true,
+								   	 'notify-user' 		=> false],	
+						 // LiveNotifier (livenotifier.net)		   
+						 'ln' =>  	['enabled' 			=> false,	
+								   	 'key' 				=> '',
+								   	 'name' 			=> 'LiveNotifier',
+								   	 'notify-tracker' 	=> true,
+								   	 'notify-user' 		=> false],
+						 // WhatsApp phonenumber
+						 'wa' =>  	['enabled' 			=> false,	
+								   	 'key' 				=> '',		// Enter <countrycode><phonenumber> here without prefix 0's and no special chars.
+								   	 'name' 			=> 'WhatsApp',
+								   	 'notify-user' 		=> true],
+						 // Script call		   
+						 'script' =>['enabled' 			=> false,	
+								   	 'cmd' 				=> '',				// Enter a script location+name (like /var/scripts/mycustomnotification.sh).
+								   	 'name' 			=> 'Custom Script', // Paramters will be: $type (tracker or user), $title, $description, $number, $filteredTitle, $filteredDesc 
+								   	 'notify-tracker' 	=> false,
+								   	 'notify-user' 		=> false]];
 
 // -------------------------------------------------
 // You don't need to edit beyond this point

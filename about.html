@@ -5,69 +5,127 @@
 				<!-- <div class="alert alert-warning" role="alert"><strong>Raspberry Pi users:</strong> Did you download the Raspberry Pi image before the 4th of march? <a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/rpi-fix" target="_blank">Please check for this problem.</a></div> -->
 				<div class="well whatsspy-header-box">
 					<div class="row">
-						<div class="col-md-8">
+						<div class="col-md-9">
 							<p>
-								WhatsSpy Public is a Proof of Concept to show how broken Whatsapp privacy settings are. With this tool you can basicly follow anyone's behaviour with only the knowledge of their phone number. This tool is for Proof of Concept purposes only!
+								WhatsSpy Public is a Proof of Concept to show how broken Whatsapp privacy settings are. With this tool you can basicly follow anyone's behaviour with only the knowledge of their phone number. This tool is for Proof of Concept purposes only! Please read the <a target ="_blank" href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/home#license-cc-by-nc">license</a> which applies to this PoC.
 							</p>
 							<br />
 							<p>
-								If you would like to support my fabulous work, you can with bitcoins! <br />
-								<strong>Bitcoin donations:</strong> 1KjZRyFKcMRu89zLUzeCoLBWuAss4PeWbc
+								You can support this work by a small donation: <br />
+								<strong>Bitcoin:</strong> 1KjZRyFKcMRu89zLUzeCoLBWuAss4PeWbc
 							</p>
 							<br />
 							<br />
-							<p>
-								<table class="table">
-									<tbody>
-										<tr>
-											<td><strong>Latest available version:</strong></td>
-											<td>{{newestVersion}} <strong class="update-behind" data-ng-show="version != newestVersion"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Your version is behind ({{version}}).</strong><strong class="update-current" data-ng-show="version == newestVersion"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Your version is up to date.</strong></td>
-										</tr>
-										<tr data-ng-show="version != newestVersion">
-											<td><strong>Update {{newestVersion}}:</strong></td>
-											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/updates" target="_blank">How to update?</a></td>
-										</tr>
-										<tr>
-											<td><strong>Wiki page:</strong></td>
-											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/" target="_blank">Gitlab Wiki</a></td>
-										</tr>
-										<tr>
-											<td><strong>Enabled Notification agents:</strong></td>
-											<td>
-												<small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
-												<div data-ng-show="notificationOptionDisabled == false && agent.enabled == true" data-ng-repeat="(key, agent) in notificationSettings">
-													<br />
-										    		 <h4>{{agent.name}}</h4>
-										    		 <span data-ng-show="key != 'wa'">
-											    		 Reporting user actions: <strong>{{agent['notify-user']}}</strong><br />
-											    		 Reporting tracker actions: <strong>{{agent['notify-tracker']}}</strong>
-										    		 </span>
-										    		 <span data-ng-show="key == 'wa'">
-										    		 	Reporting user actions: <strong>{{agent['notify-user']}}</strong><br />
-										    		 	Reporting to: <strong>{{agent['key']}}</strong><br />
-										    		 </span>
-										    	</div>
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</p>
 						</div>
-						<div class="col-md-4 about-icon-container">
+						<div class="col-md-3 about-icon-container">
 							<span class="glyphicon glyphicon-question-sign about-icon" aria-hidden="true"></span>
 						</div>
 					</div>
 				</div>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+							  	<h3 class="panel-title">General information</h3>
+							</div>
+							<div class="panel-body">
+								<table class="table">
+									<tbody>
+										<tr>
+											<td><strong>Running version:</strong></td>
+											<td>{{version}} <strong class="update-behind" data-ng-show="version != newestVersion"><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> {{newestVersion}} is available.</strong><strong class="update-current" data-ng-show="version == newestVersion"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Your version is up to date.</strong></td>
+										</tr>
+										<tr data-ng-show="version != newestVersion">
+											<td><strong>Update {{newestVersion}}:</strong></td>
+											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/updates" target="_blank">Updatelog and how-to-update</a></td>
+										</tr>
+										<tr>
+											<td><strong>Wiki home page:</strong></td>
+											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/home" target="_blank">Gitlab Wiki</a></td>
+										</tr>
+										<tr>
+											<td><strong>FAQ:</strong></td>
+											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/FAQ" target="_blank">Frequently Asked Questions</a></td>
+										</tr>
+										<tr>
+											<td><strong>Troubleshooting:</strong></td>
+											<td><a href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/troubleshooting" target="_blank">Troubleshooting</a></td>
+										</tr>
+									</tbody>
+								</table>
+								<br />
+								<p>
+									<h4>Literature for this project:</h4>
+									<ul>
+										<li><a target ="_blank" href="https://maikel.pro/blog/en-whatsapp-privacy-options-are-illusions/">General introduction to WhatsSpy Public.</a></li>
+										<li><a target ="_blank" href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/">In-depth about the WhatsApp privacy problem.</a></li>
+									</ul>
+								</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+							  	<h3 class="panel-title">Notification agents</h3>
+							</div>
+							<div class="panel-body">
+								<small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
+								<div class="col-md-6" data-ng-show="notificationOptionDisabled == false && agent.enabled == true" data-ng-repeat="(key, agent) in notificationSettings">
+									<div class="panel panel-default">
+										<div class="panel-heading">
+										  	<h3 class="panel-title"><span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span> {{agent.name}}</h3>
+										</div>
+										<div class="panel-body">
+											<strong>Notifying properties:</strong>
+											<table class="table">
+												<tbody>
+													<tr>
+														<td>
+															user actions
+														</td>
+														<td>
+															<strong>{{agent['notify-user']}}</strong>
+														</td>
+													</tr>
+													<tr data-ng-show="key != 'wa'">
+														<td>
+															tracker actions
+														</td>
+														<td>
+															<strong>{{agent['notify-tracker']}}</strong>
+														</td>
+													</tr>
+													<tr data-ng-show="key == 'wa'">
+														<td colspan="2">
+															to: 
+															<strong>{{agent['key']}}</strong>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+							    	</div>
+								</div>	
+								<div class="clear"></div>
+							</div>
+						</div>
+					</div>
 			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-12">
-				<h3>Question and Awnsers</h3>
-				<br />
-				<div data-ng-repeat="qa in help">
-					<h4>{{qa.question}}</h4>
-					<div class="awnser">
-						{{qa.awnser}}
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+						  	<h3 class="panel-title">Question and Awnsers</h3>
+						</div>
+						<div class="panel-body">
+							<div data-ng-repeat="qa in help">
+								<h4>{{qa.question}}</h4>
+								<div class="awnser">
+									{{qa.awnser}}
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

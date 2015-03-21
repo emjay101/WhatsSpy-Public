@@ -32,7 +32,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.4.2';
+  $rootScope.version = '1.4.3';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -240,6 +240,14 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
   }
 
+  $rootScope.getGroupName = function(gid) {
+    for (var i = $rootScope.groups.length - 1; i >= 0; i--) {
+      if($rootScope.groups[i]['gid'] == gid) {
+        return $rootScope.groups[i]['name'];
+      }
+    };
+  }
+
 
   // Get all the required information
   // @variable slack set this to true to only fetch the global information and not new timelines etc.
@@ -271,6 +279,9 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 
     $q.all(promises).then(function(greeting) {
       $rootScope.showLoader = false;
+      if($rootScope.inComparePage == true) {
+        $rootScope.refreshTimelineData();
+      }
     }, function(reason) {
       $rootScope.showLoader = false;
     }, function(update) {

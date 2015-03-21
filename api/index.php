@@ -101,7 +101,7 @@ switch($_GET['whatsspy']) {
 			}
 			// Add any new groups
 			foreach ($groups as $group) {
-				if(!in_array($group, $processed_groups)) {
+				if(!in_array($group, $processed_groups) && $group != '') {
 					insertUserInGroup($group, $number);
 				}
 			}
@@ -377,15 +377,15 @@ switch($_GET['whatsspy']) {
 									UNION ALL
 									(SELECT \'tracker_end\', x.start, x."end", null, x.reason, null, null, null, null, null, null, x."end" FROM tracker_history x WHERE "end" IS NOT NULL AND "end" > :since AND "end" <= :till)
 									UNION ALL
-									(SELECT  \'statusmsg\', null, null, x.number, a.name, a.notify_timeline, x.status, null, null, null, null, x.changed_at FROM statusmessage_history x LEFT JOIN accounts a ON a.id = x.number WHERE changed_at > :since AND changed_at <= :till)
+									(SELECT  \'statusmsg\', null, null, x.number, a.name, a.notify_timeline, x.status, null, null, null, null, x.changed_at FROM statusmessage_history x LEFT JOIN accounts a ON a.id = x.number WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'profilepic\', null, null, x.number, a.name, a.notify_timeline, null, x.hash, null, null, null, x.changed_at FROM profilepicture_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
+									(SELECT  \'profilepic\', null, null, x.number, a.name, a.notify_timeline, null, x.hash, null, null, null, x.changed_at FROM profilepicture_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'lastseen_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, x.privacy, null, null, x.changed_at FROM lastseen_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
+									(SELECT  \'lastseen_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, x.privacy, null, null, x.changed_at FROM lastseen_privacy_history x LEFT JOIN accounts a ON a.id = x.number WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'profilepic_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, x.privacy, null, x.changed_at FROM profilepic_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
+									(SELECT  \'profilepic_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, x.privacy, null, x.changed_at FROM profilepic_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE changed_at > :since AND changed_at <= :till)
+									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 								 ) ORDER BY changed_at DESC;');
 		$select->execute(array(':since'=> date('c', $since_activity), ':till'=> date('c', $till)));
 		

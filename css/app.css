@@ -359,6 +359,10 @@ header {
 	margin-top: 2px;
 }
 
+.whatsspy-image-xs {
+	max-height: 200px;
+}
+
 
 /**
   *  Whatsspy Compare page
@@ -371,6 +375,10 @@ header {
 
 .whatsspy-header-box h4 {
 	margin-top: 0;
+}
+
+.whatsspy-compare-add {
+	width: 20%;
 }
 
 /**
@@ -509,6 +517,7 @@ header {
 
 .update-behind {
 	color: red;
+	float: right;
 }
 
 .update-current {

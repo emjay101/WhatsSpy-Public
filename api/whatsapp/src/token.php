@@ -20,7 +20,7 @@ function generateRequestToken($country, $phone)
 
     //  return base64_encode($output);
 
-    $token = md5("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1419900749520".$phone);
+    $token = md5("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1425519315543".$phone);
 
     return $token;
 }

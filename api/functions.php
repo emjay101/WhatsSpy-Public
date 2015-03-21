@@ -327,10 +327,18 @@ function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
 		if($notificationAgent['enabled'] == true) {
 			if($type == 'tracker' && @$notificationAgent['notify-tracker'] == true) {
 				// Tracker notification can be sent.
-				if($name == 'nma') {
-					sendNMAMessage($notificationAgent['key'], $application_name, $data['title'], $data['description'], '2');
-				} else if($name == 'ln') {
-					sendLNMessage($notificationAgent['key'], $data['title'], $data['description'], @$data['image']);
+				switch ($name) {
+					case 'nma':
+						sendNMAMessage($notificationAgent['key'], $application_name, $data['title'], $data['description'], '2');
+						break;
+					case 'ln':
+						sendLNMessage($notificationAgent['key'], $data['title'], $data['description'], @$data['image']);
+						break;
+					case 'script':
+						sendCustomScriptMessage($notificationAgent['cmd'], $type, $data);
+						break;
+					default:
+						break;
 				}
 			} else if($type == 'user' && $notificationAgent['notify-user'] == true) {
 				// User notification can be sent.
@@ -340,12 +348,21 @@ function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
 					$filteredTitle = str_replace(':name', $user['name'], $data['title']);
 					$filteredDesc = str_replace(':name', $user['name'], $data['description']);
 
-					if($name == 'nma') {
-						sendNMAMessage($notificationAgent['key'], $application_name, $filteredTitle, $filteredDesc, '1');
-					} else if($name == 'ln') {
-						sendLNMessage($notificationAgent['key'], $filteredTitle, $filteredDesc, @$data['image']);
-					} else if($name == 'wa') {
-						sendWhatsAppMessage($wa, $notificationAgent['key'], $filteredDesc, @$data['image']);
+					switch ($name) {
+						case 'nma':
+							sendNMAMessage($notificationAgent['key'], $application_name, $filteredTitle, $filteredDesc, '1');
+							break;
+						case 'ln':
+							sendLNMessage($notificationAgent['key'], $filteredTitle, $filteredDesc, @$data['image']);
+							break;
+						case 'wa':
+							sendWhatsAppMessage($wa, $notificationAgent['key'], $filteredDesc, @$data['image']);
+							break;
+						case 'script':
+							sendCustomScriptMessage($notificationAgent['cmd'], $type, $data, $filteredTitle, $filteredDesc);
+							break;
+						default:
+							break;
 					}
 				}
 			}
@@ -410,6 +427,13 @@ function sendLNMessage($LNKey, $title, $message, $imgurl) {
 	curl_close ($ch); 
 	return true; 
 } 
+
+/* This command is very unsafe if not properly used. */
+// DO NOT GENERATE A $cmd BASED ON USER INPUT!
+function sendCustomScriptMessage($cmd, $type, $data, $filteredTitle = null, $filteredDesc = null) {
+	$safe_cmd = $cmd.' "'.escapeshellcmd($type).'" "'.escapeshellcmd($data['title']).'" "'.escapeshellcmd($data['description']).'" "'.escapeshellcmd(@$data['number']).'" "'.escapeshellcmd($filteredTitle).'" "'.escapeshellcmd($filteredDesc).'" &';
+	exec($safe_cmd);
+}
 
 
 

@@ -49,7 +49,7 @@ class WhatsProt
     const WHATSAPP_UPLOAD_HOST = 'https://mms.whatsapp.net/client/iphone/upload.php';        // The upload host.
     const WHATSAPP_DEVICE = 'iPhone';                                                        // The device name.
     const WHATSAPP_VER = '2.11.16';                                                          // The WhatsApp version.
-    const WHATSAPP_USER_AGENT = 'WhatsApp/2.12.61 S40Version/14.26 Device/Nokia302';         // User agent used in request/registration code.
+    const WHATSAPP_USER_AGENT = 'WhatsApp/2.12.68 S40Version/14.26 Device/Nokia302';         // User agent used in request/registration code.
     const WHATSAPP_VER_CHECKER = 'https://coderus.openrepos.net/whitesoft/whatsapp_version'; // Check WhatsApp version
 
     /**

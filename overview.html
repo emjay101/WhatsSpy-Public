@@ -91,7 +91,7 @@
 									<span data-ng-show="number.since != null" class="label label-info">tracking since {{::number.since | staticDatetime}}</span>
 									<span data-ng-show="number.latest_online != null" class="label label-info whatsspy-label-last-seen" title="{{number.latest_online | staticDatetime}}">last seen <span am-time-ago="number.latest_online"></span></span>
 									<span data-ng-repeat="group in number.groups">
-										<span class="label label-default">{{getGroupName(group.gid)}}</span> 
+										<span class="label label-default">{{getGroupName(group.gid)}}</span>
 									</span>
 								</div>
 								<!-- Responsive small setup -->
@@ -222,7 +222,7 @@
 														        id="opened-overview-graph-weekday-{{number.id}}"
 														        tooltipcontent="barChartToolTip('weekday', 'times')"
 														        width="700"
-	        													height="200"
+	        													height="260"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -239,7 +239,7 @@
 														        id="opened-overview-graph-hour-{{number.id}}"
 														        tooltipcontent="barChartToolTip('hour', 'times')"
 														        width="700"
-	        													height="200"
+	        													height="260"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -271,7 +271,7 @@
 														        id="time-overview-graph-weekday-{{number.id}}"
 														        tooltipcontent="barChartToolTip('weekday', 'minutes')"
 														        width="700"
-	        													height="200"
+	        													height="260"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -288,7 +288,7 @@
 														        id="time-overview-graph-hour-{{number.id}}"
 														        tooltipcontent="barChartToolTip('hour', 'minutes')"
 														        width="700"
-	        													height="200"
+	        													height="260"
 														        showXAxis="false"
 														        showYAxis="true"
 														        margin=" {top:5,bottom:5,right:0}"
@@ -370,7 +370,11 @@
 										        </tr>
 										      </tbody>
 										    </table>
-										    <small><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> May be off to up to 2 hours.</small>
+										    <small>
+										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Checked every 2 hours.
+										    	<br />
+										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Assuming this user does not have the tracker number in his contact list. If this is the case 'contact only' will be interpreted as 'everyone' in this view.
+										    </small>
 									    </div>
 									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-logs" id="logs-{{number.id}}">
 											<div class="whatsspy-status-entry" data-ng-repeat="entry in accountData[number.id].status">
@@ -526,7 +530,7 @@
       	<div class="whatsspy-contact-options">
 	      	<button type="submit" data-ng-click="submitAccountEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save contact</button> 
 			<a class="btn btn-warning" title="Do not track the user, but keep any status/privacy records of this person. This change can take up to an hour to take effect in the tracker." data-toggle="tooltip" data-placement="bottom" data-ng-click="setNumberInactive(editContact.id);"><span class="glyphicon glyphicon-off" title="Set inactive"></span> Set inactive</a> 
-			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteAccount(editContact.id);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact (!)</a>
+			<a class="btn btn-danger" title="Delete all information of this contact, including any status records." data-toggle="tooltip" data-placement="bottom" data-ng-click="deleteAccountConfirm(editContact.id);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete contact (!)</a>
 		</div>
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>

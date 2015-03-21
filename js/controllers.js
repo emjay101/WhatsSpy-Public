@@ -43,6 +43,13 @@ angular.module('whatsspyControllers', [])
 			});
 	}
 
+	$scope.deleteAccountConfirm = function(contactId) {
+		var confirm = window.confirm('Are you sure you want to delete this Account?');
+		if(confirm == true) {
+			$scope.deleteAccount(contactId);
+		} 
+	}
+
 	$scope.deleteAccount = function(contactId) {
 		$http({method: 'GET', url: 'api/?whatsspy=deleteContact&number=' + contactId}).
 			success(function(data, status, headers, config) {
@@ -177,14 +184,6 @@ angular.module('whatsspyControllers', [])
 
 	$scope.getRealGroups = function() {
 		return $filter('noGroupFilter')($rootScope.groups);
-	}
-
-	$scope.getGroupName = function(gid) {
-		for (var i = $rootScope.groups.length - 1; i >= 0; i--) {
-			if($rootScope.groups[i]['gid'] == gid) {
-				return $rootScope.groups[i]['name'];
-			}
-		};
 	}
 
 	$scope.$on('statusForNumberLoaded', function (event, $number) {
@@ -445,7 +444,14 @@ angular.module('whatsspyControllers', [])
 
 	$scope.comparedAccounts = [];
 
-	$scope.filterGroup = null;
+	$scope.toggleBatchInsert = false;
+	$scope.totalBatchSize = 0;
+	$scope.totalBatchProgress = 0;
+
+	$rootScope.inComparePage = true;
+	$scope.$on('$routeChangeStart', function(next, current) { 
+		$rootScope.inComparePage = false;
+	});
 
 	// Javascript page setup call
 	$('[data-toggle="tooltip"]').tooltip();
@@ -459,9 +465,12 @@ angular.module('whatsspyControllers', [])
 		return false;
 	}
 
-	$scope.addToComparison = function($number) {
+	$scope.addUserToComparison = function($number) {
 		if($scope.isNumberInComparison($number.id)) {
 			alertify.error("Contact is already in the comparison!");
+			if($scope.toggleBatchInsert == true) {
+				$scope.totalBatchProgress++;
+			}
 		} else {
 			$scope.comparedAccounts.push($number);
 			// Retrieve status information
@@ -469,17 +478,40 @@ angular.module('whatsspyControllers', [])
 		}
 	}
 
+	$scope.addGroupToComparison = function(gid) {
+		$scope.toggleBatchInsert = true;
+		$scope.totalBatchSize = 0;
+		$scope.totalBatchProgress = 0;
+		for (var i = $rootScope.accounts.length - 1; i >= 0; i--) {
+			for (var y = $rootScope.accounts[i].groups.length - 1; y >= 0; y--) {
+				if($rootScope.accounts[i].groups[y].gid == gid) {
+					$scope.addUserToComparison($rootScope.accounts[i]);
+					$scope.totalBatchSize++;
+				}
+			};
+		};
+	}
+
 	// broadcast event on status information loaded
 	$scope.$on('statusForNumberLoaded', function (event, $number) {
 		// Append to timeline
-	  	$scope.refreshTimelineData($scope.comparedAccounts);
+		if($scope.toggleBatchInsert == false) {
+		  	$rootScope.refreshTimelineData();
+		} else {
+			// Check if this is last batch record.			
+			$scope.totalBatchProgress++;
+			if($scope.totalBatchProgress == $scope.totalBatchSize) {
+				$scope.toggleBatchInsert = false;
+				$rootScope.refreshTimelineData();
+			}
+		}
 	});
 
 	$scope.removeFromComparison = function($number) {
 		for (var i = 0; i < $scope.comparedAccounts.length; i++) {
 			if($scope.comparedAccounts[i].id == $number.id) {
 				$scope.comparedAccounts.splice(i, 1);
-				$scope.refreshTimelineData($scope.comparedAccounts);
+				$rootScope.refreshTimelineData();
 			}
 		}
 		// Delete from the timeline
@@ -660,7 +692,9 @@ angular.module('whatsspyControllers', [])
 
 
 	// Append state data to the timelines
-	$scope.refreshTimelineData = function($numbers) {
+	$rootScope.refreshTimelineData = function() {
+		var $numbers = $scope.comparedAccounts;
+		
 		var items = $scope.timelineData.items;
 		var groups = $scope.timelineData.groups;
 		items.clear();
