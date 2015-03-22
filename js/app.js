@@ -92,6 +92,16 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     return deferred.promise;
   }
 
+  $rootScope.getAccountById = function(id) {
+    for (var i = $rootScope.accounts.length - 1; i >= 0; i--) {
+      if($rootScope.accounts[i].id == id) {
+        return $rootScope.accounts[i];
+        break;
+      }
+    };
+    return null;
+  }
+
   $rootScope.getAbout = function() {
   var deferred = $q.defer();
   $http({method: 'GET', url: 'api/?whatsspy=getAbout&v='+ $rootScope.version}).
@@ -279,9 +289,6 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 
     $q.all(promises).then(function(greeting) {
       $rootScope.showLoader = false;
-      if($rootScope.inComparePage == true) {
-        $rootScope.refreshTimelineData();
-      }
     }, function(reason) {
       $rootScope.showLoader = false;
     }, function(update) {

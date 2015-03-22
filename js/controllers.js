@@ -442,7 +442,7 @@ angular.module('whatsspyControllers', [])
 })
 .controller('CompareController', function($scope, $rootScope, $q, $http, $timeout, VisDataSet) {
 
-	$scope.comparedAccounts = [];
+	$scope.comparedAccountsIds = [];
 
 	$scope.toggleBatchInsert = false;
 	$scope.totalBatchSize = 0;
@@ -457,8 +457,8 @@ angular.module('whatsspyControllers', [])
 	$('[data-toggle="tooltip"]').tooltip();
 
 	$scope.isNumberInComparison = function(id) {
-		for (var i = 0; i < $scope.comparedAccounts.length; i++) {
-			if($scope.comparedAccounts[i].id == id) {
+		for (var i = 0; i < $scope.comparedAccountsIds.length; i++) {
+			if($scope.comparedAccountsIds[i] == id) {
 				return true;
 			}
 		}
@@ -467,12 +467,12 @@ angular.module('whatsspyControllers', [])
 
 	$scope.addUserToComparison = function($number) {
 		if($scope.isNumberInComparison($number.id)) {
-			alertify.error("Contact is already in the comparison!");
+			alertify.error($number.name + " is already in the comparison!");
 			if($scope.toggleBatchInsert == true) {
 				$scope.totalBatchProgress++;
 			}
 		} else {
-			$scope.comparedAccounts.push($number);
+			$scope.comparedAccountsIds.push($number.id);
 			// Retrieve status information
 			$rootScope.loadDataFromNumber($number);
 		}
@@ -507,10 +507,10 @@ angular.module('whatsspyControllers', [])
 		}
 	});
 
-	$scope.removeFromComparison = function($number) {
-		for (var i = 0; i < $scope.comparedAccounts.length; i++) {
-			if($scope.comparedAccounts[i].id == $number.id) {
-				$scope.comparedAccounts.splice(i, 1);
+	$scope.removeFromComparison = function(id) {
+		for (var i = 0; i < $scope.comparedAccountsIds.length; i++) {
+			if($scope.comparedAccountsIds[i] == id) {
+				$scope.comparedAccountsIds.splice(i, 1);
 				$rootScope.refreshTimelineData();
 			}
 		}
@@ -693,18 +693,14 @@ angular.module('whatsspyControllers', [])
 
 	// Append state data to the timelines
 	$rootScope.refreshTimelineData = function() {
-		var $numbers = $scope.comparedAccounts;
-		
 		var items = $scope.timelineData.items;
 		var groups = $scope.timelineData.groups;
 		items.clear();
 		groups.clear();
-
-		
 		
 
-		for(var x = 0; x < $numbers.length; x++) {
-			var $number = $numbers[x];
+		for(var x = 0; x < $scope.comparedAccountsIds.length; x++) {
+			var $number = $rootScope.getAccountById($scope.comparedAccountsIds[x]);
 			groups.add({id: x, content: $number.name});
 			if($rootScope.accountData[$number.id] != null && $rootScope.accountData[$number.id] != undefined) {
 				for(var y = 0; y < $rootScope.accountData[$number.id].status.length; y++) {

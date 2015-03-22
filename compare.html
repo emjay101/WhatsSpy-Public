@@ -50,33 +50,33 @@
 								</tr>
 							</thead>
 							<tbody>
-								<tr data-ng-repeat="account in comparedAccounts">
+								<tr data-ng-repeat="accountId in comparedAccountsIds">
 									<td>
 										<div class="row">
 											<div class="col-md-2 hidden-xs">
-												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{account.profilepic_updated | staticDatetime}}" data-ng-show="account.profilepic != null" data-ng-src="{{(account.profilepic != null && profilePicPath != null) && profilePicPath + account.profilepic + '.jpg' || ''}}" />
-												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="account.profilepic == null" src="https://placehold.it/175x175" />
+												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{getAccountById(accountId).profilepic_updated | staticDatetime}}" data-ng-show="getAccountById(accountId).profilepic != null" data-ng-src="{{(getAccountById(accountId).profilepic != null && profilePicPath != null) && profilePicPath + getAccountById(accountId).profilepic + '.jpg' || ''}}" />
+												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="getAccountById(accountId).profilepic == null" src="https://placehold.it/175x175" />
 											</div>
 
 											<div class="col-md-10">
-												<strong>{{account.name}}</strong>
-												({{account.id}})
-												<span data-ng-repeat="group in account.groups">
+												<strong>{{getAccountById(accountId).name}}</strong>
+												({{getAccountById(accountId).id}})
+												<span data-ng-repeat="group in getAccountById(accountId).groups">
 													<span class="label label-default">{{getGroupName(group.gid)}}</span>
 												</span>
 												<br />
 												<br />
-												<span data-ng-show="account.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">last seen : contacts*</span>
-												<span data-ng-show="account.profilepic_privacy == false" class="label label-success">last seen : everyone</span>
-												<span data-ng-show="account.statusmessage_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">status messages : contacts*</span>
-												<span data-ng-show="account.statusmessage_privacy == false" class="label label-success">status messages : everyone</span>
-												<span data-ng-show="account.profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">profile pic : contacts*</span>
-												<span data-ng-show="account.profilepic_privacy == false" class="label label-success">profile pic : everyone</span>
+												<span data-ng-show="getAccountById(accountId).lastseen_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">last seen : contacts*</span>
+												<span data-ng-show="getAccountById(accountId).lastseen_privacy == false" class="label label-success">last seen : everyone</span>
+												<span data-ng-show="getAccountById(accountId).statusmessage_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">status messages : contacts*</span>
+												<span data-ng-show="getAccountById(accountId).statusmessage_privacy == false" class="label label-success">status messages : everyone</span>
+												<span data-ng-show="getAccountById(accountId).profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">profile pic : contacts*</span>
+												<span data-ng-show="getAccountById(accountId).profilepic_privacy == false" class="label label-success">profile pic : everyone</span>
 											</div>
 										</div>
 									</td>
 									<td>
-										<button type="button" data-ng-click="removeFromComparison(account)" class="btn btn-danger">Remove</button>
+										<button type="button" data-ng-click="removeFromComparison(accountId)" class="btn btn-danger">Remove</button>
 									</td>
 								</tr>
 							</tbody>
