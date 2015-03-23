@@ -359,7 +359,7 @@ function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
 							sendWhatsAppMessage($wa, $notificationAgent['key'], $filteredDesc, @$data['image']);
 							break;
 						case 'script':
-							sendCustomScriptMessage($notificationAgent['cmd'], $type, $data, $filteredTitle, $filteredDesc);
+							sendCustomScriptMessage($notificationAgent['cmd'], $type, $data, $user);
 							break;
 						default:
 							break;
@@ -428,10 +428,26 @@ function sendLNMessage($LNKey, $title, $message, $imgurl) {
 	return true; 
 } 
 
-/* This command is very unsafe if not properly used. */
-// DO NOT GENERATE A $cmd BASED ON USER INPUT!
-function sendCustomScriptMessage($cmd, $type, $data, $filteredTitle = null, $filteredDesc = null) {
-	$safe_cmd = $cmd.' "'.escapeshellcmd($type).'" "'.escapeshellcmd($data['title']).'" "'.escapeshellcmd($data['description']).'" "'.escapeshellcmd(@$data['number']).'" "'.escapeshellcmd($filteredTitle).'" "'.escapeshellcmd($filteredDesc).'" &';
+
+/**
+  *		This command is very unsafe if not properly used.
+  *		DO NOT GENERATE A $cmd BASED ON USER INPUT!
+  *		Examples of script calls:
+  *		/path/to/script.sh "tracker" "Event title" "Event description"
+  *		/path/to/script.sh "user" ":user has title" ":user event description" "user notification type" "name" "number"
+  *
+  *		First parameter is either 'user' or 'tracker':
+  *		- In case of 'tracker' the next parameters will be a [title, description, event-type (start, error)].
+  *		- In case of 'user' the next parameters will be a [title, description, user notification type (status, statusmsg, profilepic, privacy), name of user, number of user].
+  */
+function sendCustomScriptMessage($cmd, $type, $data, $user = null) {
+	$safe_cmd = $cmd.' "'.escapeshellcmd($type).'" ';
+	if($type == 'tracker') {
+		$safe_cmd .= '"'.escapeshellcmd($data['title']).'" "'.escapeshellcmd($data['description']).'" "'.escapeshellcmd($data['event-type']).'" ';
+	} else {
+		$safe_cmd .= '"'.escapeshellcmd($data['title']).'" "'.escapeshellcmd($data['description']).'" "'.escapeshellcmd($data['notify_type']).'" "'.escapeshellcmd(@$user['name']).'" "'.escapeshellcmd($data['number']).'" ';
+	}
+	$safe_cmd .=  '> /dev/null &';
 	exec($safe_cmd);
 }
 

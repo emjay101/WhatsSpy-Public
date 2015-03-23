@@ -78,7 +78,7 @@ pcntl_signal(SIGINT, "signal_handler");
 
 // General last seen privacy check
 function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
-	global $DBH, $wa;
+	global $DBH, $wa, $whatsspyNotificatons;
 	$number = explode("@", $from)[0];
 	$privacy_status = $DBH->prepare('SELECT "lastseen_privacy" FROM accounts WHERE "id"=:number');
 	$privacy_status -> execute(array(':number' => $number));
@@ -88,6 +88,10 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 								SET "lastseen_privacy" = false WHERE "id" = :number;');
 		if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
 			tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option DISABLED! ');
+			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name changed the lastseen privacy option', 
+																		'description' => ':name has the lastseen privacy option to DISABLED!.',
+																		'number' => $number,
+																		'notify_type' => 'privacy']);
 		}
 	}
 }
@@ -196,7 +200,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			        fclose($fp);
 			    } else {
 			    	tracker_log('  -[profile-pic] Could not write '. $filename .' to disk!');
-			    	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => 'Could not write '. $filename .' to disk!']);
+			    	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => 'Could not write '. $filename .' to disk!', 'event-type' => 'error']);
 			    }
 			}
 			// Update database
@@ -222,6 +226,10 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 									SET "profilepic_privacy" = false WHERE "id" = :number;');
 			if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
 				tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option DISABLED!');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name changed the profile picture privacy option', 
+																		'description' => ':name has the profile picture privacy option to DISABLED!',
+																		'number' => $number,
+																		'notify_type' => 'privacy']);
 			}
 		}
 	} else {
@@ -291,8 +299,16 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
 		if(checkDatabaseInsert($update->execute(array(':number' => $number, ':privacy' => (int)$privacy_enabled)))) {
 			if($privacy_enabled) {
 				tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option ENABLED! ');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name changed the statusmessage privacy option', 
+																			'description' => ':name has the statusmessage privacy option to ENABLED!',
+																			'number' => $number,
+																			'notify_type' => 'privacy']);
 			} else {
 				tracker_log('  -[status-msg] '.$number.' has the statusmessage privacy option DISABLED! ');
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name changed the statusmessage privacy option', 
+																			'description' => ':name has the statusmessage privacy option to DISABLED!',
+																			'number' => $number,
+																			'notify_type' => 'privacy']);
 			}
 		}
 	}
@@ -338,10 +354,19 @@ function onGetError($mynumber, $from, $id, $data ) {
         	$data->getAttribute("code") == '401') {
         	// Lastseen privacy error:
         	$number = explode("@", $from)[0];
-			$update = $DBH->prepare('UPDATE accounts
-										SET "lastseen_privacy" = true WHERE "id" = :number;');
-			if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
-				tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option ENABLED! ');
+	        $privacy_status = $DBH->prepare('SELECT "lastseen_privacy" FROM accounts WHERE "id"=:number');
+			$privacy_status -> execute(array(':number' => $number));
+			$row  = $privacy_status -> fetch();
+			if($row['lastseen_privacy'] == false) {
+				$update = $DBH->prepare('UPDATE accounts
+											SET "lastseen_privacy" = true WHERE "id" = :number;');
+				if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
+					tracker_log('  -[lastseen] '.$number.' has the lastseen privacy option to ENABLED! ');
+					sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name changed the lastseen privacy option', 
+																				'description' => ':name has the lastseen privacy option to ENABLED!',
+																				'number' => $number,
+																				'notify_type' => 'privacy']);
+				}
 			}
         } else if($data->getAttribute("code") == '404') {
         	tracker_log('  -[lastseen] cannot determine lastseen, ignoring request.');
@@ -355,10 +380,19 @@ function onGetError($mynumber, $from, $id, $data ) {
         	$data->getAttribute("code") == '401') {
         	// picture privacy error
         	$number = explode("@", $from)[0];
-			$update = $DBH->prepare('UPDATE accounts
-										SET "profilepic_privacy" = true WHERE "id" = :number;');
-			if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
-				tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option ENABLED! ');
+        	$privacy_status = $DBH->prepare('SELECT "profilepic_privacy" FROM accounts WHERE "id"=:number');
+			$privacy_status -> execute(array(':number' => $number));
+			$row  = $privacy_status -> fetch();
+			if($row['profilepic_privacy'] == false) {
+				$update = $DBH->prepare('UPDATE accounts
+											SET "profilepic_privacy" = true WHERE "id" = :number;');
+				if(checkDatabaseInsert($update->execute(array(':number' => $number)))) {
+					tracker_log('  -[profile-pic] '.$number.' has the profilepic privacy option to ENABLED! ');
+					sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name changed the profile picture privacy option', 
+																				'description' => ':name has the profile picture privacy option to ENABLED!',
+																				'number' => $number,
+																				'notify_type' => 'privacy']);
+				}
 			}
         } else if($data->getAttribute("code") == '404') {
         	// No profile picture
@@ -520,7 +554,7 @@ function track() {
 	retrieveTrackingUsers();
 	tracker_log('[init] Started tracking with phonenumber ' . $whatsappAuth['number']);
 	startTrackerHistory();
-	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'WhatsSpy Public has started tracking!', 'description' => 'tracker has started tracking '.count($tracking_numbers). ' users.']);
+	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'WhatsSpy Public has started tracking!', 'description' => 'tracker has started tracking '.count($tracking_numbers). ' users.', 'event-type' => 'start']);
 
 	while(true){
 		$crawl_time = time();
@@ -650,7 +684,7 @@ do {
 		if($whatsappAuth['debug']) {
 			print_r($e);
 		}
-		sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => $e->getMessage()]);
+		sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => $e->getMessage(), 'event-type' => 'error']);
 	}
 
 	if($last_error == 'Connection Closed!') {

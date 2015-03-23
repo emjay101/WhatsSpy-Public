@@ -214,6 +214,19 @@ function checkDBMigration($DBH) {
 			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 5;');
 			$update -> execute();
 		}
+	} else if($row['db_version'] == 5) {
+		// Added notify for privacy settings
+		$upgrade = $DBH->exec('ALTER TABLE accounts
+ 							   ADD COLUMN notify_privacy boolean NOT NULL DEFAULT false;
+							   ');
+		if($DBH->errorCode() != '00000') {
+			echo 'The following error occured when trying to upgrade DB:';
+			print_r($DBH->errorInfo());
+			exit();
+		} else {
+			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 6;');
+			$update -> execute();
+		}
 	}
 }
 /**

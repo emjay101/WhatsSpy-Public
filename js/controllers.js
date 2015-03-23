@@ -83,6 +83,7 @@ angular.module('whatsspyControllers', [])
 		$scope.editContact.notify_status = $contact.notify_status;
 		$scope.editContact.notify_statusmsg = $contact.notify_statusmsg;
 		$scope.editContact.notify_profilepic = $contact.notify_profilepic;
+		$scope.editContact.notify_privacy = $contact.notify_privacy;
 		$scope.editContact.notify_timeline = $contact.notify_timeline;
 		$scope.editContact.groups = $contact.groups;
 	}
@@ -107,7 +108,7 @@ angular.module('whatsspyControllers', [])
 			};
 		groupArray = groupArray.substring(0, groupArray.length - 1);
 
-		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_status=' + $scope.editContact.notify_status + '&notify_statusmsg=' + $scope.editContact.notify_statusmsg + '&notify_profilepic=' + $scope.editContact.notify_profilepic + '&notify_timeline=' + $scope.editContact.notify_timeline + '&groups=' + groupArray}).
+		$http({method: 'GET', url: 'api/?whatsspy=updateAccount&number=' + $scope.editContact.id + '&name=' + encodeURIComponent($scope.editContact.name) + '&notify_status=' + $scope.editContact.notify_status + '&notify_statusmsg=' + $scope.editContact.notify_statusmsg + '&notify_profilepic=' + $scope.editContact.notify_profilepic + '&notify_privacy='+ $scope.editContact.notify_privacy +'&notify_timeline=' + $scope.editContact.notify_timeline + '&groups=' + groupArray}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact updated");
@@ -393,7 +394,7 @@ angular.module('whatsspyControllers', [])
 					style: 'font-size:11px; line-height: 1;',
 					start: startDate.valueOf(),
 					end: endDate.valueOf(),
-					title: 'from ' + startDate.format('HH:mm:ss') + ' till ' + endDate.format('HH:mm:ss'),
+					title: 'Duration: ' + $filter('timeFormat')(Math.round((endDate - startDate)/1000)) + '.',
 					type: 'box'
 				});
 			}
@@ -718,7 +719,7 @@ angular.module('whatsspyControllers', [])
 						style: 'font-size:11px; line-height: 1;',
 						start: startDate.valueOf(),
 						end: endDate.valueOf(),
-						title: 'from ' + startDate.format('HH:mm:ss') + ' till ' + endDate.format('HH:mm:ss'),
+						title: 'Duration: ' + $filter('timeFormat')(Math.round((endDate - startDate)/1000)) + '.',
 						type: 'box'
 					});
 				}

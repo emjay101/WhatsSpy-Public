@@ -104,7 +104,7 @@
 								</div>
 								<!-- END responsive small setup -->
 								<div class="col-md-3 whatsspy-contact-phone">
-									<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true"> 
+									<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true || number.notify_privacy == true"> 
 						    			<span class="label label-danger whatsspy-label-notifications">
 						    				notifications enabled
 						    			</span>
@@ -504,6 +504,11 @@
 	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="editContact.notify_profilepic == true"></span>
 	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_profilepic == false"></span>
 	    					Profile picture change
+	    				</button>
+	    				<button type="button" class="btn btn-primary whatsspy-btn-notify col-xs-12" data-ng-click="editContact.notify_privacy = getOpposite(editContact.notify_privacy);" data-ng-disabled="notificationOptionDisabled">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="editContact.notify_privacy == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="editContact.notify_privacy == false"></span>
+	    					Privacy setting changes
 	    				</button>
 					    <small data-ng-show="notificationOptionDisabled">There are no notification agents configured in <strong>config.php</strong>. Check config.example.php in case you are missing these options.</small>
 					    <small data-ng-show="notificationOptionDisabled == false">

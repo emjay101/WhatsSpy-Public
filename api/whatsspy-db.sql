@@ -300,7 +300,7 @@ ALTER TABLE whatsspy_config
 GRANT ALL ON TABLE whatsspy_config TO whatsspy;
 
 INSERT INTO whatsspy_config (db_version)
-    VALUES (5);
+    VALUES (6);
 
 
 -- Add notification options
@@ -354,6 +354,9 @@ ALTER TABLE accounts
 
 ALTER TABLE accounts
   ADD COLUMN notify_timeline boolean NOT NULL DEFAULT false;
+
+ALTER TABLE accounts
+  ADD COLUMN notify_privacy boolean NOT NULL DEFAULT false;
 
 
 

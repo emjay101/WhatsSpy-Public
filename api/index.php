@@ -73,6 +73,7 @@ switch($_GET['whatsspy']) {
 			$notify_status = ($_GET['notify_status'] == 'true' ? true : false);
 			$notify_statusmsg = ($_GET['notify_statusmsg'] == 'true' ? true : false);
 			$notify_profilepic = ($_GET['notify_profilepic'] == 'true' ? true : false);
+			$notify_privacy = ($_GET['notify_privacy'] == 'true' ? true : false);
 			$notify_timeline = ($_GET['notify_timeline'] == 'true' ? true : false);
 
 			$groups = explode(',', ($_GET['groups'] == '' ? null : $_GET['groups']));
@@ -80,12 +81,13 @@ switch($_GET['whatsspy']) {
 
 			$name = $_GET['name']; // do not use htmlentities, AngularJS will protect us
 			$update = $DBH->prepare('UPDATE accounts
-										SET name = :name, notify_status = :notify_status, notify_statusmsg = :notify_statusmsg, notify_profilepic = :notify_profilepic, notify_timeline = :notify_timeline WHERE id = :id;');
+										SET name = :name, notify_status = :notify_status, notify_statusmsg = :notify_statusmsg, notify_profilepic = :notify_profilepic, notify_privacy = :notify_privacy, notify_timeline = :notify_timeline WHERE id = :id;');
 			$update->execute(array(':id' => $number, 
 								   ':name' => $name, 
 								   ':notify_status' => (int)$notify_status,
 								   ':notify_statusmsg' => (int)$notify_statusmsg,
 								   ':notify_profilepic' => (int)$notify_profilepic,
+								   ':notify_privacy' => (int)$notify_privacy,
 								   ':notify_timeline' => (int)$notify_timeline));
 			// Update groups
 			$select_group = $DBH->prepare('SELECT gid FROM accounts_to_groups WHERE number = :number');
@@ -144,7 +146,7 @@ switch($_GET['whatsspy']) {
 		// Upgrade DB if it's old:
 		checkDBMigration($DBH);
 
-		$select = $DBH->prepare('SELECT n.id, n.name, n."notify_status", n."notify_statusmsg", n."notify_profilepic", n."notify_timeline", n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
+		$select = $DBH->prepare('SELECT n.id, n.name, n."notify_status", n."notify_statusmsg", n."notify_profilepic", n."notify_privacy", n."notify_timeline", n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
 										smh.status as "last_statusmessage",
 										pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
 								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
