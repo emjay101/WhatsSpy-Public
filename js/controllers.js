@@ -441,7 +441,7 @@ angular.module('whatsspyControllers', [])
 		onload: $scope.onLoaded
 	};
 })
-.controller('CompareController', function($scope, $rootScope, $q, $http, $timeout, VisDataSet) {
+.controller('CompareController', function($scope, $rootScope, $q, $http, $timeout, VisDataSet, $filter) {
 
 	$scope.comparedAccountsIds = [];
 

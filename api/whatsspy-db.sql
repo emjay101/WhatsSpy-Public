@@ -512,11 +512,6 @@ CREATE INDEX index_profilepic_privacy_history_number_changed_at_desc
 CREATE INDEX index_statusmessage_privacy_history_number_changed_at_desc
    ON statusmessage_privacy_history ("number", "changed_at" DESC);
 
-CREATE INDEX index_account_group_id
-                    ON accounts (group_id ASC NULLS LAST);
-CREATE INDEX index_account_id_group_id
-   ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);
-
 
 -- Trigger: trigger_lastseen on accounts
 
