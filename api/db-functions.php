@@ -138,7 +138,8 @@ function checkDBMigration($DBH) {
 							   FROM   whatsspy_config');
 	$select -> execute();
 	$row  = $select -> fetch();
-	if($row['db_version'] == 3) {
+	$version = $row['db_version'];
+	if($version == 3) {
 		// Add tracker reason
 		// Add notifier options
 		// Groups
@@ -186,8 +187,11 @@ function checkDBMigration($DBH) {
 		} else {
 			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 4;');
 			$update -> execute();
+			$version = 4;
 		}
-	} else if($row['db_version'] == 4) {
+	} 
+
+	if($version == 4) {
 		// Added mulitple groups
 		$upgrade = $DBH->exec('CREATE TABLE accounts_to_groups
 								(
@@ -213,8 +217,11 @@ function checkDBMigration($DBH) {
 		} else {
 			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 5;');
 			$update -> execute();
+			$version = 5;
 		}
-	} else if($row['db_version'] == 5) {
+	}
+	
+	if($version == 5) {
 		// Added notify for privacy settings
 		$upgrade = $DBH->exec('ALTER TABLE accounts
  							   ADD COLUMN notify_privacy boolean NOT NULL DEFAULT false;
@@ -226,6 +233,7 @@ function checkDBMigration($DBH) {
 		} else {
 			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 6;');
 			$update -> execute();
+			$version = 6;
 		}
 	}
 }
