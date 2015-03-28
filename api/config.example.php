@@ -29,7 +29,7 @@ $whatsappAuth = 	['number' => '',
 				 	 'debug' => false];
 
 // Password to use in the WhatsSpy Public application
-$whatsspyPublicAuth = 'changethis';
+$whatsspyPublicAuth = 'whatsspypublic';
 
 // Set your timezone
 // Check for all timezones: http://php.net/manual/en/timezones.php
