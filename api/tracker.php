@@ -696,11 +696,11 @@ do {
 
 	if($last_error == 'Connection Closed!') {
 		// Wait 360 seconds before reconnecting.
-		tracker_log('[retry] Reconnectiong to WhatsApp in 360 seconds.');
+		tracker_log('[retry] Reconnecting to WhatsApp in 360 seconds.');
 		sleep(360);
 	} else {
 		// Wait 120 seconds before reconnecting.
-		tracker_log('[retry] Reconnectiong to WhatsApp in 120 seconds.');
+		tracker_log('[retry] Reconnecting to WhatsApp in 120 seconds.');
 		sleep(120);
 	}
 	$last_error = null;
