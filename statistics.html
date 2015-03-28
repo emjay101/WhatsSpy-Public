@@ -458,7 +458,12 @@
 										  <th>Opened WA</th>
 										</tr>
 										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10DayChoice]">
-										  <td><a data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a></td>
+										  <td>
+										  	<a data-ng-show="tokenAuth == null" data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a>
+
+										  	<span data-ng-show="tokenAuth != null">
+										  	<span data-ng-show="tokenAuth != null" class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</span>
+										  </td>
 										  <td>{{user.online | timeFormat}}</td>
 										  <td>{{user.count}} times</td>
 										</tr>
@@ -482,7 +487,13 @@
 										  <th>Opened WA</th>
 										</tr>
 										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10TimeChoice]">
-										  <td><a data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a></td>
+										  <td>
+										  	<a data-ng-show="tokenAuth == null" data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a>
+
+										  	<span data-ng-show="tokenAuth != null">
+										  	<span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}
+										  </span>
+										  </td>
 										  <td>{{user.online | timeFormat}}</td>
 										  <td>{{user.count}} times</td>
 										</tr>

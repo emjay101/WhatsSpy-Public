@@ -1040,7 +1040,7 @@ angular.module('whatsspyControllers', [])
 .controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter, $routeParams) {
 	$scope.stats = null;
 	$scope.filterGroup = null;
-	$scope.tokenAuth = null;
+	$rootScope.tokenAuth = null;
 
 	if($routeParams.token != null) {
 		if($rootScope.authenticated == true) {
@@ -1048,7 +1048,7 @@ angular.module('whatsspyControllers', [])
 			$rootScope.doLogout(false);
 		}
 		$rootScope.constructor();
-		$scope.tokenAuth = $routeParams.token;
+		$rootScope.tokenAuth = $routeParams.token;
 	}
 
 	$rootScope.inStatsPage = true;
@@ -1093,8 +1093,8 @@ angular.module('whatsspyControllers', [])
 
 	$rootScope.loadGlobalStats = function(component) {
 		var query = '';
-		if($scope.tokenAuth != null) {
-			query = '&token='+$scope.tokenAuth;
+		if($rootScope.tokenAuth != null) {
+			query = '&token='+$rootScope.tokenAuth;
 		}
 		var deferred = $q.defer();
 		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats&component='+component+'&group='+$scope.filterGroup + query}).

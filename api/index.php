@@ -636,9 +636,11 @@ switch($_GET['whatsspy']) {
 			$token_group = requireTokenAuthForGroup($_GET['token']);
 			$_GET['group'] = $token_group['gid'];
 			$token_auth = true;
+			$select_top = '';
 		} else {
 			requireAuth();
 			$token_auth = false;
+			$select_top = 'a.id,';
 		}
 	
 		$group = null;
@@ -690,7 +692,7 @@ switch($_GET['whatsspy']) {
 				// Top 10 setup
 				$result_top10 = array();
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -704,7 +706,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['today'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -719,7 +721,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['yesterday'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -734,7 +736,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['2days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -749,7 +751,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['3days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -764,7 +766,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['4days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -778,7 +780,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['24hours'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -792,7 +794,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['7days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -806,7 +808,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['14days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -820,7 +822,7 @@ switch($_GET['whatsspy']) {
 				$select -> execute();
 				$result_top10['31days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -837,7 +839,7 @@ switch($_GET['whatsspy']) {
 				break;
 			case 'user_status_analytics_user':
 				// user data for pie charts
-				$select_user_status = $DBH->prepare('SELECT a.id, a.name,
+				$select_user_status = $DBH->prepare('SELECT a.name,
 										(SELECT COUNT(1) FROM status_history WHERE number = a.id AND status = true AND start >= DATE_TRUNC(\'day\', NOW())) "count_today",
 										(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) as "result" FROM status_history WHERE status = true AND number= a.id  AND start >= DATE_TRUNC(\'day\', NOW()) AND "end" IS NOT NULL) "seconds_today",
 										(SELECT COUNT(1) FROM status_history WHERE number = a.id AND status = true AND start >= NOW() - \'7 day\'::INTERVAL) "count_7day",
