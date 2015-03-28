@@ -44,47 +44,66 @@
                     </div>
                     <div class="col-md-8 col-md-offset-1 col-xs-12">
                         <ul class="options-large">
-                            <li>
+                            <li data-ng-show="authenticated == false">
+                                <a href="#/login" data-ng-class="getActivePageClass('login')">
+                                    <span class="setting-icon glyphicon glyphicon-bell"></span><br />
+                                    Login
+                                </a>
+                            </li>
+                            <li data-ng-show="authenticated == true && !isInPage('public')">
                                 <a href="#/overview" data-ng-class="getActivePageClass('overview')">
                                     <span class="setting-icon glyphicon glyphicon-list"></span><br />
                                     Overview
                                 </a>
                             </li>
-                            <li>
+                            <li data-ng-show="authenticated == true && !isInPage('public')">
                                 <a href="#/compare" data-ng-class="getActivePageClass('compare')">
                                     <span class="setting-icon glyphicon glyphicon-scale"></span><br />
                                     Compare
                                 </a>
                             </li>
-                            <li>
+                            <li data-ng-show="authenticated == true && !isInPage('public')">
                                 <a href="#/timeline" data-ng-class="getActivePageClass('timeline')">
                                     <span class="setting-icon glyphicon glyphicon-time"></span><br />
                                     Timeline
                                 </a>
                             </li>
-                            <li>
+                            <li data-ng-show="authenticated == true && !isInPage('public')">
                                 <a href="#/statistics" data-ng-class="getActivePageClass('statistics')">
                                     <span class="setting-icon glyphicon glyphicon-signal"></span><br />
                                     Statistics
                                 </a>
                             </li>
-                            <li>
+                            <li data-ng-show="authenticated == true && !isInPage('public')">
                                 <a href="#/about" data-ng-class="getActivePageClass('about')">
                                     <span class="setting-icon glyphicon glyphicon-blackboard"></span><br />
                                     About / Help
                                 </a>
                             </li>
+                            <li data-ng-show="isInPage('public/user')">
+                                <a href="#" onclick="return false;" data-ng-class="getActivePageClass('public/user')">
+                                    <span class="setting-icon glyphicon glyphicon-tag"></span><br />
+                                    Public user
+                                </a>
+                            </li>
+                            <li data-ng-show="isInPage('public/group')">
+                                <a href="#" onclick="return false;" data-ng-class="getActivePageClass('public/group')">
+                                    <span class="setting-icon glyphicon glyphicon-tags"></span><br />
+                                    Public group
+                                </a>
+                            </li>
                         </ul>
                         <div id="loader" data-ng-show="showLoader == true" title="Loading new data ..."></div>
                     </div>
-                    <div class="col-md-2 col-xs-12">
+                    <div class="col-md-2 col-xs-12" data-ng-hide="isInPage('public') == true">
                         <div id="status">
                             <strong><span class="setting-icon glyphicon glyphicon-tasks"></span> status</strong>
                             <br />
                             <span data-ng-cloak data-ng-show="trackerStatus() == 'online'" class="label label-success">Tracker online</span>
                             <span data-ng-cloak data-ng-show="trackerStatus() == 'offline'" class="label label-danger">Tracker offline</span>
+                            <span data-ng-cloak data-ng-show="trackerStatus() == 'unknown'" class="label label-default">not authenticated</span>
                             <span data-ng-cloak data-ng-show="trackerStatus() == 'online'"class="label label-info">{{accounts.length}} users</span>
-                            <span data-ng-click="refreshContent()" data-ng-cloak class="label label-default whatsspy-data-management" data-toggle="tooltip" data-placement="bottom" title="Click to refresh the data loaded into the web-app."><span am-time-ago="loadedTime"></span></span>
+                            <span data-ng-show="trackerStatus() != 'unknown'" data-ng-click="refreshContent()" data-ng-cloak class="label label-default whatsspy-data-management" data-toggle="tooltip" data-placement="bottom" title="Click to refresh the data loaded into the web-app."><span am-time-ago="loadedTime"></span></span>
                         </div>
                     </div>
                 </div> 

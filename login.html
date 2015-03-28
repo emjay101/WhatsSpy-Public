@@ -1,0 +1,38 @@
+<div class="row">
+	<div class="col-md-8">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="jumbotron">
+					<h1>Welcome!</h1>
+					<p>
+						Welcome to the WhatsSpy Public PoC! Before you start tracking please read the <a target ="_blank" href="https://gitlab.maikel.pro/maikeldus/WhatsSpy-Public/wikis/home#license-cc-by-nc">license</a>. For clarification you can read the <a target ="_blank" href="https://maikel.pro/blog/en-whatsapp-privacy-options-are-illusions/">general introduction to WhatsSpy Public</a> article.
+					</p>
+				</div>
+			</div>	
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> Login</h3>
+			</div>
+			<div class="panel-body">
+				<small>It seems you are not yet authenticated. Please login to view and manage the tracker.</small>
+				<br />
+				<br />
+				<form onsubmit="return false;" ng-submit="attemptLogin()">
+					<div class="form-group">
+						<label for="inputPassword" class="control-label">Password</label>
+						<input type="password" class="form-control" id="inputPassword" data-ng-model="inputPassword" placeholder="password ...">
+					</div>
+					<br />
+					<br />
+					<div class="form-group">
+						<button type="submit" class="btn btn-primary">Sign in</button>
+						<span class="btn btn-default" data-ng-click="inputPassword = null">Reset</span>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

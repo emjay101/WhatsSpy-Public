@@ -98,7 +98,8 @@ abstract class AllEvents
     public function onPaidAccount($mynumber, $author, $kind, $status, $creation, $expiration) {}
     public function onPaymentRecieved($mynumber, $kind, $status, $creation, $expiration) {}
     public function onPing($mynumber, $id) {}
-    public function onPresence($mynumber, $from, $status) {}
+    public function onPresenceAvailable($mynumber, $from) {}
+    public function onPresenceUnavailable($mynumber, $from, $last) {}
     public function onProfilePictureChanged($mynumber, $from, $id, $time) {}
     public function onProfilePictureDeleted($mynumber, $from, $id, $time) {}
     public function onSendMessage($mynumber, $target, $messageId, $node) {}

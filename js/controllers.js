@@ -6,12 +6,12 @@
 // -----------------------------------------------------------------------
 
 angular.module('whatsspyControllers', [])
-.controller('OverviewController', function($rootScope, $q, $scope, $http, $timeout, VisDataSet, $filter) {
+.controller('OverviewController', function($rootScope, $q, $scope, $http, $timeout, VisDataSet, $filter, $routeParams, $location, $anchorScroll) {
 	// Add new number
 	$scope.newContact = {'countryCode': '0031', 'number': null, 'name': null};
 
 	// Edit name
-	$scope.editContact = {'id': null, 'name': null, 'groups': null, 'notify_status': null, 'notify_statusmsg': null, 'notify_profilepic': null, 'notify_timeline': null};
+	$scope.editContact = {'id': null, 'name': null, 'groups': null, 'read_only_token': null, 'notify_status': null, 'notify_statusmsg': null, 'notify_profilepic': null, 'notify_timeline': null};
 
 	// New group
 	$scope.newGroup = {'name': null};
@@ -26,7 +26,43 @@ angular.module('whatsspyControllers', [])
 		
 	});
 
+	// Check if account is set
+	if($location.hash() != null) {
+		$scope.hightLightAccount = $location.hash();
+	}
+
 	// Functions
+	$scope.getAccountWithToken = function(token) {
+		$http({method: 'GET', url: 'api/?whatsspy=getStats&token='+token}).
+      success(function(data, status, headers, config) {
+          if(data.error != null) {
+            if(data.code == 403) {
+            	$scope.tokenInvalid = true;
+              	alertify.error(data.error);
+            }
+          } else {
+            $rootScope.accounts = data.accounts;
+            $rootScope.groups = data.groups;
+            $scope.toggleContactPanel(data.accounts[0]);
+          }
+      }).
+      error(function(data, status, headers, config) {
+        alertify.error('An error occured, please check your configuration.');
+        $rootScope.error = true;
+      });
+	}
+
+	// Get token account
+	if($routeParams.token != null) {
+		$rootScope.tokenAuth = $routeParams.token;
+		if($rootScope.authenticated == true) {
+			// logout
+			$rootScope.doLogout(false);
+		}
+		$rootScope.constructor();
+		$scope.getAccountWithToken($rootScope.tokenAuth);
+	}
+
 	$scope.setNumberInactive = function(contactId) {
 		$http({method: 'GET', url: 'api/?whatsspy=setContactInactive&number=' + contactId}).
 			success(function(data, status, headers, config) {
@@ -80,6 +116,7 @@ angular.module('whatsspyControllers', [])
 	$scope.setEditContact = function($contact) {
 		$scope.editContact.id = $contact.id;
 		$scope.editContact.name = $contact.name;
+		$scope.editContact.read_only_token = $contact.read_only_token;
 		$scope.editContact.notify_status = $contact.notify_status;
 		$scope.editContact.notify_statusmsg = $contact.notify_statusmsg;
 		$scope.editContact.notify_profilepic = $contact.notify_profilepic;
@@ -128,8 +165,10 @@ angular.module('whatsspyControllers', [])
 		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + encodeURIComponent($scope.newContact.name)}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
-					alertify.success("Contact added to WhatsSpy. Tracking will start in 5 minutes.");
+					alertify.success("Contact added to WhatsSpy. Tracking will start in 5-10 minutes.");
 					$('#addNumber').modal('hide');
+					$scope.newContact.number = null;
+					$scope.newContact.name = null;
 					$rootScope.refreshContent();
 				} else {
 					alertify.error(data.error);
@@ -399,19 +438,21 @@ angular.module('whatsspyControllers', [])
 				});
 			}
 			// Add tracker online status as background
-			for(var z = 0; z < $rootScope.tracker.length; z++) {
-				var startDate = moment($rootScope.tracker[z].start);
-				var endDate = moment();
-				if($rootScope.tracker[z].end != null) {
-					endDate = moment($rootScope.tracker[z].end);
+			if($rootScope.tracker != null && $rootScope.tracker.length != 0) {
+				for(var z = 0; z < $rootScope.tracker.length; z++) {
+					var startDate = moment($rootScope.tracker[z].start);
+					var endDate = moment();
+					if($rootScope.tracker[z].end != null) {
+						endDate = moment($rootScope.tracker[z].end);
+					}
+					items.add({
+						id: 'tracker-'+z,
+						group: 0,
+						start: startDate.valueOf(),
+						end: endDate.valueOf(),
+						type: 'background'
+					});
 				}
-				items.add({
-					id: 'tracker-'+z,
-					group: 0,
-					start: startDate.valueOf(),
-					end: endDate.valueOf(),
-					type: 'background'
-				});
 			}
 
 
@@ -694,8 +735,8 @@ angular.module('whatsspyControllers', [])
 
 	// Append state data to the timelines
 	$rootScope.refreshTimelineData = function() {
-		var items = $scope.timelineData.items;
-		var groups = $scope.timelineData.groups;
+		var items = $rootScope.clone($scope.timelineData.items);
+		var groups = $rootScope.clone($scope.timelineData.groups);
 		items.clear();
 		groups.clear();
 		
@@ -801,7 +842,7 @@ angular.module('whatsspyControllers', [])
 	});
 	
 })
-.controller('TimelineController', function($scope, $rootScope, $q, $http, $timeout) {
+.controller('TimelineController', function($scope, $rootScope, $q, $http, $timeout, $filter, $location) {
 	$scope.timelineData = null;
 	$scope.lastRequiredSid = 0;
 	$rootScope.liveFeed = null;
@@ -861,7 +902,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.notifyForObj = function($obj) {
-		if($scope.notifyAnySound == true || $obj.notify_timeline == true) {
+		if(($scope.notifyAnySound == true || $obj.notify_timeline == true) && $filter('numberFilter')([$obj], $scope.filterPhonenumber, $scope.filterName, $scope.filterGroup).length  != 0) {
 			try {
 				$scope.notificationPlayer.play();
 			} catch(e) {
@@ -874,31 +915,35 @@ angular.module('whatsspyControllers', [])
 
 	$scope.appendToTimelineFront = function($data) {
 		// Activities
-		for(var i = 0; i < $data.activity.length; i++) {
-			// Add UI feedback
-			$data.activity[i].new = true;
-			$scope.setStatusTimeout($data.activity[i]);
-			$scope.timelineData.activity.unshift($data.activity[i]);
-			$scope.notifyForObj($data.activity[i]);
+		if($data.activity != null) {
+			for(var i = 0; i < $data.activity.length; i++) {
+				// Add UI feedback
+				$data.activity[i].new = true;
+				$scope.setStatusTimeout($data.activity[i]);
+				$scope.timelineData.activity.unshift($data.activity[i]);
+				$scope.notifyForObj($data.activity[i]);
+			}
 		}
 		// Userstatus
-		for(var i = 0; i < $data.userstatus.length; i++) {
-			// Do not add overlap again
-			// This might be a existing record which we want to update the "end" status.
-			if(!$scope.isStatusPresentAndUpdateEnd($data.userstatus[i])) {
-				// Add UI feedback
-				$data.userstatus[i].new = true;
-				$scope.setStatusTimeout($data.userstatus[i]);
-				// Add first record
-				$scope.timelineData.userstatus.unshift($data.userstatus[i]);
-				// Remove last record
-				if($scope.timelineData.userstatus.length > 200) {
-					$scope.timelineData.userstatus.pop();
+		if($data.userstatus != null) {
+			for(var i = 0; i < $data.userstatus.length; i++) {
+				// Do not add overlap again
+				// This might be a existing record which we want to update the "end" status.
+				if(!$scope.isStatusPresentAndUpdateEnd($data.userstatus[i])) {
+					// Add UI feedback
+					$data.userstatus[i].new = true;
+					$scope.setStatusTimeout($data.userstatus[i]);
+					// Add first record
+					$scope.timelineData.userstatus.unshift($data.userstatus[i]);
+					// Remove last record
+					if($scope.timelineData.userstatus.length > 200) {
+						$scope.timelineData.userstatus.pop();
+					}
+					$scope.notifyForObj($data.userstatus[i]);
+				} 
+				if($data.userstatus[i].end == null) {
+					$scope.lastRequiredSid = $data.userstatus[i].sid;
 				}
-				$scope.notifyForObj($data.userstatus[i]);
-			} 
-			if($data.userstatus[i].end == null) {
-				$scope.lastRequiredSid = $data.userstatus[i].sid;
 			}
 		}
 
@@ -934,22 +979,28 @@ angular.module('whatsspyControllers', [])
 		}
 		$http({method: 'GET', url: 'api/?whatsspy=getTimelineStats' + query}).
 		success(function(data, status, headers, config) {
-			// init load (type=init)
-			if($scope.timelineData == null) {
-				$scope.timelineData = data;
-				$scope.lastRequiredSid = $scope.findLastRequiredSid($scope.timelineData.userstatus);
-			// update or history load
-			} else {
-				// Load to the end of activities
-				if(data.type == 'activities_till') {
-					$scope.appendToTimelineBack(data);
-				// Load to front of activities & statuses (type=since)
-				} else {
-					$scope.appendToTimelineFront(data);
+			if(data.error != null) {
+				if(data.code == 403) {
+		            $location.path('/login');
+		            $rootScope.constructor();
+		            $rootScope.refreshContent();
 				}
-				
+			} else {
+				// init load (type=init)
+				if($scope.timelineData == null) {
+					$scope.timelineData = data;
+					$scope.lastRequiredSid = $scope.findLastRequiredSid($scope.timelineData.userstatus);
+				// update or history load
+				} else {
+					// Load to the end of activities
+					if(data.type == 'activities_till') {
+						$scope.appendToTimelineBack(data);
+					// Load to front of activities & statuses (type=since)
+					} else {
+						$scope.appendToTimelineFront(data);
+					}
+				}
 			}
-			
 			deferred.resolve(null);
 		}).
 		error(function(data, status, headers, config) {
@@ -983,9 +1034,19 @@ angular.module('whatsspyControllers', [])
 
 	$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 })
-.controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter) {
+.controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter, $routeParams) {
 	$scope.stats = null;
 	$scope.filterGroup = null;
+	$scope.tokenAuth = null;
+
+	if($routeParams.token != null) {
+		if($rootScope.authenticated == true) {
+			// logout
+			$rootScope.doLogout(false);
+		}
+		$rootScope.constructor();
+		$scope.tokenAuth = $routeParams.token;
+	}
 
 	$rootScope.inStatsPage = true;
 	$scope.$on('$routeChangeStart', function(next, current) { 
@@ -1028,50 +1089,62 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$rootScope.loadGlobalStats = function(component) {
+		var query = '';
+		if($scope.tokenAuth != null) {
+			query = '&token='+$scope.tokenAuth;
+		}
 		var deferred = $q.defer();
-		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats&component='+component+'&group='+$scope.filterGroup}).
+		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats&component='+component+'&group='+$scope.filterGroup + query}).
 		success(function(data, status, headers, config) {
-			if($scope.stats == null) {
-				$scope.stats = {};
-			}
-			$scope.stats[component] = data;
+			if(data.error != null) {
+				if(data.code == 403) {
+					$scope.tokenInvalid = true;
+				} else {
+					alertify.error(data.error);
+				}
+			} else {
+				if($scope.stats == null) {
+					$scope.stats = {};
+				}
+				$scope.stats[component] = data;
 
-			if(component == 'top10_users') {
-	        	if($scope.stats.generated == null) {
-		        	$scope.stats.generated = {};
-		    	}
-		    	$scope.stats.generated.top10DayChoice = 'today';
-	        	$scope.stats.generated.top10TimeChoice = 'alltime';
-			}
+				if(component == 'top10_users') {
+		        	if($scope.stats.generated == null) {
+			        	$scope.stats.generated = {};
+			    	}
+			    	$scope.stats.generated.top10DayChoice = 'today';
+		        	$scope.stats.generated.top10TimeChoice = 'alltime';
+				}
 
 
 
-			if(component == 'user_status_analytics_time') {
-				// Setup data structures for the GUI
-				if($scope.stats.generated == null) {
-		        	$scope.stats.generated = {};
-		    	}
-		        $scope.stats.generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data.weekday_status_today},
-		        																					  {key: '7 days', id: 'dow', value: 'count', data: data.weekday_status_7day},
-		                                                                                              {key: '14 days', id: 'dow', value: 'count', data: data.weekday_status_14day},
-		                                                                                              {key: 'all time', id: 'dow', value: 'count', data: data.weekday_status_all}]);
-		        $scope.stats.generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data.hour_status_today},
-		        																				   {key: '7 days', id: 'hour', value: 'count', data: data.hour_status_7day},
-		                                                                                           {key: '14 days', id: 'hour', value: 'count', data: data.hour_status_14day},
-		                                                                                           {key: 'all time', id: 'hour', value: 'count', data: data.hour_status_all}]);
-		        $scope.stats.generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data.weekday_status_today},
-		        																					 {key: '7 days', id: 'dow', value: 'minutes', data: data.weekday_status_7day},
-		                                                                                             {key: '14 days', id: 'dow', value: 'minutes', data: data.weekday_status_14day},
-		                                                                                             {key: 'all time', id: 'dow', value: 'minutes', data: data.weekday_status_all}]);
-		        $scope.stats.generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data.hour_status_today},
-		        																				  {key: '7 days', id: 'hour', value: 'minutes', data: data.hour_status_7day},
-		                                                                                          {key: '14 days', id: 'hour', value: 'minutes', data: data.hour_status_14day},
-		                                                                                          {key: 'all time', id: 'hour', value: 'minutes', data: data.hour_status_all}]);
-		        // Set default view
-	        	$scope.stats.generated.showHour = false;
-	        	$scope.stats.generated.showWeekday = true;
-	        	$scope.stats.generated.showPieChart = 'today';
-	        }
+				if(component == 'user_status_analytics_time') {
+					// Setup data structures for the GUI
+					if($scope.stats.generated == null) {
+			        	$scope.stats.generated = {};
+			    	}
+			        $scope.stats.generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data.weekday_status_today},
+			        																					  {key: '7 days', id: 'dow', value: 'count', data: data.weekday_status_7day},
+			                                                                                              {key: '14 days', id: 'dow', value: 'count', data: data.weekday_status_14day},
+			                                                                                              {key: 'all time', id: 'dow', value: 'count', data: data.weekday_status_all}]);
+			        $scope.stats.generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data.hour_status_today},
+			        																				   {key: '7 days', id: 'hour', value: 'count', data: data.hour_status_7day},
+			                                                                                           {key: '14 days', id: 'hour', value: 'count', data: data.hour_status_14day},
+			                                                                                           {key: 'all time', id: 'hour', value: 'count', data: data.hour_status_all}]);
+			        $scope.stats.generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data.weekday_status_today},
+			        																					 {key: '7 days', id: 'dow', value: 'minutes', data: data.weekday_status_7day},
+			                                                                                             {key: '14 days', id: 'dow', value: 'minutes', data: data.weekday_status_14day},
+			                                                                                             {key: 'all time', id: 'dow', value: 'minutes', data: data.weekday_status_all}]);
+			        $scope.stats.generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data.hour_status_today},
+			        																				  {key: '7 days', id: 'hour', value: 'minutes', data: data.hour_status_7day},
+			                                                                                          {key: '14 days', id: 'hour', value: 'minutes', data: data.hour_status_14day},
+			                                                                                          {key: 'all time', id: 'hour', value: 'minutes', data: data.hour_status_all}]);
+			        // Set default view
+		        	$scope.stats.generated.showHour = false;
+		        	$scope.stats.generated.showWeekday = true;
+		        	$scope.stats.generated.showPieChart = 'today';
+		        }
+		    }
 
 			deferred.resolve(null);
 		}).
@@ -1102,6 +1175,29 @@ angular.module('whatsspyControllers', [])
 	// No need to call anymore, watch will do this.
 	//$scope.refreshContent();
 })
-.controller('AboutController', function($rootScope, $q, $scope, $http) {
+.controller('AboutController', function($rootScope, $q, $scope, $http, $location) {
 
+})
+.controller('LoginController', function($rootScope, $q, $scope, $http, $location) {
+
+	$scope.attemptLogin = function() {
+		$rootScope.showLoader = true;
+		$http({method: 'GET', url: 'api/?whatsspy=doLogin&password=' + encodeURIComponent($scope.inputPassword)}).
+			success(function(data, status, headers, config) {
+				$rootScope.showLoader = false;
+				$scope.inputPassword = null;
+				if(data.success == true) {
+					$rootScope.authenticated = true;
+					$rootScope.tokenAuth = null;
+					$rootScope.tokenInvalid = null;
+					$location.path('/overview');
+					$scope.refreshContent();
+				} else {
+					alertify.error(data.error);
+				}
+			}).
+			error(function(data, status, headers, config) {
+				alertify.error("Could not contact the server.");
+			});
+	}
 });

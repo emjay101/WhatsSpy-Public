@@ -54,12 +54,12 @@
 									<td>
 										<div class="row">
 											<div class="col-md-2 hidden-xs">
-												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{getAccountById(accountId).profilepic_updated | staticDatetime}}" data-ng-show="getAccountById(accountId).profilepic != null" data-ng-src="{{(getAccountById(accountId).profilepic != null && profilePicPath != null) && profilePicPath + getAccountById(accountId).profilepic + '.jpg' || ''}}" />
+												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{getAccountById(accountId).profilepic_updated | staticDatetime}}" data-ng-show="getAccountById(accountId).profilepic != null" data-ng-src="{{(getAccountById(accountId).profilepic != null) && getImageURL(getAccountById(accountId).profilepic) || ''}}" />
 												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="getAccountById(accountId).profilepic == null" src="https://placehold.it/175x175" />
 											</div>
 
 											<div class="col-md-10">
-												<strong>{{getAccountById(accountId).name}}</strong>
+												<a data-ng-href="#/overview#{{accountId}}" class="whatsspy-clean-link"><strong>{{getAccountById(accountId).name}}</strong></a>
 												({{getAccountById(accountId).id}})
 												<span data-ng-repeat="group in getAccountById(accountId).groups">
 													<span class="label label-default">{{getGroupName(group.gid)}}</span>

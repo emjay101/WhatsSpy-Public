@@ -26,7 +26,7 @@ $application_name = 'WhatsSpy Public';
 //		- Online/Offline status in realtime.
 // 		- Status messages in realtime.
 //		- Privacy settings for status message / last seen every 2 hours.
-//		- Profile picture and privacy setting every 3 hours.	 
+//		- Profile picture and privacy setting every 4 hours.	 
 //		
 //		WARNING:
 //		WhatsApp is very picky when it comes to accepting requests. If you spam to much requests (which come from checking privacy setting checking and profile pictures) you may don't get a response.

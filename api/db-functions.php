@@ -130,9 +130,8 @@ function checkDBMigration($DBH) {
 	}
 
 	/**
-	  *		Database option added in 1.4.0
-	  *		- Tracker history now gives a reason why it closed.
-	  *		- Notifications can be specificly chosen.
+	  *		Database migration added in 1.4.0
+	  *		- Now update according to version number which saves countless queries.
 	  */
 	$select = $DBH->prepare('SELECT db_version
 							   FROM   whatsspy_config');
@@ -140,10 +139,13 @@ function checkDBMigration($DBH) {
 	$row  = $select -> fetch();
 	$version = $row['db_version'];
 	if($version == 3) {
-		// Add tracker reason
-		// Add notifier options
-		// Groups
-		$upgrade = $DBH->exec('-- Add tracker reason
+		/**
+		  *		Database option added in 1.4.0
+		  *		- Tracker history now gives a reason why it closed.
+		  *		- Notifications can be specificly chosen.
+		  */
+		$version = doMigration($DBH, 
+								'-- Add tracker reason
 								ALTER TABLE tracker_history
 								  ADD COLUMN reason character varying(255);
 
@@ -178,22 +180,17 @@ function checkDBMigration($DBH) {
 								CREATE INDEX index_account_group_id
    									ON accounts (group_id ASC NULLS LAST);
    								CREATE INDEX index_account_id_group_id
-   									ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);
-							   ');
-		if($DBH->errorCode() != '00000') {
-			echo 'The following error occured when trying to upgrade DB:';
-			print_r($DBH->errorInfo());
-			exit();
-		} else {
-			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 4;');
-			$update -> execute();
-			$version = 4;
-		}
+   									ON accounts (id ASC NULLS LAST, group_id ASC NULLS LAST);', 
+								4);
 	} 
 
 	if($version == 4) {
-		// Added mulitple groups
-		$upgrade = $DBH->exec('CREATE TABLE accounts_to_groups
+		/**
+		  *		Database option added in 1.4.1
+		  *		- Added multiple groups
+		  */
+		$version = doMigration($DBH, 
+								'CREATE TABLE accounts_to_groups
 								(
 								  "number" character(50) NOT NULL,
 								  gid integer NOT NULL,
@@ -208,35 +205,56 @@ function checkDBMigration($DBH) {
 								  DROP COLUMN group_id;
 
 								ALTER TABLE accounts
-  									ADD COLUMN notify_timeline boolean NOT NULL DEFAULT false;
-							   ');
-		if($DBH->errorCode() != '00000') {
-			echo 'The following error occured when trying to upgrade DB:';
-			print_r($DBH->errorInfo());
-			exit();
-		} else {
-			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 5;');
-			$update -> execute();
-			$version = 5;
-		}
+  									ADD COLUMN notify_timeline boolean NOT NULL DEFAULT false;', 
+								5);
 	}
-	
+
 	if($version == 5) {
-		// Added notify for privacy settings
-		$upgrade = $DBH->exec('ALTER TABLE accounts
- 							   ADD COLUMN notify_privacy boolean NOT NULL DEFAULT false;
-							   ');
-		if($DBH->errorCode() != '00000') {
-			echo 'The following error occured when trying to upgrade DB:';
-			print_r($DBH->errorInfo());
-			exit();
-		} else {
-			$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = 6;');
-			$update -> execute();
-			$version = 6;
-		}
+		/**
+		  *		Database option added in 1.4.4
+		  *		- Added notify for privacy settings
+		  */
+		$version = doMigration($DBH, 
+								'ALTER TABLE accounts
+ 							   		ADD COLUMN notify_privacy boolean NOT NULL DEFAULT false;', 
+								6);
+	}
+
+	if($version == 6) {
+		/**
+		  *		Database option added in 1.5.0
+		  *		- Generate read-only tokens for users/groups.
+		  */
+		$version = doMigration($DBH, 
+								'ALTER TABLE accounts
+									ADD COLUMN read_only_token character varying(255);
+								 ALTER TABLE groups
+									ADD COLUMN read_only_token character varying(255);
+								ALTER TABLE whatsspy_config
+  									ADD COLUMN last_login_attempt timestamp with time zone;', 
+								7);
 	}
 }
+
+
+/**
+  *	Try to upgrade the database to a newer version.
+  */
+function doMigration($DBH, $upgrade_sql, $new_version) {
+	$upgrade = $DBH->exec($upgrade_sql);
+	if($DBH->errorCode() != '00000') {
+		echo 'The following error occured when trying to upgrade DB:';
+		print_r($DBH->errorInfo());
+		exit();
+		return null;
+	} else {
+		$update = $DBH->prepare('UPDATE whatsspy_config SET db_version = :version;');
+		$update -> execute(array(':version' => $new_version));
+		return $new_version;
+	}
+}
+
+
 /**
   *	Check if the minimal tables are in the database. 
   * @notice This function does not take any migrations into account!

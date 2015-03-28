@@ -363,6 +363,27 @@ header {
 	max-height: 200px;
 }
 
+.whatsspy-copy-token {
+	cursor: pointer !important;
+}
+
+.whatsspy-group-tags {
+	text-align: right;
+}
+
+.jumbotron {
+	line-height: 25px;
+}
+
+.whatsspy-label-share {
+	cursor: pointer;
+}
+
+.whatsspy-group-body {
+	text-align: center;
+	padding: 5px !important;
+}
+
 
 /**
   *  Whatsspy Compare page
@@ -379,6 +400,18 @@ header {
 
 .whatsspy-compare-add {
 	width: 20%;
+}
+
+.whatsspy-account-highlight {
+	background-color: #ABDEB5 !important;
+}
+
+.whatsspy-clean-link {
+	color: black;
+}
+
+.whatsspy-clean-link:hover {
+	text-decoration: none;
 }
 
 /**

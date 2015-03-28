@@ -28,6 +28,9 @@ $whatsappAuth = 	['number' => '',
 				 	 'secret' => '',
 				 	 'debug' => false];
 
+// Password to use in the WhatsSpy Public application
+$whatsspyPublicAuth = 'changethis';
+
 // Set your timezone
 // Check for all timezones: http://php.net/manual/en/timezones.php
 date_default_timezone_set('Europe/Amsterdam');
@@ -42,17 +45,11 @@ date_default_timezone_set('Europe/Amsterdam');
 // include the last / in the path!
 $whatsspyProfilePath = '/var/www/whatsspy/images/profilepicture/';
 
-// Relative or absolute path for the web-user.
-// THIS PATH IS FOR USERS ACCESSING THE PROFILE PICTURES (path here above) FROM THE WEB.
-// NOTE: usually it is enough to use $whatsspyProfilePath and remove the /var/www
-// If you installed whatsspy in /var/www/whatsspy you do not need to change this.
-// include the last / in the path!
-$whatsspyWebProfilePath = '/whatsspy/images/profilepicture/';
-
 //	Notifications about tracker and users.
 //
 //	If you want to recieve information about the tracker status (and specific events of users) you can enable this here. Enter the API key or phonenumber and set enabled to true.
 //  NOTE: WhatsApp phonenumber cannot recieve tracker notifications (since WhatsApp connection might be down).
+//  NOTE 2: restart the tracker if you change any of these settings.
 $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
 						 'nma' => 	['enabled' 			=> false,	
 								   	 'key' 				=> '',
@@ -73,9 +70,17 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
 						 // Script call		   
 						 'script' =>['enabled' 			=> false,	
 								   	 'cmd' 				=> '',				// Enter a script location+name (like /var/scripts/mycustomnotification.sh).
-								   	 'name' 			=> 'Custom Script', // Paramters will be: $type (tracker or user), $title, $description, $number, $filteredTitle, $filteredDesc 
+								   	 'name' 			=> 'Custom Script',
 								   	 'notify-tracker' 	=> false,
 								   	 'notify-user' 		=> false]];
+ /*		Examples of script calls:
+  *		/path/to/script.sh "tracker" "Event title" "Event description"
+  *		/path/to/script.sh "user" ":user has title" ":user event description" "user notification type" "name" "number"
+  *
+  *		First parameter is either 'user' or 'tracker':
+  *		- In case of 'tracker' the next parameters will be a [title, description, event-type (start, error)].
+  *		- In case of 'user' the next parameters will be a [title, description, user notification type (status, statusmsg, profilepic, privacy), name of user, number of user].
+  */
 
 // -------------------------------------------------
 // You don't need to edit beyond this point

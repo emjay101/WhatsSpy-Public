@@ -4,21 +4,68 @@
 // 	@Author Maikel Zweerink
 //	Index.php - contains the webservice supplying information to the webUI.
 // -----------------------------------------------------------------------
+
+header('Cache-Control: no-cache, must-revalidate');
+header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+if($_GET['whatsspy'] != 'getProfilePic') {
+	header("Content-type: application/json; charset=utf-8");
+}
+
+
 require_once 'config.php';
 require_once 'db-functions.php';
 require_once 'functions.php';
 
 $DBH  = setupDB($dbAuth);
 
+// Setup session management
+session_start();
 
-header("Content-type: application/json; charset=utf-8");
 // Process any GET requests that are for WhatsSpy Public.
 switch($_GET['whatsspy']) {
+	/**
+	  *		Do a login attempt with a password	
+	  */
+	case 'doLogin':
+		if(isset($_GET['password'])) {
+			if(!isset($whatsspyPublicAuth)) {
+				echo json_encode(['error' => 'Password is not set in the config.php', 'code' => 403]);
+				exit();
+			}
+			// Login spam protection
+			$select = $DBH->prepare('SELECT 1 FROM whatsspy_config WHERE "last_login_attempt" >= NOW() - \'7 second\'::INTERVAL;');
+			$select -> execute();
+			if($select -> rowCount() == 0) {
+				if($_GET['password'] == $whatsspyPublicAuth) {
+					setAuth(true);
+					echo json_encode(['success' => true]);
+				} else {
+					echo json_encode(['error' => 'Incorrect password!', 'code' => 403]);
+				}
+				$update = $DBH->prepare('UPDATE whatsspy_config
+											SET "last_login_attempt" = NOW();');
+				$update->execute();
+			} else {
+				echo json_encode(['error' => 'Please wait 7 seconds before retrying!', 'code' => 400]);
+			}
+		} else {
+			echo json_encode(['error' => 'No password supplied!', 'code' => 400]);
+		}
+		break;
+	/**
+	  *		Logout
+	  */
+	case 'doLogout':
+		requireAuth();
+		setAuth(false);
+		echo json_encode(['success' => true]);
+		break;
 	/**
 	  *		Attempt to create a new contact to the WhatsSpy Public Database (39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa)
 	  *		@notice This user is not verified as a WhatsApp user, the tracker verifies the contacts.
 	  */
 	case 'addContact':
+		requireAuth();
 		if(isset($_GET['number']) && isset($_GET['countrycode'])) {
 			// Name is optional
 			$name = (isset($_GET['name']) ? $_GET['name'] : null);
@@ -37,6 +84,7 @@ switch($_GET['whatsspy']) {
 	  *		Set a contact to inactive, causing the user will not be tracked anymore but all data will be retained.
 	  */
 	case 'setContactInactive':
+		requireAuth();
 		// We need the exact ID: this means no 003106 (only 316...)
 		if(isset($_GET['number'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
@@ -53,6 +101,7 @@ switch($_GET['whatsspy']) {
 	  *		Stop tracking the user and delete ALL data of this user.
 	  */
 	case 'deleteContact':
+		requireAuth();
 		// We need the exact ID: this means no 003106 (only 316...)
 		if(isset($_GET['number'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
@@ -67,6 +116,7 @@ switch($_GET['whatsspy']) {
 	  *		Update information of the account.
 	  */
 	case 'updateAccount':
+		requireAuth();
 		if(isset($_GET['number']) && isset($_GET['name'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
 
@@ -113,9 +163,75 @@ switch($_GET['whatsspy']) {
 		}
 		break;
 	/**
+	  *		Generate a new user read-only token
+	  */
+	case 'generateToken':
+		requireAuth();
+		if(isset($_GET['number'])) {
+			$number = preg_replace('/\D/', '', $_GET['number']);
+			if($_GET['type'] == 'read_only') {
+				// generate token
+				$token = md5(rand().'whatsspy-token-user-'.microtime().rand());
+				// update database
+				$update = $DBH->prepare('UPDATE accounts SET read_only_token = :token WHERE id = :number;');
+				$update -> execute(array(':token' => $token, ':number' => $number));
+				$result = ['success' => true, 'number' => $number, 'token' => $token];
+			} else {
+				$result = ['success' => false, 'error' => 'No known type!'];
+			}
+			echo json_encode($result);
+		} else if(isset($_GET['group']) && is_numeric($_GET['group'])) {
+			$group = $_GET['group'];
+			if($_GET['type'] == 'read_only') {
+				// generate token
+				$token = md5(rand().'whatsspy-token-group-'.microtime().rand());
+				// update database
+				$update = $DBH->prepare('UPDATE groups SET read_only_token = :token WHERE gid = :gid;');
+				$update -> execute(array(':token' => $token, ':gid' => $group));
+				$result = ['success' => true, 'gid' => $gid, 'token' => $token];
+			} else {
+				$result = ['success' => false, 'error' => 'No known type!'];
+			}
+			echo json_encode($result);
+		} else {
+			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
+		}
+		break;
+	/**
+	  *		Generate a new user read-only token
+	  */
+	case 'resetToken':
+		requireAuth();
+		if(isset($_GET['number'])) {
+			$number = preg_replace('/\D/', '', $_GET['number']);
+			if($_GET['type'] == 'read_only') {
+				$update = $DBH->prepare('UPDATE accounts SET read_only_token = null WHERE id = :number;');
+				$update -> execute(array(':number' => $number));
+				$result = ['success' => true, 'number' => $number];
+			} else {
+				$result = ['success' => false, 'error' => 'No known type!'];
+			}
+			echo json_encode($result);
+		} else if(isset($_GET['group']) && is_numeric($_GET['group'])) {
+			$group = $_GET['group'];
+			if($_GET['type'] == 'read_only') {
+				// update database
+				$update = $DBH->prepare('UPDATE groups SET read_only_token = null WHERE gid = :gid;');
+				$update -> execute(array(':gid' => $group));
+				$result = ['success' => true, 'gid' => $gid];
+			} else {
+				$result = ['success' => false, 'error' => 'No known type!'];
+			}
+			echo json_encode($result);
+		} else {
+			echo json_encode(['error' => 'No phone number supplied!', 'code' => 400]);
+		}
+		break;
+	/**
 	  *		Attempt to create a new group
 	  */
 	case 'addGroup':
+		requireAuth();
 		if(isset($_GET['name']) && strlen($_GET['name']) > 0 && strlen($_GET['name']) < 256) {
 			$name = $_GET['name'];
 			echo json_encode(addGroup($name, true));
@@ -127,6 +243,7 @@ switch($_GET['whatsspy']) {
 	  *		Delete the group
 	  */
 	case 'deleteGroup':
+		requireAuth();
 		// We need the exact ID: this means no 003106 (only 316...)
 		if(isset($_GET['gid']) && is_numeric($_GET['gid'])) {
 			$gid = $_GET['gid'];
@@ -138,6 +255,31 @@ switch($_GET['whatsspy']) {
 		}
 		break;
 	/**
+	  *		Get a profile picture of a account that is being tracked
+	  */
+	case 'getProfilePic':
+		if(isValidSha256($_GET['hash'])) {
+			$hash = $_GET['hash'];
+			if(isset($_GET['token'])) {
+				$token_user = requireTokenAuthForUser($_GET['token'], $hash);
+				$token_auth = true;
+			} else {
+				requireAuth();
+				$token_auth = false;
+			}
+			// Send image
+			$seconds_to_cache = 2592000;
+			$ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
+			header("Expires: $ts");
+			header("Pragma: cache");
+			header("Cache-Control: max-age=$seconds_to_cache");
+			header('Content-Type: image/jpeg');
+			readfile($whatsspyProfilePath.$hash.'.jpg');
+		} else {
+			echo json_encode(['error' => 'Invalid hash!', 'code' => 400]);
+		}
+		break;
+	/**
 	  *		Get all users and some basic information about them.
 	  *		@notice These quries are optimised to perform <2 seconds on an Raspberry Pi. This is why all the contact data is lazy-loaded. Querying for all status data can cost over 60 seconds for 10 contacts and 7 days of data.
 	  */
@@ -145,57 +287,104 @@ switch($_GET['whatsspy']) {
 		// Because this will be the first call for the GUI, we will only check it here.
 		// Upgrade DB if it's old:
 		checkDBMigration($DBH);
-
-		$select = $DBH->prepare('SELECT n.id, n.name, n."notify_status", n."notify_statusmsg", n."notify_profilepic", n."notify_privacy", n."notify_timeline", n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
-										smh.status as "last_statusmessage",
-										pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
-								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
-								(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online"
-								FROM accounts n
-								LEFT JOIN profilepicture_history pph
-									ON n.id = pph.number AND pph.changed_at = (SELECT changed_at FROM profilepicture_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
-								LEFT JOIN statusmessage_history smh
-									ON n.id = smh.number AND smh.changed_at = (SELECT changed_at FROM statusmessage_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
-								WHERE n.active = true AND n.verified=true
-								ORDER BY n.name ASC');
-		$select -> execute();
-		$result = array();
-		foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $account) {
-			$account['profilepic_updated'] = fixTimezone($account['profilepic_updated']);
-			$account['latest_online'] = fixTimezone($account['latest_online']);			
-			$account['since'] = fixTimezone($account['since']);		
-			$account['groups'] = getGroupsFromNumber($account['id']);	
-			array_push($result, $account);
+		if(isset($_GET['token'])) {
+			$token_user = requireTokenAuthForUser($_GET['token']);
+			$token_auth = true;
+		} else {
+			requireAuth();
+			$token_auth = false;
 		}
 
-		$select_pending = $DBH->prepare('SELECT n.id, n.name FROM accounts n WHERE n.active = true AND n.verified = false');
-		$select_pending -> execute();
-		$result_pending = $select_pending->fetchAll(PDO::FETCH_ASSOC);
+		if($token_auth == false) {
+			// Normal information available for the admin of WhatsSpy
+			$select = $DBH->prepare('SELECT n.id, n.name, n."read_only_token", n."notify_status", n."notify_statusmsg", n."notify_profilepic", n."notify_privacy", n."notify_timeline", n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
+											smh.status as "last_statusmessage",
+											pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
+									(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
+									(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online"
+									FROM accounts n
+									LEFT JOIN profilepicture_history pph
+										ON n.id = pph.number AND pph.changed_at = (SELECT changed_at FROM profilepicture_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
+									LEFT JOIN statusmessage_history smh
+										ON n.id = smh.number AND smh.changed_at = (SELECT changed_at FROM statusmessage_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
+									WHERE n.active = true AND n.verified=true 
+									ORDER BY n.name ASC');
+			$select -> execute();
+			$result = array();
+			foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $account) {
+				$account['profilepic_updated'] = fixTimezone($account['profilepic_updated']);
+				$account['latest_online'] = fixTimezone($account['latest_online']);			
+				$account['since'] = fixTimezone($account['since']);		
+				$account['groups'] = getGroupsFromNumber($account['id']);	
+				array_push($result, $account);
+			}
 
-		$tracker_select = $DBH->prepare('SELECT "start", "end" FROM tracker_history WHERE "start" >= NOW() - \'14 day\'::INTERVAL ORDER BY "start" DESC LIMIT 50');
-		$tracker_select -> execute();
-		$tracker = $tracker_select->fetchAll(PDO::FETCH_ASSOC);
+			$select_pending = $DBH->prepare('SELECT n.id, n.name FROM accounts n WHERE n.active = true AND n.verified = false');
+			$select_pending -> execute();
+			$result_pending = $select_pending->fetchAll(PDO::FETCH_ASSOC);
 
-		$groups_select = $DBH->prepare('SELECT * FROM groups');
-		$groups_select -> execute();
-		$groups = $groups_select->fetchAll(PDO::FETCH_ASSOC);
-		$null_group['gid'] = null;
-		$null_group['name'] = 'All groups';
-		array_unshift($groups, $null_group);
+			$tracker_select = $DBH->prepare('SELECT "start", "end" FROM tracker_history WHERE "start" >= NOW() - \'14 day\'::INTERVAL ORDER BY "start" DESC LIMIT 50');
+			$tracker_select -> execute();
+			$tracker = $tracker_select->fetchAll(PDO::FETCH_ASSOC);
 
-		$tracker_start_select = $DBH->prepare('SELECT start FROM tracker_history ORDER BY start ASC LIMIT 1');
-		$tracker_start_select -> execute();
-		$tracker_start = $tracker_start_select -> fetch();
-		$start_tracker = $tracker_start['start'];
+			$groups_select = $DBH->prepare('SELECT * FROM groups ORDER BY gid ASC');
+			$groups_select -> execute();
+			$groups = $groups_select->fetchAll(PDO::FETCH_ASSOC);
+			$null_group['gid'] = null;
+			$null_group['name'] = 'All groups';
+			array_unshift($groups, $null_group);
+
+			$tracker_start_select = $DBH->prepare('SELECT start FROM tracker_history ORDER BY start ASC LIMIT 1');
+			$tracker_start_select -> execute();
+			$tracker_start = $tracker_start_select -> fetch();
+			$start_tracker = $tracker_start['start'];
+
+			$whatsspyNotifcationSettingsProxy = $whatsspyNotificatons;
+		} else {
+			$select = $DBH->prepare('SELECT n.id, n.name, n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
+											smh.status as "last_statusmessage",
+											pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
+									(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE number = n.id ORDER BY start ASC LIMIT 1) "since",
+									(SELECT (CASE WHEN ("end" IS NULL) THEN start ELSE "end" END) FROM status_history WHERE status = true AND number = n.id ORDER BY start DESC LIMIT 1) "latest_online"
+									FROM accounts n
+									LEFT JOIN profilepicture_history pph
+										ON n.id = pph.number AND pph.changed_at = (SELECT changed_at FROM profilepicture_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
+									LEFT JOIN statusmessage_history smh
+										ON n.id = smh.number AND smh.changed_at = (SELECT changed_at FROM statusmessage_history WHERE number = n.id ORDER BY changed_at DESC LIMIT 1)
+									WHERE n.active = true AND n.verified=true AND n.id = :id  
+									ORDER BY n.name ASC');
+			$select -> execute(array(':id' => $token_user['id']));
+			$result = array();
+			foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $account) {
+				$account['profilepic_updated'] = fixTimezone($account['profilepic_updated']);
+				$account['latest_online'] = fixTimezone($account['latest_online']);			
+				$account['since'] = fixTimezone($account['since']);		
+				$account['groups'] = getGroupsFromNumber($account['id']);	
+				array_push($result, $account);
+			}
+
+			// Fetch the groups that the requested user has
+			$groups_select = $DBH->prepare('SELECT g.gid, g.name FROM groups g LEFT JOIN accounts_to_groups atg ON g.gid = atg.gid WHERE atg.number = :id ORDER BY g.gid ASC');
+			$groups_select -> execute(array(':id' => $token_user['id']));
+			$groups = $groups_select->fetchAll(PDO::FETCH_ASSOC);
+		}
 
 
-		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'groups' => $groups, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'profilePicPath' => $whatsspyWebProfilePath, 'notificationSettings' => $whatsspyNotificatons]);
+		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'groups' => $groups, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'notificationSettings' => $whatsspyNotifcationSettingsProxy]);
 
 		break;
 	/**
 	  *		Get specific stats of a account. You can specify multiple accounts at the same time.
 	  */
 	case 'getContactStats':
+		if(isset($_GET['token'])) {
+			$token_user = requireTokenAuthForUser($_GET['token']);
+			$token_auth = true;
+			$_GET['number'] = $token_user['id'];
+		} else {
+			requireAuth();
+			$token_auth = false;
+		}
 		if (isset($_GET['number'])) {
 			$numbers = explode(',', $_GET['number']);
 			$accounts = array();
@@ -343,6 +532,7 @@ switch($_GET['whatsspy']) {
 	  *		Also is used for the live feed in the timeline page. GET till is used for activites, GET sid is used for contact statuses.
 	  */
 	case 'getTimelineStats':
+		requireAuth();
 		$data = array();
 		// Select by default 7 days of activities
 		$since_activity = (time() - (60*60*24*7));
@@ -442,6 +632,15 @@ switch($_GET['whatsspy']) {
 	  *		Get general statistics of the WhatsSpy Public installation and the users.
 	  */
 	case 'getGlobalStats':
+		if(isset($_GET['token'])) {
+			$token_group = requireTokenAuthForGroup($_GET['token']);
+			$_GET['group'] = $token_group['gid'];
+			$token_auth = true;
+		} else {
+			requireAuth();
+			$token_auth = false;
+		}
+	
 		$group = null;
 		$group_query_join = '';
 		$group_query_join_where = 'WHERE';
@@ -463,6 +662,7 @@ switch($_GET['whatsspy']) {
 				$select_global = $DBH->prepare('SELECT
 													(SELECT COUNT(1) FROM tracker_history) "tracker_session_count",
 													(SELECT start FROM tracker_history ORDER BY start ASC LIMIT 1) "first_tracker_session",
+													(SELECT COUNT(1) FROM accounts a '.$group_query_acc_join.') "user_count",
 													(SELECT COUNT(1) FROM status_history t '.$group_query_join_where.' t.status=true) "user_status_count",
 													(SELECT ROUND(EXTRACT(\'epoch\' FROM SUM("end" - "start"))) FROM status_history t '.$group_query_join_where.' t.status=true AND t."end" IS NOT NULL) "user_status_count_time",
 													(SELECT COUNT(1) FROM profilepicture_history t '.$group_query_join.') "profilepicture_count",
@@ -481,14 +681,16 @@ switch($_GET['whatsspy']) {
 
 				// Fix timezone
 				$result_global['first_tracker_session'] = fixTimezone($result_global['first_tracker_session']);
-				
+				// Add group name
+				$result_global['shared_group_name'] = @$token_group['name'];
+
 				echo json_encode($result_global);
 				break;
 			case 'top10_users':
 				// Top 10 setup
 				$result_top10 = array();
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -496,13 +698,13 @@ switch($_GET['whatsspy']) {
 									        	AND sh.status = true
 									        	AND start >= DATE_TRUNC(\'day\', NOW()) 
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['today'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -511,13 +713,13 @@ switch($_GET['whatsspy']) {
 									        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'1 day\'::INTERVAL)) 
 									        	AND start < DATE_TRUNC(\'day\', NOW()) 
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['yesterday'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -526,13 +728,13 @@ switch($_GET['whatsspy']) {
 									        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'2 day\'::INTERVAL)) 
 									        	AND start < DATE_TRUNC(\'day\', (NOW() - \'1 day\'::INTERVAL)) 
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['2days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -541,13 +743,13 @@ switch($_GET['whatsspy']) {
 									        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'3 day\'::INTERVAL)) 
 									        	AND start < DATE_TRUNC(\'day\', (NOW() - \'2 day\'::INTERVAL)) 
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['3days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -556,13 +758,13 @@ switch($_GET['whatsspy']) {
 									        	AND start >= DATE_TRUNC(\'day\', (NOW() - \'4 day\'::INTERVAL)) 
 									        	AND start < DATE_TRUNC(\'day\', (NOW() - \'3 day\'::INTERVAL)) 
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['4days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -570,13 +772,13 @@ switch($_GET['whatsspy']) {
 									        	AND sh.status = true
 									        	AND start >= NOW() - \'1 day\'::INTERVAL
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['24hours'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -584,13 +786,13 @@ switch($_GET['whatsspy']) {
 									        	AND sh.status = true
 									        	AND start >= NOW() - \'7 day\'::INTERVAL
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['7days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -598,13 +800,13 @@ switch($_GET['whatsspy']) {
 									        	AND sh.status = true
 									        	AND start >= NOW() - \'14 day\'::INTERVAL
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['14days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
@@ -612,20 +814,20 @@ switch($_GET['whatsspy']) {
 									        	AND sh.status = true
 									        	AND start >= NOW() - \'31 day\'::INTERVAL
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();
 				$result_top10['31days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				$select = $DBH->prepare('SELECT a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
+				$select = $DBH->prepare('SELECT a.id, a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
 									        LEFT JOIN status_history sh ON sh.number = a.id
 									        '.$group_query_acc_join_where.' a.id = sh.number 
 									        	AND a.active = true 
 									        	AND sh.status = true
 									        	AND "end" IS NOT NULL
-									        GROUP BY a.name 
+									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
 									        LIMIT 10');
 				$select -> execute();

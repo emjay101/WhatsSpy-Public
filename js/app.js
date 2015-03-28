@@ -28,11 +28,23 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     templateUrl: 'about.html',
     controller: 'AboutController'
   })
+  .when('/public/group/:token', {
+    templateUrl: 'statistics.html',
+    controller: 'StatisticsController'
+  })
+  .when('/public/user/:token', {
+    templateUrl: 'overview.html',
+    controller: 'OverviewController'
+  })
+  .when('/login', {
+    templateUrl: 'login.html',
+    controller: 'LoginController'
+  })
   .otherwise({redirectTo: '/overview'});;
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.4.4';
+  $rootScope.version = '1.5.0';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -45,24 +57,38 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
   }
 
-  // This data is required for this whole Angularjs Application
-  $rootScope.accounts = [];
-  $rootScope.pendingAccounts = [];
-  $rootScope.groups = null;
-  $rootScope.profilePicPath = null;
-  $rootScope.notificationSettings = null;
-  $rootScope.trackerStart = null;
-  $rootScope.loadedTime = null;
-  $rootScope.newestVersion = null;
-  $rootScope.help = null;
-  // Information that might be lazy loaded.
-  $rootScope.accountData = {};
+  $scope.isInPage = function(path) {
+    if ($location.path().substr(1, path.length) == path) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-  // Tracker online/offline info.
-  $rootScope.tracker = [];
+  $rootScope.constructor = function() {
+    // This data is required for this whole Angularjs Application
+    $rootScope.accounts = [];
+    $rootScope.pendingAccounts = [];
+    $rootScope.groups = null;
+    $rootScope.profilePicPath = null;
+    $rootScope.notificationSettings = null;
+    $rootScope.trackerStart = null;
+    $rootScope.loadedTime = null;
+    $rootScope.newestVersion = null;
+    $rootScope.help = null;
+    $rootScope.news = null;
+    $rootScope.authenticated = false;
+    // Information that might be lazy loaded.
+    $rootScope.accountData = {};
 
-  // Just some feedback when setting up WhatsSpy
-  $rootScope.error = false;
+    // Tracker online/offline info (array).
+    $rootScope.tracker = null;
+
+    // Just some feedback when setting up WhatsSpy
+    $rootScope.error = false;
+  }
+
+  $rootScope.constructor();
 
   $rootScope.getAccounts = function() {
     var deferred = $q.defer();
@@ -72,15 +98,29 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
           alertify.error('An error occured, please check your configuration:' + data);
           $rootScope.error = true;
         } else {
-          $rootScope.accounts = data.accounts;
-          $rootScope.pendingAccounts = data.pendingAccounts;
-          $rootScope.groups = data.groups;
-          $rootScope.tracker = data.tracker;
-          $rootScope.trackerStart = data.trackerStart;
-          $rootScope.profilePicPath = data.profilePicPath;
-          $rootScope.notificationSettings = data.notificationSettings;
-          $rootScope.setNotificationOptions(data.notificationSettings);
-          $rootScope.loadedTime = moment();
+          if(data.error != null) {
+            if(data.code == 403) {
+              // Not logged in
+              if($location.path().indexOf('/public') !== 0) {
+                $location.path('/login');
+              }
+              $rootScope.tracker = null;
+              $rootScope.accounts = [];
+              $rootScope.pendingAccounts = [];
+              $rootScope.groups = null;
+            }
+          } else {
+            $rootScope.authenticated = true;
+            $rootScope.accounts = data.accounts;
+            $rootScope.pendingAccounts = data.pendingAccounts;
+            $rootScope.groups = data.groups;
+            $rootScope.tracker = data.tracker;
+            $rootScope.trackerStart = data.trackerStart;
+            $rootScope.profilePicPath = data.profilePicPath;
+            $rootScope.notificationSettings = data.notificationSettings;
+            $rootScope.setNotificationOptions(data.notificationSettings);
+            $rootScope.loadedTime = moment();
+          }
         }
         deferred.resolve(null);
       }).
@@ -108,6 +148,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     success(function(data, status, headers, config) {
       $rootScope.newestVersion = data.version;
       $rootScope.help = data.help;
+      $rootScope.news = data.news;
       deferred.resolve(null);
     }).
     error(function(data, status, headers, config) {
@@ -117,12 +158,12 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   }
 
   $rootScope.trackerStatus = function() {
-    if($rootScope.tracker == null || $rootScope.tracker[0] == undefined) {
+    if($rootScope.tracker != null && ($rootScope.tracker.length == 0 || $rootScope.tracker[0].end != null)) {
       return 'offline';
-    } else if($rootScope.tracker[0].end == null) {
+    } else if($rootScope.tracker != null && ($rootScope.tracker.length > 0 && $rootScope.tracker[0].end == null)) {
       return 'online';
     } else {
-      return 'offline';
+      return 'unknown';
     }
   }
 
@@ -142,46 +183,66 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   }
 
   $rootScope.loadDataCall = function($number) {
+    var query = '';
+    if($rootScope.tokenAuth != null) {
+      query = '&token='+$rootScope.tokenAuth;
+    }
     var deferred = $q.defer();
-    $http({method: 'GET', url: 'api/?whatsspy=getContactStats&number='+$number.id}).
+    $http({method: 'GET', url: 'api/?whatsspy=getContactStats&number='+$number.id+query}).
       success(function(data, status, headers, config) {
-        if($rootScope.accountData[$number.id] == undefined) {
-          $rootScope.accountData[$number.id] = {};
-        }
-        $rootScope.accountData[$number.id].id = data[0].id;
-        $rootScope.accountData[$number.id].user = data[0].user;
-        $rootScope.accountData[$number.id].status = data[0].status;
-        $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
-        $rootScope.accountData[$number.id].pictures = data[0].pictures;
-        // Setup data structures for the GUI
-        $rootScope.accountData[$number.id].generated = {};
-        $rootScope.accountData[$number.id].generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_today},
-                                                                                                                    {key: '7 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_7day},
-                                                                                                                    {key: '14 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_14day},
-                                                                                                                    {key: 'all time', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_all}]);
-        $rootScope.accountData[$number.id].generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_today},
-                                                                                                                 {key: '7 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_7day},
-                                                                                                                 {key: '14 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_14day},
-                                                                                                                 {key: 'all time', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_all}]);
-        $rootScope.accountData[$number.id].generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_today},
-                                                                                                                   {key: '7 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_7day},
-                                                                                                                   {key: '14 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_14day},
-                                                                                                                   {key: 'all time', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_all}]);
-        $rootScope.accountData[$number.id].generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_today},
-                                                                                                                {key: '7 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_7day},
-                                                                                                                {key: '14 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_14day},
-                                                                                                                {key: 'all time', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_all}]);
-        // Set default view
-        $rootScope.accountData[$number.id].generated.showHour = false;
-        $rootScope.accountData[$number.id].generated.showWeekday = true;
+        if(data.error != null) {
+          if(data.code == 403) {
+            $location.path('/login');
+            $rootScope.constructor();
+            $rootScope.refreshContent();
+          }
+        } else {
+          if($rootScope.accountData[$number.id] == undefined) {
+            $rootScope.accountData[$number.id] = {};
+          }
+          $rootScope.accountData[$number.id].id = data[0].id;
+          $rootScope.accountData[$number.id].user = data[0].user;
+          $rootScope.accountData[$number.id].status = data[0].status;
+          $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
+          $rootScope.accountData[$number.id].pictures = data[0].pictures;
+          // Setup data structures for the GUI
+          $rootScope.accountData[$number.id].generated = {};
+          $rootScope.accountData[$number.id].generated.chart_weekday_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_today},
+                                                                                                                      {key: '7 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_7day},
+                                                                                                                      {key: '14 days', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_14day},
+                                                                                                                      {key: 'all time', id: 'dow', value: 'count', data: data[0].advanced_analytics.weekday_status_all}]);
+          $rootScope.accountData[$number.id].generated.chart_hour_status_count_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_today},
+                                                                                                                   {key: '7 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_7day},
+                                                                                                                   {key: '14 days', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_14day},
+                                                                                                                   {key: 'all time', id: 'hour', value: 'count', data: data[0].advanced_analytics.hour_status_all}]);
+          $rootScope.accountData[$number.id].generated.chart_weekday_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_today},
+                                                                                                                     {key: '7 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_7day},
+                                                                                                                     {key: '14 days', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_14day},
+                                                                                                                     {key: 'all time', id: 'dow', value: 'minutes', data: data[0].advanced_analytics.weekday_status_all}]);
+          $rootScope.accountData[$number.id].generated.chart_hour_status_time_all = $rootScope.setupBarChartData([{key: 'today', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_today},
+                                                                                                                  {key: '7 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_7day},
+                                                                                                                  {key: '14 days', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_14day},
+                                                                                                                  {key: 'all time', id: 'hour', value: 'minutes', data: data[0].advanced_analytics.hour_status_all}]);
+          // Set default view
+          $rootScope.accountData[$number.id].generated.showHour = false;
+          $rootScope.accountData[$number.id].generated.showWeekday = true;
 
-        $rootScope.$broadcast('statusForNumberLoaded', $number);
+          $rootScope.$broadcast('statusForNumberLoaded', $number);
+        }
         deferred.resolve(null);
       }).
       error(function(data, status, headers, config) {
         deferred.reject(null);
       });
     return deferred.promise;
+  }
+
+  $rootScope.getImageURL = function(hash) {
+    var url = 'api/?whatsspy=getProfilePic&hash=' + hash;
+    if($rootScope.tokenAuth != null) {
+      url += '&token='+$rootScope.tokenAuth;
+    }
+    return url;
   }
 
   $rootScope.setupBarChartData = function($data) {
@@ -250,12 +311,142 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
   }
 
+  $rootScope.generateReadOnlyToken = function(type, user, group) {
+    var query = '';
+    if(type == 'user') {
+      query = 'number=' + user.id;
+    } else if(type == 'group') {
+      query = 'group=' + group.gid;
+    }
+
+    $http({method: 'GET', url: 'api/?whatsspy=generateToken&type=read_only&' + query}).
+      success(function(data, status, headers, config) {
+        if(data.success == true) {
+          if(type == 'user') {
+            user.read_only_token = data.token;
+            $rootScope.getAccountById(user.id).read_only_token  = data.token;
+          } else if(type == 'group') {
+            group.read_only_token = data.token;
+          }
+        } else {
+          alertify.error(data.error);
+        }
+      }).
+      error(function(data, status, headers, config) {
+        alertify.error("Could not contact the server.");
+      });
+  }
+
+  $rootScope.resetReadOnlyToken = function(type, user, group) {
+    var query = '';
+    if(type == 'user') {
+      query = 'number=' + user.id;
+    } else if(type == 'group') {
+      query = 'group=' + group.gid;
+    }
+
+    $http({method: 'GET', url: 'api/?whatsspy=resetToken&type=read_only&' + query}).
+      success(function(data, status, headers, config) {
+        if(data.success == true) {
+          if(type == 'user') {
+            user.read_only_token = null;
+            $rootScope.getAccountById(user.id).read_only_token  = null;
+          } else if(type == 'group') {
+            group.read_only_token = null;
+          }
+        } else {
+          alertify.error(data.error);
+        }
+      }).
+      error(function(data, status, headers, config) {
+        alertify.error("Could not contact the server.");
+      });
+  }
+
+  $rootScope.getTokenUrl = function(type, token) {
+    if(token == null) {
+      return null;
+    } else {
+      if(type == 'user') {
+        return document.URL.split('#')[0] + '#/public/user/' + token;
+      } else if(type == 'group') {
+        return document.URL.split('#')[0] + '#/public/group/' + token;
+      }
+    }
+  }
+
+  $rootScope.copyToClipboard = function(text) {
+    if(text != null) {
+      window.prompt("Copy to clipboard: Ctrl+C, Enter", text);
+    }
+  }
+
   $rootScope.getGroupName = function(gid) {
     for (var i = $rootScope.groups.length - 1; i >= 0; i--) {
       if($rootScope.groups[i]['gid'] == gid) {
         return $rootScope.groups[i]['name'];
       }
     };
+  }
+
+  $rootScope.getGroupById = function(gid) {
+    if($rootScope.groups == null) {return;}
+    for (var i = $rootScope.groups.length - 1; i >= 0; i--) {
+      if($rootScope.groups[i]['gid'] == gid) {
+        return $rootScope.groups[i];
+      }
+    };
+  }
+
+  $rootScope.clone = function(obj) {
+      var copy;
+
+      // Handle the 3 simple types, and null or undefined
+      if (null == obj || "object" != typeof obj) return obj;
+
+      // Handle Date
+      if (obj instanceof Date) {
+          copy = new Date();
+          copy.setTime(obj.getTime());
+          return copy;
+      }
+
+      // Handle Array
+      if (obj instanceof Array) {
+          copy = [];
+          for (var i = 0, len = obj.length; i < len; i++) {
+              copy[i] = $rootScope.clone(obj[i]);
+          }
+          return copy;
+      }
+
+      // Handle Object
+      if (obj instanceof Object) {
+          copy = {};
+          for (var attr in obj) {
+              if (obj.hasOwnProperty(attr)) copy[attr] = $rootScope.clone(obj[attr]);
+          }
+          return copy;
+      }
+
+      throw new Error("Unable to copy obj! Its type isn't supported.");
+  }
+
+  $rootScope.doLogout = function(updateUI) {
+    $http({method: 'GET', url: 'api/?whatsspy=doLogout'}).
+      success(function(data, status, headers, config) {
+        if(data.success == true) {
+          if(updateUI == true) {
+            $rootScope.authenticated = false;
+            $rootScope.refreshContent();
+          }
+        } else {
+          alertify.error(data.error);
+        }
+      }).
+      error(function(data, status, headers, config) {
+        alertify.error("Could not contact the server.");
+      });
   }
 
 
@@ -297,6 +488,10 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   }
 
   // Call the setup
-  $scope.refreshContent();
+  if(!$scope.isInPage('public')) {
+    $scope.refreshContent();
+  } else {
+    $rootScope.authenticated = false;
+  }
 
 });

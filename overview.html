@@ -1,6 +1,12 @@
 <div class="row">
 	<div class="col-md-12">
-		<div class="row">
+		<span data-ng-show="tokenInvalid == true">
+			<div class="alert alert-danger" role="alert"><strong>Invalid token:</strong> You are not allowed to view this user because the token is or became invalid.</div>
+		</span>
+		<span data-ng-show="tokenAuth != null">
+			<div class="alert alert-warning" role="alert"><strong>Shared user profile:</strong> This is a shared user profile created by the hoster of this WhatsSpy Public instance. The timeline contains a maximum of 14 days of history and all other data is since the user is tracked.</div>
+		</span>
+		<div class="row" data-ng-hide="tokenAuth != null">
 			<div class="col-md-3">
 				<div class="well whatsspy-header-box">
 					<strong><span class="glyphicon glyphicon-filter" aria-hidden="true"></span> Filters</strong>
@@ -43,10 +49,10 @@
 			</div>
 		</div>
 		<div class="whatsspy-item-wrapper">	
-			<div class="panel panel-default" data-ng-repeat="number in accounts | numberFilter:filterPhonenumber:filterName:filterGroup">
-					<div class="panel-heading whatsspy-contact-head">
+			<div class="panel panel-default" data-ng-repeat="number in accounts | numberFilter:filterPhonenumber:filterName:filterGroup" id="{{number.id}}">
+					<div class="panel-heading whatsspy-contact-head" data-ng-class="::{'whatsspy-account-highlight': number.id == hightLightAccount}">
 						<div class="col-md-1 col-xs-5">
-							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null && profilePicPath != null) && profilePicPath + number.profilepic + '.jpg' || ''}}" />
+							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null) && getImageURL(number.profilepic) || ''}}" />
 							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" data-ng-show="number.profilepic == null" src="https://placehold.it/150x150" />
 						</div>
 						<div class="col-md-11">
@@ -60,11 +66,11 @@
 								</div>
 								<!-- END responsive small setup -->
 								<div class="col-md-3 hidden-xs whatsspy-contact-options">
-									<a class="btn btn-default" data-ng-click="toggleContactPanel(number);">
+									<a class="btn btn-default" data-ng-click="toggleContactPanel(number);" data-ng-hide="tokenAuth != null">
 										<span data-ng-show="accountData[number.id].showPanel != true"><span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span> Expand view</span>
 										<span data-ng-show="accountData[number.id].showPanel == true"><span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span> Collapse view</span>
 									</a>
-									<a class="btn btn-default" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" ></span> Edit</a>
+									<a class="btn btn-default" data-ng-hide="tokenAuth != null" data-ng-click="editNameModal(number);"><span class="glyphicon glyphicon-pencil" ></span> Edit</a>
 								</div>
 								<div class="col-md-3 hidden-xs whatsspy-contact-phone">
 									<div class="input-group">
@@ -104,11 +110,12 @@
 								</div>
 								<!-- END responsive small setup -->
 								<div class="col-md-3 whatsspy-contact-phone">
-									<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true || number.notify_privacy == true"> 
-						    			<span class="label label-danger whatsspy-label-notifications">
-						    				notifications enabled
-						    			</span>
-						    		</span>
+					    			<span data-ng-show="number.notify_status == true || number.notify_statusmsg == true || number.notify_profilepic == true || number.notify_privacy == true" class="label label-danger whatsspy-label-notifications" title="notifications enabled">
+					    				notifications enabled
+					    			</span>
+									<span data-ng-show="number.read_only_token" class="label label-warning whatsspy-label-notifications whatsspy-label-share" title="sharing enabled" data-ng-click="copyToClipboard(getTokenUrl('user', number.read_only_token))">
+					    				profile sharing enabled
+					    			</span>
 								</div>
 							</div>
 						</div>
@@ -316,7 +323,7 @@
 									    </div>
 									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-pic" id="pictures-{{number.id}}">
 									    	<div data-ng-repeat="picture in accountData[number.id].pictures" class="whatsspy-img-container">
-									    		<img class="img-rounded whatsspy-img-big" data-ng-src="{{(picture.hash != null && profilePicPath != null) && profilePicPath + picture.hash + '.jpg' || ''}}" />
+									    		<img class="img-rounded whatsspy-img-big" data-ng-src="{{(picture.hash != null) && getImageURL(picture.hash) || ''}}" />
 									    		<br />
 									    		<span class="label label-info">{{picture.changed_at | staticDate}}</span>
 									    	</div>
@@ -373,7 +380,7 @@
 										    <small>
 										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Checked every 2 hours.
 										    	<br />
-										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Assuming this user does not have the tracker number in his contact list. If this is the case 'contact only' will be interpreted as 'everyone' in this view.
+										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Assuming this user does not have the tracker number in his contact list. If this is the case 'contacts only' will be interpreted as 'everyone' in this view.
 										    </small>
 									    </div>
 									    <div role="tabpanel" class="tab-pane whatsspy-tab-info-logs" id="logs-{{number.id}}">
@@ -486,6 +493,31 @@
 		    </div>
 		  </div>
 		  <div class="form-group">
+		    <label for="phoneNumber" class="col-sm-2 control-label">Share profile</label>
+		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1">
+		    	<div class="row">
+		    		<div class="row">
+		    			<div class="col-sm-8  col-xs-12">
+		    				<div class="input-group whatsspy-copy-token" data-ng-click="copyToClipboard(getTokenUrl('user', editContact.read_only_token))">
+		        				<span class="input-group-addon"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></span>  
+				    			<input type="text" class="form-control" id="shareUrl" data-ng-value="editContact.read_only_token | emptyToken" disabled="disabled">
+				    		</div>
+		    			</div>
+		    			<div class="col-sm-4 col-xs-12">
+		    				<button type="button" class="btn btn-primary" data-ng-click="generateReadOnlyToken('user', editContact, null)">
+		    					 Generate
+		    				</button>
+		    				<button type="button" class="btn btn-danger" data-ng-click="resetReadOnlyToken('user', editContact, null)">
+		    					 Reset
+		    				</button>
+		    			</div>
+		    		</div>    			
+		    		<small>Sharing profile URL's will only work if WhatsSpy Public is available from the internet. <br />
+		    			Click on the token to copy the link. The generation of tokens does not have to be saved.</small>
+		    	</div>
+		    </div>
+		  </div>
+		  <div class="form-group">
 		    <label for="name" class="col-sm-2 control-label">Notifications</label>
 		    <div class="col-sm-7 col-sm-offset-1 col-xs-10 col-xs-offset-1" data-ng-disabled="isNotificationEnabled();">
 		    	<div class="row">
@@ -552,29 +584,37 @@
       </div>
       <div class="modal-body">
       	<h4>Existing groups</h4>
-      	<form class="form-horizontal">
-      		<span data-ng-show="groups.length > 1">
-			  	<div class="form-group" data-ng-repeat="group in groups" data-ng-show="group.gid != null">
-					<div class="col-sm-3 col-xs-5">
-						<div class="input-group"> 
-		    				<div class="input-group-addon"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span></div>
-					      	<input type="text" class="form-control" id="name" data-ng-value="group.name" disabled="disabled">
+      	<div class="row">
+	  		<span data-ng-show="groups.length > 1">
+	  			<div class="col-md-4" data-ng-repeat="group in groups" data-ng-show="group.gid != null">
+		  			<div class="panel panel-default">
+						<div class="panel-heading">
+							<div class="row">
+								<div class="col-sm-12">
+									<h2 class="panel-title"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span> {{group.name}}</h2>
+								</div>
+							</div>
+						</div>
+						<div class="panel-body whatsspy-group-body">
+							<span class="label label-default whatsspy-label-notifications">Users: {{getGroupUsers(group.gid)}}</span>
+							<span class="label label-success whatsspy-label-notifications" data-ng-show="group.read_only_token != null" data-ng-click="closeGroupModalAndOpen(getTokenUrl('group', group.read_only_token))">Sharing enabled</span>
+							<span class="label label-warning whatsspy-label-notifications" data-ng-show="group.read_only_token == null">Sharing disabled</span>
+							<br />
+							<br />
+							<a class="btn btn-danger whatsspy-label-notifications" title="Deleting the group will not delete the users in this group." data-ng-click="deleteGroup(group.gid);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete group*</a>   		
 						</div>
 					</div>
-					<div class="col-sm-3 col-xs-3">
-						Users in this group: <strong>{{getGroupUsers(group.gid)}}</strong>
-					</div>
-					<div class="col-sm-4 col-xs-4">
-						<a class="btn btn-danger" title="Deleting the group will not delete the users in this group." data-ng-click="deleteGroup(group.gid);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete group</a>
-					</div>
 				</div>
-				<small>Deleting the group will not delete the users in this group.</small>
 			</span>
 			<span data-ng-show="groups.length == 1">
 				No groups defined yet...
 			</span>
-		</form>
-		<h4>Create groups</h4>
+		</div>
+		<small data-ng-show="groups.length > 1">* Deleting the group will not delete the users in this group.</small>
+		<br />
+		<small>You can share group statistics in the "Statistics" page.</small>
+		<br />
+		<h4>Create group</h4>
 		<form class="form-horizontal">
 			<div class="form-group">
 				<label for="name" class="col-sm-2 control-label">Group name</label>
@@ -583,7 +623,7 @@
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="name" class="col-sm-2 control-label">Create group</label>
+				<label for="name" class="col-sm-2 control-label"></label>
 				<div class="col-sm-5">
 					<button type="submit" data-ng-click="submitNewGroup();" class="btn btn-success">Create group</button>
 				</div>

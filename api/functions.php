@@ -24,6 +24,10 @@ function cutZeroPrefix($string) {
 	}
 }
 
+function isValidSha256($str) {
+    return (bool) preg_match('/^[0-9a-f]{64}$/i', $str);
+}
+
 /**
   *		Make sure that any timestamp from PostgreSQL meet the requirements for MomentJS
   *		This means timezones are always in the format: 00:00
@@ -316,6 +320,66 @@ function getGroupsFromNumber($number) {
 	$select_groups = $DBH->prepare('SELECT gid FROM accounts_to_groups WHERE number = :number ORDER BY gid ASC');
 	$select_groups -> execute(array(':number' => $number));
 	return $select_groups->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function requireAuth() {
+	if(isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
+		$_SESSION['auth'] = true;
+		return;
+	} else {
+		echo json_encode(['error' => 'Not authenticated!', 'code' => 403]);
+		exit();
+	}
+}
+
+function requireTokenAuthForGroup($token) {
+	global $DBH;
+	$select = $DBH->prepare('SELECT gid, name FROM groups WHERE "read_only_token" = :token AND "read_only_token" IS NOT NULL;');
+	$select -> execute(array(':token' => $token));
+	if($select -> rowCount() == 0) {
+		echo json_encode(['error' => 'Not authenticated!', 'code' => 403]);
+		exit();
+	} else {
+		$row = $select -> fetch();
+		return $row;
+	}
+}
+
+function requireTokenAuthForUser($token, $profilepic_hash = null) {
+	global $DBH;
+	if($profilepic_hash == null) {
+		$select = $DBH->prepare('SELECT id FROM accounts WHERE "read_only_token" = :token AND "read_only_token" IS NOT NULL;');
+		$select -> execute(array(':token' => $token));
+	} else {
+		$select = $DBH->prepare('SELECT a.id FROM accounts a
+									LEFT JOIN profilepicture_history pph
+									ON a.id = pph.number
+									WHERE a."read_only_token" = :token AND a."read_only_token" IS NOT NULL AND pph.hash = :hash;');
+		$select -> execute(array(':token' => $token, ':hash' => $profilepic_hash));
+	}
+	if($select -> rowCount() == 0) {
+		echo json_encode(['error' => 'Not authenticated!', 'code' => 403]);
+		exit();
+	} else {
+		$row = $select -> fetch();
+		return $row;
+	}
+}
+
+function setAuth($authenticated) {
+	if($authenticated) {
+		$_SESSION['auth'] = true;
+	} else {
+		session_destroy();
+	}
+}
+
+function isAuth() {
+	if(isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 

@@ -96,14 +96,7 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 	}
 }
 
-// General change retrieving
-// This is called when:
-// - the user comes online/offline
-// - the first time you send a subscription.
-function onPresenceReceived($mynumber, $from, $type) {
-	global $DBH, $wa, $crawl_time, $whatsspyNotificatons;
-	$number = explode("@", $from)[0];
-	// $type is either "available" or "unavailable"
+function handPresenceChange($number, $type, $DBH, $wa, $crawl_time, $whatsspyNotificatons) {
 	$status = ($type == 'available' ? true : false);
 	$latest_status = $DBH->prepare('SELECT "sid", "status", ROUND(EXTRACT(\'epoch\' FROM "start")) as "start" FROM status_history WHERE "number"=:number AND "end" IS NULL');
 	$latest_status -> execute(array(':number' => $number));
@@ -170,6 +163,19 @@ function onPresenceReceived($mynumber, $from, $type) {
 			}
 		}
 	}
+}
+
+function onPresenceAvailable($username, $from) {
+	global $DBH, $wa, $crawl_time, $whatsspyNotificatons;
+	$number = explode("@", $from)[0];
+	handPresenceChange($number, 'available', $DBH, $wa, $crawl_time, $whatsspyNotificatons);
+}
+
+function onPresenceUnavailable($username, $from, $last) {
+	// Ignore last
+	global $DBH, $wa, $crawl_time, $whatsspyNotificatons;
+	$number = explode("@", $from)[0];
+	handPresenceChange($number, 'unavailable', $DBH, $wa, $crawl_time, $whatsspyNotificatons);
 }
 
 // retrieve profile pics
@@ -478,7 +484,8 @@ function setupWhatsappHandler() {
 	$wa->eventManager()->bind('onGetRequestLastSeen', 'onGetRequestLastSeen');
 	$wa->eventManager()->bind('onGetError', 'onGetError');
 	$wa->eventManager()->bind('onDisconnect', 'onDisconnect');
-	$wa->eventManager()->bind("onPresence", "onPresenceReceived");
+	$wa->eventManager()->bind("onPresenceAvailable", "onPresenceAvailable");
+	$wa->eventManager()->bind("onPresenceUnavailable", "onPresenceUnavailable");
 	$wa->eventManager()->bind("onGetStatus", "onGetStatus");
 	$wa->eventManager()->bind('onGetSyncResult', 'onSyncResultNumberCheck');
 	$wa->eventManager()->bind("onGetProfilePicture", "onGetProfilePicture");

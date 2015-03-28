@@ -394,7 +394,7 @@ class WhatsProt
                         $this->phoneNumber,
                         $method,
                         $response->reason,
-                        $response->param
+                        isset($response->param) ? $response->param : NULL
                     ));
                 throw new Exception('There was a problem trying to request the code.');
             }
@@ -639,13 +639,15 @@ class WhatsProt
      * @param bool   $storeURLmedia Keep a copy of the audio file on your server
      * @param int    $fsize
      * @param string $fhash
+     * @return string|null          Message ID if successfully, null if not.
      */
     public function sendBroadcastAudio($targets, $path, $storeURLmedia = false, $fsize = 0, $fhash = "")
     {
         if (!is_array($targets)) {
             $targets = array($targets);
         }
-        $this->sendMessageAudio($targets, $path, $storeURLmedia, $fsize, $fhash);
+        // Return message ID. Make pull request for this.
+        return  $this->sendMessageAudio($targets, $path, $storeURLmedia, $fsize, $fhash);
     }
 
     /**
@@ -662,13 +664,15 @@ class WhatsProt
      * @param int    $fsize
      * @param string $fhash
      * @param string $caption
+     * @return string|null          Message ID if successfully, null if not.
      */
     public function sendBroadcastImage($targets, $path, $storeURLmedia = false, $fsize = 0, $fhash = "", $caption = "")
     {
         if (!is_array($targets)) {
             $targets = array($targets);
         }
-        $this->sendMessageImage($targets, $path, $storeURLmedia, $fsize, $fhash, $caption);
+        // Return message ID. Make pull request for this.
+        return  $this->sendMessageImage($targets, $path, $storeURLmedia, $fsize, $fhash, $caption);
     }
 
     /**
@@ -681,21 +685,22 @@ class WhatsProt
      * thumbnail of entered Lat/Long but NO name/url for location.
      *
      * With name supplied, a combined map thumbnail/name box is displayed
-
      * Approx 20 (unverified) is the maximum number of targets
      *
-     * @param  array  $targets       An array of numbers to send to.
-     * @param  float $long    The longitude of the location eg 54.31652
-     * @param  float $lat     The latitude if the location eg -6.833496
-     * @param  string $name    (Optional) A name to describe the location
-     * @param  string $url     (Optional) A URL to link location to web resource
+     * @param  array  $targets  An array of numbers to send to.
+     * @param  float $long      The longitude of the location eg 54.31652
+     * @param  float $lat       The latitude if the location eg -6.833496
+     * @param  string $name     (Optional) A name to describe the location
+     * @param  string $url      (Optional) A URL to link location to web resource
+     * @return string           Message ID
      */
     public function sendBroadcastLocation($targets, $long, $lat, $name = null, $url = null)
     {
         if (!is_array($targets)) {
             $targets = array($targets);
         }
-        $this->sendMessageLocation($targets, $long, $lat, $name, $url);
+        // Return message ID. Make pull request for this.
+        return $this->sendMessageLocation($targets, $long, $lat, $name, $url);
     }
 
     /**
@@ -706,14 +711,16 @@ class WhatsProt
      *
      * Approx 20 (unverified) is the maximum number of targets
      *
-     * @param  array  $targets       An array of numbers to send to.
-     * @param  string $message Your message
+     * @param  array  $targets      An array of numbers to send to.
+     * @param  string $message      Your message
+     * @return string               Message ID
      */
     public function sendBroadcastMessage($targets, $message)
     {
         $message = $this->parseMessageForEmojis($message);
         $bodyNode = new ProtocolNode("body", null, null, $message);
-        $this->sendBroadcast($targets, $bodyNode, "text");
+        // Return message ID. Make pull request for this.
+        return $this->sendBroadcast($targets, $bodyNode, "text");
     }
 
     /**
@@ -730,13 +737,15 @@ class WhatsProt
      * @param int     $fsize
      * @param string  $fhash
      * @param string  $caption
+     * @return string|null           Message ID if successfully, null if not.
      */
     public function sendBroadcastVideo($targets, $path, $storeURLmedia = false, $fsize = 0, $fhash = "", $caption = "")
     {
         if (!is_array($targets)) {
             $targets = array($targets);
         }
-        $this->sendMessageVideo($targets, $path, $storeURLmedia, $fsize, $fhash, $caption);
+        // Return message ID. Make pull request for this.
+        return $this->sendMessageVideo($targets, $path, $storeURLmedia, $fsize, $fhash, $caption);
     }
 
     /**
@@ -1574,19 +1583,19 @@ class WhatsProt
      * @param string $filepath      The url/uri to the audio file.
      * @param bool   $storeURLmedia Keep copy of file
      * @param int    $fsize
-     * @param string $fhash
-     *
-     * @return bool
+     * @param string $fhash         *
+     * @return string|null          Message ID if successfully, null if not.
      */
     public function sendMessageAudio($to, $filepath, $storeURLmedia = false, $fsize = 0, $fhash = "")
     {
         if ($fsize == 0 || $fhash == "") {
             $allowedExtensions = array('3gp', 'caf', 'wav', 'mp3', 'wma', 'ogg', 'aif', 'aac', 'm4a');
             $size = 10 * 1024 * 1024; // Easy way to set maximum file size for this media type.
+            // Return message ID. Make pull request for this.
             return $this->sendCheckAndSendMedia($filepath, $size, $to, 'audio', $allowedExtensions, $storeURLmedia);
         } else {
-            $this->sendRequestFileUpload($fhash, 'audio', $fsize, $filepath, $to);
-            return true;
+            // Return message ID. Make pull request for this.
+            return $this->sendRequestFileUpload($fhash, 'audio', $fsize, $filepath, $to);
         }
     }
 
@@ -1609,7 +1618,7 @@ class WhatsProt
      * @param int    $fsize         size of the media file
      * @param string $fhash         base64 hash of the media file
      * @param string $caption
-     * @return bool
+     * @return string|null          Message ID if successfully, null if not.
      */
     public function sendMessageImage($to, $filepath, $storeURLmedia = false, $fsize = 0, $fhash = "", $caption = "")
     {
@@ -1617,10 +1626,11 @@ class WhatsProt
         if ($fsize == 0 || $fhash == "") {
             $allowedExtensions = array('jpg', 'jpeg', 'gif', 'png');
             $size = 5 * 1024 * 1024; // Easy way to set maximum file size for this media type.
+            // Return message ID. Make pull request for this.
             return $this->sendCheckAndSendMedia($filepath, $size, $to, 'image', $allowedExtensions, $storeURLmedia, $caption);
         } else {
-            $this->sendRequestFileUpload($fhash, 'image', $fsize, $filepath, $to, $caption);
-            return true;
+            // Return message ID. Make pull request for this.
+            return $this->sendRequestFileUpload($fhash, 'image', $fsize, $filepath, $to, $caption);
         }
     }
 
@@ -1637,6 +1647,7 @@ class WhatsProt
      * @param float  $lat   The latitude of the location, e.g. -6.833496.
      * @param string $name  (Optional) A custom name for the specified location.
      * @param string $url   (Optional) A URL to attach to the specified location.
+     * @return string       Message ID
      */
     public function sendMessageLocation($to, $long, $lat, $name = null, $url = null)
     {
@@ -1653,6 +1664,9 @@ class WhatsProt
         $id = (is_array($to)) ? $this->sendBroadcast($to, $mediaNode, "media") : $this->sendMessageNode($to, $mediaNode);
 
         $this->waitForServer($id);
+
+        // Return message ID. Make pull request for this.
+        return $id;
     }
 
     /**
@@ -1683,9 +1697,8 @@ class WhatsProt
      * @param bool   $storeURLmedia Keep a copy of media file.
      * @param int    $fsize         Size of the media file
      * @param string $fhash         base64 hash of the media file
-     * @param string $caption
-     *
-     * @return bool
+     * @param string $caption       *
+     * @return string|null          Message ID if successfully, null if not.
      */
     public function sendMessageVideo($to, $filepath, $storeURLmedia = false, $fsize = 0, $fhash = "", $caption = "")
     {
@@ -1694,10 +1707,11 @@ class WhatsProt
         if ($fsize == 0 || $fhash == "") {
             $allowedExtensions = array('3gp', 'mp4', 'mov', 'avi');
             $size = 20 * 1024 * 1024; // Easy way to set maximum file size for this media type.
+            // Return message ID. Make pull request for this.
             return $this->sendCheckAndSendMedia($filepath, $size, $to, 'video', $allowedExtensions, $storeURLmedia, $caption);
         } else {
-            $this->sendRequestFileUpload($fhash, 'video', $fsize, $filepath, $to, $caption);
-            return true;
+            // Return message ID. Make pull request for this.
+            return $this->sendRequestFileUpload($fhash, 'video', $fsize, $filepath, $to, $caption);
         }
     }
 
@@ -1940,6 +1954,7 @@ class WhatsProt
      * @param string $to    The recipient to send.
      * @param string $name  The contact name.
      * @param object $vCard The contact vCard to send.
+     * @return string       Message ID
      */
     public function sendVcard($to, $name, $vCard)
     {
@@ -1953,7 +1968,8 @@ class WhatsProt
                 "type" => "vcard"
             ), array($vCardNode), "");
 
-        $this->sendMessageNode($to, $mediaNode);
+        // Return message ID. Make pull request for this.
+        return $this->sendMessageNode($to, $mediaNode);
     }
 
     /**
@@ -1962,6 +1978,7 @@ class WhatsProt
      * @param array  $targets An array of recipients to send to.
      * @param string $name    The vCard contact name.
      * @param object $vCard   The contact vCard to send.
+     * @return string         Message ID
      */
     public function sendBroadcastVcard($targets, $name, $vCard)
     {
@@ -1975,7 +1992,8 @@ class WhatsProt
                 "type" => "vcard"
             ), array($vCardNode), "");
 
-        $this->sendBroadcast($targets, $mediaNode, "media");
+        // Return message ID. Make pull request for this.
+        return $this->sendBroadcast($targets, $mediaNode, "media");
     }
 
     /**
@@ -2310,7 +2328,6 @@ class WhatsProt
      * Create an identity string
      *
      * @param  string $identity Identity.
-
      * @return string           Correctly formatted identity
      *
      * @throws Exception        Error when cannot write identity data to file.
@@ -2906,18 +2923,17 @@ class WhatsProt
             && strpos($node->getAttribute('from'), "-") === false) {
             $presence = array();
             if ($node->getAttribute('type') == null) {
-                $this->eventManager()->fire("onPresence",
+                $this->eventManager()->fire("onPresenceAvailable",
                     array(
                         $this->phoneNumber,
                         $node->getAttribute('from'),
-                        $presence['type'] = "available"
                     ));
             } else {
-                $this->eventManager()->fire("onPresence",
+                $this->eventManager()->fire("onPresenceUnavailable",
                     array(
                         $this->phoneNumber,
                         $node->getAttribute('from'),
-                        $presence['type'] = "unavailable"
+                        $node->getAttribute('last')
                     ));
             }
         }
@@ -3589,12 +3605,14 @@ class WhatsProt
                 $icon = '';
                 break;
         }
+        //Retrieve Message ID
+        $message_id = $messageNode['message_id'];
 
         $mediaNode = new ProtocolNode("media", $mediaAttribs, null, $icon);
         if (is_array($to)) {
             $this->sendBroadcast($to, $mediaNode, "media");
         } else {
-            $this->sendMessageNode($to, $mediaNode);
+            $this->sendMessageNode($to, $mediaNode, $message_id);
         }
         $this->eventManager()->fire("onMediaMessageSent",
             array(
@@ -3684,27 +3702,27 @@ class WhatsProt
      * @param string $type              media filetype. 'audio', 'video', 'image'
      * @param array  $allowedExtensions An array of allowable file types for the media file
      * @param bool   $storeURLmedia     Keep a copy of the media file
-     * @param string $caption
-     *
-     * @return bool
+     * @param string $caption           *
+     * @return string|null              Message ID if successfully, null if not.
      */
     protected function sendCheckAndSendMedia($filepath, $maxSize, $to, $type, $allowedExtensions, $storeURLmedia, $caption = "")
     {
         if ($this->getMediaFile($filepath, $maxSize) == true) {
             if (in_array($this->mediaFileInfo['fileextension'], $allowedExtensions)) {
                 $b64hash = base64_encode(hash_file("sha256", $this->mediaFileInfo['filepath'], true));
-                //request upload
-                $this->sendRequestFileUpload($b64hash, $type, $this->mediaFileInfo['filesize'], $this->mediaFileInfo['filepath'], $to, $caption);
+                //request upload and get Message ID
+                $id =$this->sendRequestFileUpload($b64hash, $type, $this->mediaFileInfo['filesize'], $this->mediaFileInfo['filepath'], $to, $caption);
                 $this->processTempMediaFile($storeURLmedia);
-                return true;
+                // Return message ID. Make pull request for this.
+                return $id;
             } else {
                 //Not allowed file type.
                 $this->processTempMediaFile($storeURLmedia);
-                return false;
+                return null;
             }
         } else {
             //Didn't get media file details.
-            return false;
+            return null;
         }
     }
 
@@ -3907,6 +3925,7 @@ class WhatsProt
      * @param string $filepath Path to image file
      * @param mixed  $to       Recipient(s)
      * @param string $caption
+     * @return string          Message ID
      */
     protected function sendRequestFileUpload($b64hash, $type, $size, $filepath, $to, $caption = "")
     {
@@ -3941,6 +3960,9 @@ class WhatsProt
 
         $this->sendNode($node);
         $this->waitForServer($id);
+
+        // Return message ID. Make pull request for this.
+        return $messageId;
     }
 
     /**

@@ -96,7 +96,7 @@
 					  		<span class="glyphicon glyphicon-comment whatsspy-timeline-activity-icon " aria-hidden="true"></span>
 					  	</div>
 					  	<div class="col-md-7 col-xs-10">
-					  		<h3 class="panel-title">New status message for {{item.name | emptyName}}</h3> ({{item.id}})
+					  		<h3 class="panel-title">New status message for <a data-ng-href="#/overview#{{item.id}}" class="whatsspy-clean-link">{{item.name | emptyName}}</a></h3> ({{item.id}})
 					  	</div>
 					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}}
@@ -114,7 +114,7 @@
 					  		<span class="glyphicon glyphicon-picture whatsspy-timeline-activity-icon " aria-hidden="true"></span>
 					  	</div>
 					  	<div class="col-md-7 col-xs-10">
-					  		<h3 class="panel-title">New profile photo for {{item.name | emptyName}}</h3> ({{item.id}})
+					  		<h3 class="panel-title">New profile photo for <a data-ng-href="#/overview#{{item.id}}" class="whatsspy-clean-link">{{item.name | emptyName}}</a></h3> ({{item.id}})
 					  	</div>
 					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}} <span class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="Detecting profile picture changes can take 0-4 hours."></span>
@@ -122,7 +122,7 @@
 					  	<div class="clear"></div>
 					  	</div>
 					  <div class="panel-body whatsspy-timeline-photo">
-					    <img class="img-responsive img-rounded whatsspy-timeline-photo-thumb" data-ng-src="{{(item.hash != null && profilePicPath != null) && profilePicPath + item.hash + '.jpg' || ''}}" />
+					    <img class="img-responsive img-rounded whatsspy-timeline-photo-thumb" data-ng-src="{{(item.hash != null) && getImageURL(item.hash) || ''}}" />
 					  </div>
 					</div>	
 					<!-- ACTIVITY: STATUS LAST SEEN PRIVACY -->
@@ -132,7 +132,7 @@
 					  		<span class="glyphicon glyphicon-pencil whatsspy-timeline-activity-icon " aria-hidden="true"></span>
 					  	</div>
 					  	<div class="col-md-7 col-xs-10">
-					  		<h3 class="panel-title">{{item.name | emptyName}} changed his privacy setting</h3> ({{item.id}})
+					  		<h3 class="panel-title"><a data-ng-href="#/overview#{{item.id}}" class="whatsspy-clean-link">{{item.name | emptyName}}</a> changed his privacy setting</h3> ({{item.id}})
 					  	</div>
 					  	<div class="col-md-4 col-xs-12 whatsspy-timeline-changed-at">
 					  		{{item.changed_at | staticDatetime}} <span class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="Detecting privacy changes can take 0-2 hours."></span>
@@ -170,7 +170,7 @@
 				<!-- userstatus -->
 				<div data-ng-repeat="item in filteredUserstatus = (timelineData.userstatus | numberFilter:filterPhonenumber:filterName:filterGroup)">
 					<div class="whatsspy-timeline-animate-status whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}">
-						<h4><span class="glyphicon glyphicon-user" data-ng-class="" aria-hidden="true"></span> {{item.name | emptyName}} <small>({{item.id}})</small></h4> 
+						<h4><a data-ng-href="#/overview#{{item.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" data-ng-class="" aria-hidden="true"></span> {{item.name | emptyName}}</a> <small>({{item.id}})</small></h4> 
 						Online from <span class="label label-success">{{item.start | staticTime}}</span> <span data-ng-show="item.end != null">till <span class="label label-success">{{item.end | staticTime}}</span></span>
 					</div>
 				</div>

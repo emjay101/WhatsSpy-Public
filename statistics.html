@@ -1,11 +1,17 @@
 <div class="row">
 	<div class="col-md-12">
 		<!-- panels here -->
-		<div class="whatsspy-no-information-data" data-ng-show="stats == null">
+		<span data-ng-show="tokenInvalid == true">
+			<div class="alert alert-danger" role="alert"><strong>Invalid token:</strong> You are not allowed to view this group because the token is or became invalid.</div>
+		</span>
+		<span data-ng-show="tokenAuth != null">
+			<div class="alert alert-warning" role="alert"><strong>Shared group profile:</strong> This is a shared statistics report of the group <strong>{{stats.global_stats.shared_group_name}}</strong> created by the hoster of this WhatsSpy Public instance.</div>
+		</span>
+		<div class="whatsspy-no-information-data" data-ng-show="stats == null && tokenInvalid != true">
 			<span data-ng-show="showLoader == false">Not enough information available ...</span>
 			<span data-ng-show="showLoader == true">Loading information ...</span>
 		</div>
-		<span data-ng-show="stats != null">
+		<span data-ng-show="authenticated == true && stats.global_stats != null">
 			<div class="row">
 				<div class="col-md-6">
 					<div class="panel panel-default">
@@ -27,7 +33,31 @@
 							<h3 class="panel-title"><span class="glyphicon glyphicon-education" aria-hidden="true"></span> Notes</h3>
 						</div>
 						<div class="panel-body">
+							<span data-ng-show="filterGroup == null">
 							All information on this page does not update. You can refresh by clicking the gray timestamp in "status".
+							</span>
+							<span data-ng-show="filterGroup != null">
+								<div class="row">
+					    			<div class="col-sm-8 col-xs-12">
+					    				<div class="input-group whatsspy-copy-token" data-ng-click="copyToClipboard(getTokenUrl('group', getGroupById(filterGroup).read_only_token))">
+					        				<span class="input-group-addon"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></span>  
+							    			<input type="text" class="form-control" id="shareUrl" data-ng-value="getGroupById(filterGroup).read_only_token | emptyToken" disabled="disabled">
+							    		</div>
+					    			</div>
+					    			<div class="col-sm-4 col-xs-12">
+					    				<button type="button" class="btn btn-primary" data-ng-click="generateReadOnlyToken('group', null, getGroupById(filterGroup))">
+					    					 Generate
+					    				</button>
+					    				<button type="button" class="btn btn-danger" data-ng-click="resetReadOnlyToken('group', null, getGroupById(filterGroup))">
+					    					 Reset
+					    				</button>
+					    			</div>
+					    		</div>    			
+					    		<small>
+					    			Sharing this statistics group page URL's will only work if WhatsSpy Public is available from the internet.
+					    			Click on the token to copy the link.
+					    		</small>
+					    	</span>
 						</div>
 					</div>
 				</div>
@@ -58,7 +88,11 @@
 						    <table class="table table-striped table-bordered ">
 						      <tbody>
 						        <tr>
-						          <th class="whatsspy-statistics-table-normal">Online/offline statuses gathered</th>
+						          <th class="whatsspy-statistics-table-normal">Number of accounts</th>
+						          <td>{{stats.global_stats.user_count}} accounts</td>
+						        </tr>
+						        <tr>
+						          <th>Online/offline statuses gathered</th>
 						          <td>{{stats.global_stats.user_status_count}} statuses</td>
 						        </tr>
 						        <tr>
@@ -424,7 +458,7 @@
 										  <th>Opened WA</th>
 										</tr>
 										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10DayChoice]">
-										  <td><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</td>
+										  <td><a data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a></td>
 										  <td>{{user.online | timeFormat}}</td>
 										  <td>{{user.count}} times</td>
 										</tr>
@@ -448,7 +482,7 @@
 										  <th>Opened WA</th>
 										</tr>
 										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10TimeChoice]">
-										  <td><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</td>
+										  <td><a data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a></td>
 										  <td>{{user.online | timeFormat}}</td>
 										  <td>{{user.count}} times</td>
 										</tr>

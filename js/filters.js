@@ -111,6 +111,15 @@ angular.module('whatsspyFilters', [])
 		}
 	};
 })
+.filter('emptyToken', function () {
+	return function (value) {
+		if(value == null) {
+			return 'Not shared ...';
+		} else {
+			return value;
+		}
+	};
+})
 .filter('noGroupFilter', function () {
 	return function (groups) {
 		if(groups == null) {
