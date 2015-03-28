@@ -108,6 +108,8 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
               $rootScope.accounts = [];
               $rootScope.pendingAccounts = [];
               $rootScope.groups = null;
+            } else {
+              alertify.error(data.error);
             }
           } else {
             $rootScope.authenticated = true;
@@ -195,6 +197,8 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
             $location.path('/login');
             $rootScope.constructor();
             $rootScope.refreshContent();
+          } else {
+            alertify.error(data.error);
           }
         } else {
           if($rootScope.accountData[$number.id] == undefined) {

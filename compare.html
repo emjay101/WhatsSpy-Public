@@ -46,7 +46,6 @@
 							<thead>
 								<tr>
 									<th>Candidate / Privacy settings</th>
-									<th>Actions</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -57,8 +56,7 @@
 												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{getAccountById(accountId).profilepic_updated | staticDatetime}}" data-ng-show="getAccountById(accountId).profilepic != null" data-ng-src="{{(getAccountById(accountId).profilepic != null) && getImageURL(getAccountById(accountId).profilepic) || ''}}" />
 												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="getAccountById(accountId).profilepic == null" src="https://placehold.it/175x175" />
 											</div>
-
-											<div class="col-md-10">
+											<div class="col-md-8">
 												<a data-ng-href="#/overview#{{accountId}}" class="whatsspy-clean-link"><strong>{{getAccountById(accountId).name}}</strong></a>
 												({{getAccountById(accountId).id}})
 												<span data-ng-repeat="group in getAccountById(accountId).groups">
@@ -73,10 +71,10 @@
 												<span data-ng-show="getAccountById(accountId).profilepic_privacy == true" title="This privacy setting may be contacts or nobody. This can't be detected." class="label label-danger">profile pic : contacts*</span>
 												<span data-ng-show="getAccountById(accountId).profilepic_privacy == false" class="label label-success">profile pic : everyone</span>
 											</div>
+											<div class="col-md-2">
+												<button type="button" data-ng-click="removeFromComparison(accountId)" class="btn btn-danger">Remove</button>
+											</div>
 										</div>
-									</td>
-									<td>
-										<button type="button" data-ng-click="removeFromComparison(accountId)" class="btn btn-danger">Remove</button>
 									</td>
 								</tr>
 							</tbody>

@@ -38,8 +38,9 @@ angular.module('whatsspyControllers', [])
           if(data.error != null) {
             if(data.code == 403) {
             	$scope.tokenInvalid = true;
-              	alertify.error(data.error);
-            }
+            } else {
+	            alertify.error(data.error);
+	        }
           } else {
             $rootScope.accounts = data.accounts;
             $rootScope.groups = data.groups;
@@ -984,6 +985,8 @@ angular.module('whatsspyControllers', [])
 		            $location.path('/login');
 		            $rootScope.constructor();
 		            $rootScope.refreshContent();
+				} else {
+					alertify.error(data.error);
 				}
 			} else {
 				// init load (type=init)
