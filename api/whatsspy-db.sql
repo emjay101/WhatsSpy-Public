@@ -1,5 +1,5 @@
 --
--- PostgreSQL database dump
+-- whatsspyQL database dump
 --
 
 SET statement_timeout = 0;
@@ -8,7 +8,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 --
--- Name: lastseen_privacy_update(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: lastseen_privacy_update(); Type: FUNCTION; Schema: public; Owner: whatsspy
 --
 
 CREATE FUNCTION lastseen_privacy_update() RETURNS trigger
@@ -27,10 +27,10 @@ END;
 $$;
 
 
-ALTER FUNCTION public.lastseen_privacy_update() OWNER TO postgres;
+ALTER FUNCTION public.lastseen_privacy_update() OWNER TO whatsspy;
 
 --
--- Name: profilepic_privacy_update(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: profilepic_privacy_update(); Type: FUNCTION; Schema: public; Owner: whatsspy
 --
 
 CREATE FUNCTION profilepic_privacy_update() RETURNS trigger
@@ -49,10 +49,10 @@ END;
 $$;
 
 
-ALTER FUNCTION public.profilepic_privacy_update() OWNER TO postgres;
+ALTER FUNCTION public.profilepic_privacy_update() OWNER TO whatsspy;
 
 --
--- Name: statusmessage_privacy_update(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: statusmessage_privacy_update(); Type: FUNCTION; Schema: public; Owner: whatsspy
 --
 
 CREATE FUNCTION statusmessage_privacy_update() RETURNS trigger
@@ -71,7 +71,7 @@ END;
 $$;
 
 
-ALTER FUNCTION public.statusmessage_privacy_update() OWNER TO postgres;
+ALTER FUNCTION public.statusmessage_privacy_update() OWNER TO whatsspy;
 
 SET default_tablespace = '';
 
@@ -114,7 +114,7 @@ CREATE TABLE accounts_to_groups (
 ALTER TABLE public.accounts_to_groups OWNER TO whatsspy;
 
 --
--- Name: groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: groups; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE groups (
@@ -124,10 +124,10 @@ CREATE TABLE groups (
 );
 
 
-ALTER TABLE public.groups OWNER TO postgres;
+ALTER TABLE public.groups OWNER TO whatsspy;
 
 --
--- Name: groups_gid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: groups_gid_seq; Type: SEQUENCE; Schema: public; Owner: whatsspy
 --
 
 CREATE SEQUENCE groups_gid_seq
@@ -138,17 +138,17 @@ CREATE SEQUENCE groups_gid_seq
     CACHE 1;
 
 
-ALTER TABLE public.groups_gid_seq OWNER TO postgres;
+ALTER TABLE public.groups_gid_seq OWNER TO whatsspy;
 
 --
--- Name: groups_gid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: groups_gid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: whatsspy
 --
 
 ALTER SEQUENCE groups_gid_seq OWNED BY groups.gid;
 
 
 --
--- Name: lastseen_privacy_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: lastseen_privacy_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE lastseen_privacy_history (
@@ -158,10 +158,10 @@ CREATE TABLE lastseen_privacy_history (
 );
 
 
-ALTER TABLE public.lastseen_privacy_history OWNER TO postgres;
+ALTER TABLE public.lastseen_privacy_history OWNER TO whatsspy;
 
 --
--- Name: profilepic_privacy_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: profilepic_privacy_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE profilepic_privacy_history (
@@ -171,10 +171,10 @@ CREATE TABLE profilepic_privacy_history (
 );
 
 
-ALTER TABLE public.profilepic_privacy_history OWNER TO postgres;
+ALTER TABLE public.profilepic_privacy_history OWNER TO whatsspy;
 
 --
--- Name: profilepicture_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: profilepicture_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE profilepicture_history (
@@ -184,10 +184,10 @@ CREATE TABLE profilepicture_history (
 );
 
 
-ALTER TABLE public.profilepicture_history OWNER TO postgres;
+ALTER TABLE public.profilepicture_history OWNER TO whatsspy;
 
 --
--- Name: status_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: status_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE status_history (
@@ -199,10 +199,10 @@ CREATE TABLE status_history (
 );
 
 
-ALTER TABLE public.status_history OWNER TO postgres;
+ALTER TABLE public.status_history OWNER TO whatsspy;
 
 --
--- Name: status_sid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: status_sid_seq; Type: SEQUENCE; Schema: public; Owner: whatsspy
 --
 
 CREATE SEQUENCE status_sid_seq
@@ -213,17 +213,17 @@ CREATE SEQUENCE status_sid_seq
     CACHE 1;
 
 
-ALTER TABLE public.status_sid_seq OWNER TO postgres;
+ALTER TABLE public.status_sid_seq OWNER TO whatsspy;
 
 --
--- Name: status_sid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: status_sid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: whatsspy
 --
 
 ALTER SEQUENCE status_sid_seq OWNED BY status_history.sid;
 
 
 --
--- Name: statusmessage_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: statusmessage_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE statusmessage_history (
@@ -233,10 +233,10 @@ CREATE TABLE statusmessage_history (
 );
 
 
-ALTER TABLE public.statusmessage_history OWNER TO postgres;
+ALTER TABLE public.statusmessage_history OWNER TO whatsspy;
 
 --
--- Name: statusmessage_privacy_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: statusmessage_privacy_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE statusmessage_privacy_history (
@@ -246,10 +246,10 @@ CREATE TABLE statusmessage_privacy_history (
 );
 
 
-ALTER TABLE public.statusmessage_privacy_history OWNER TO postgres;
+ALTER TABLE public.statusmessage_privacy_history OWNER TO whatsspy;
 
 --
--- Name: tracker_history; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: tracker_history; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE TABLE tracker_history (
@@ -259,7 +259,7 @@ CREATE TABLE tracker_history (
 );
 
 
-ALTER TABLE public.tracker_history OWNER TO postgres;
+ALTER TABLE public.tracker_history OWNER TO whatsspy;
 
 --
 -- Name: whatsspy_config; Type: TABLE; Schema: public; Owner: whatsspy; Tablespace: 
@@ -277,14 +277,14 @@ INSERT INTO whatsspy_config (db_version)
 ALTER TABLE public.whatsspy_config OWNER TO whatsspy;
 
 --
--- Name: gid; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: gid; Type: DEFAULT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY groups ALTER COLUMN gid SET DEFAULT nextval('groups_gid_seq'::regclass);
 
 
 --
--- Name: sid; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: sid; Type: DEFAULT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY status_history ALTER COLUMN sid SET DEFAULT nextval('status_sid_seq'::regclass);
@@ -299,7 +299,7 @@ ALTER TABLE ONLY accounts_to_groups
 
 
 --
--- Name: pk_groups_gid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_groups_gid; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY groups
@@ -315,7 +315,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- Name: pk_profilepic_privacy; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_profilepic_privacy; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY profilepic_privacy_history
@@ -323,7 +323,7 @@ ALTER TABLE ONLY profilepic_privacy_history
 
 
 --
--- Name: pk_sid; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_sid; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY status_history
@@ -331,7 +331,7 @@ ALTER TABLE ONLY status_history
 
 
 --
--- Name: pk_statusmessage_history; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_statusmessage_history; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY statusmessage_history
@@ -339,7 +339,7 @@ ALTER TABLE ONLY statusmessage_history
 
 
 --
--- Name: pk_statusmessage_privacy; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_statusmessage_privacy; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY statusmessage_privacy_history
@@ -347,7 +347,7 @@ ALTER TABLE ONLY statusmessage_privacy_history
 
 
 --
--- Name: pk_tracker_history; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pk_tracker_history; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY tracker_history
@@ -355,7 +355,7 @@ ALTER TABLE ONLY tracker_history
 
 
 --
--- Name: privacy_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: privacy_history_pkey; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY lastseen_privacy_history
@@ -363,7 +363,7 @@ ALTER TABLE ONLY lastseen_privacy_history
 
 
 --
--- Name: profilepicture_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: profilepicture_history_pkey; Type: CONSTRAINT; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 ALTER TABLE ONLY profilepicture_history
@@ -420,224 +420,224 @@ CREATE INDEX index_accounts_to_groups_number_gid ON accounts_to_groups USING btr
 
 
 --
--- Name: index_end_status; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_end_status; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_end_status ON status_history USING btree ("end");
 
 
 --
--- Name: index_group_gid; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_group_gid; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_group_gid ON groups USING btree (gid);
 
 
 --
--- Name: index_lastseen_number_changed_at; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_lastseen_number_changed_at; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_lastseen_number_changed_at ON lastseen_privacy_history USING btree (number, changed_at DESC NULLS LAST);
 
 
 --
--- Name: index_lastseen_privacy_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_lastseen_privacy_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_lastseen_privacy_history_number_changed_at_desc ON lastseen_privacy_history USING btree (number, changed_at DESC);
 
 
 --
--- Name: index_number_status; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_number_status; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_number_status ON status_history USING btree (number);
 
 
 --
--- Name: index_profilepic_number_changed_at; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_profilepic_number_changed_at; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_profilepic_number_changed_at ON profilepic_privacy_history USING btree (number, changed_at DESC NULLS LAST);
 
 
 --
--- Name: index_profilepic_privacy_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_profilepic_privacy_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_profilepic_privacy_history_number_changed_at_desc ON profilepic_privacy_history USING btree (number, changed_at DESC);
 
 
 --
--- Name: index_profilepicture_data_number_changed_at; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_profilepicture_data_number_changed_at; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_profilepicture_data_number_changed_at ON profilepicture_history USING btree (number, changed_at DESC NULLS LAST);
 
 
 --
--- Name: index_profilepicture_history_number; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_profilepicture_history_number; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_profilepicture_history_number ON profilepicture_history USING btree (number);
 
 
 --
--- Name: index_profilepicture_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_profilepicture_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_profilepicture_history_number_changed_at_desc ON profilepicture_history USING btree (number, changed_at DESC);
 
 
 --
--- Name: index_start_status; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_start_status; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_start_status ON status_history USING btree (start);
 
 
 --
--- Name: index_status_history_end_status; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_end_status; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_end_status ON status_history USING btree (status, "end" NULLS FIRST);
 
 
 --
--- Name: index_status_history_number_end; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_end; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_end ON status_history USING btree (number, "end" NULLS FIRST);
 
 
 --
--- Name: index_status_history_number_end_is_null; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_end_is_null; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_end_is_null ON status_history USING btree (number) WHERE ("end" = NULL::timestamp with time zone);
 
 
 --
--- Name: index_status_history_number_start_asc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_start_asc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_start_asc ON status_history USING btree (number, start);
 
 
 --
--- Name: index_status_history_number_start_status_true_end_not_null; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_start_status_true_end_not_null; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_start_status_true_end_not_null ON status_history USING btree (number, start DESC) WHERE ((status = true) AND ("end" IS NOT NULL));
 
 
 --
--- Name: index_status_history_number_status_true_end_not_null; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_status_true_end_not_null; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_status_true_end_not_null ON status_history USING btree (number) WHERE ((status = true) AND ("end" IS NOT NULL));
 
 
 --
--- Name: index_status_history_number_status_true_end_null; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_status_true_end_null; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_status_true_end_null ON status_history USING btree (number) WHERE ((status = true) AND ("end" IS NULL));
 
 
 --
--- Name: index_status_history_number_status_true_start_desc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_number_status_true_start_desc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_number_status_true_start_desc ON status_history USING btree (number, start DESC) WHERE (status = true);
 
 
 --
--- Name: index_status_history_sid_start_end_status_true; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_sid_start_end_status_true; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_sid_start_end_status_true ON status_history USING btree (sid DESC, start DESC, "end" DESC) WHERE (status = true);
 
 
 --
--- Name: index_status_history_status_true; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_history_status_true; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_history_status_true ON status_history USING btree (status) WHERE (status = true);
 
 
 --
--- Name: index_status_status; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_status_status; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_status_status ON status_history USING btree (status);
 
 
 --
--- Name: index_statusmessage_data_number_changed_at; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_statusmessage_data_number_changed_at; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_statusmessage_data_number_changed_at ON statusmessage_history USING btree (number, changed_at DESC NULLS LAST);
 
 
 --
--- Name: index_statusmessage_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_statusmessage_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_statusmessage_history_number_changed_at_desc ON statusmessage_history USING btree (number, changed_at DESC);
 
 
 --
--- Name: index_statusmessage_number; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_statusmessage_number; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_statusmessage_number ON statusmessage_history USING btree (number);
 
 
 --
--- Name: index_statusmessage_number_changed_at; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_statusmessage_number_changed_at; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_statusmessage_number_changed_at ON statusmessage_privacy_history USING btree (number, changed_at DESC NULLS LAST);
 
 
 --
--- Name: index_statusmessage_privacy_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_statusmessage_privacy_history_number_changed_at_desc; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_statusmessage_privacy_history_number_changed_at_desc ON statusmessage_privacy_history USING btree (number, changed_at DESC);
 
 
 --
--- Name: index_tracker_history_end; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_tracker_history_end; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_tracker_history_end ON tracker_history USING btree ("end" NULLS FIRST);
 
 
 --
--- Name: index_tracker_history_start; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_tracker_history_start; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_tracker_history_start ON tracker_history USING btree (start DESC);
 
 
 --
--- Name: index_tracker_history_start_end_not_null; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: index_tracker_history_start_end_not_null; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX index_tracker_history_start_end_not_null ON tracker_history USING btree (start DESC) WHERE ("end" IS NOT NULL);
 
 
 --
--- Name: number_status_analytics_count; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: number_status_analytics_count; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX number_status_analytics_count ON status_history USING btree (number);
 
 
 --
--- Name: number_status_analytics_result; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: number_status_analytics_result; Type: INDEX; Schema: public; Owner: whatsspy; Tablespace: 
 --
 
 CREATE INDEX number_status_analytics_result ON status_history USING btree (start, status, number) WHERE (("end" IS NOT NULL) AND (status = true));
@@ -665,7 +665,7 @@ CREATE TRIGGER trigger_statusmessage AFTER UPDATE ON accounts FOR EACH ROW EXECU
 
 
 --
--- Name: fk_lastseen_privacy_number; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: fk_lastseen_privacy_number; Type: FK CONSTRAINT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY lastseen_privacy_history
@@ -673,7 +673,7 @@ ALTER TABLE ONLY lastseen_privacy_history
 
 
 --
--- Name: fk_number_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: fk_number_id; Type: FK CONSTRAINT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY status_history
@@ -681,7 +681,7 @@ ALTER TABLE ONLY status_history
 
 
 --
--- Name: fk_profilepic_privacy_number; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: fk_profilepic_privacy_number; Type: FK CONSTRAINT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY profilepic_privacy_history
@@ -689,7 +689,7 @@ ALTER TABLE ONLY profilepic_privacy_history
 
 
 --
--- Name: fk_profilepicture_history_number; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: fk_profilepicture_history_number; Type: FK CONSTRAINT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY profilepicture_history
@@ -697,7 +697,7 @@ ALTER TABLE ONLY profilepicture_history
 
 
 --
--- Name: fk_statusmessage_history; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: fk_statusmessage_history; Type: FK CONSTRAINT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY statusmessage_history
@@ -705,7 +705,7 @@ ALTER TABLE ONLY statusmessage_history
 
 
 --
--- Name: fk_statusmessage_privacy_number; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: fk_statusmessage_privacy_number; Type: FK CONSTRAINT; Schema: public; Owner: whatsspy
 --
 
 ALTER TABLE ONLY statusmessage_privacy_history
