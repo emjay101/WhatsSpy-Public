@@ -54,7 +54,7 @@
 										<div class="row">
 											<div class="col-md-2 hidden-xs">
 												<img data-ng-cloak class="img-responsive img-rounded" title="Indexed image at {{getAccountById(accountId).profilepic_updated | staticDatetime}}" data-ng-show="getAccountById(accountId).profilepic != null" data-ng-src="{{(getAccountById(accountId).profilepic != null) && getImageURL(getAccountById(accountId).profilepic) || ''}}" />
-												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="getAccountById(accountId).profilepic == null" src="images/no-profile-pic.jpg" />
+												<img data-ng-cloak class="img-responsive img-rounded" data-ng-show="getAccountById(accountId).profilepic == null" src="images/profile_pic_placeholder.png" />
 											</div>
 											<div class="col-md-8">
 												<a data-ng-href="#/overview#{{accountId}}" class="whatsspy-clean-link"><strong>{{getAccountById(accountId).name}}</strong></a>
