@@ -53,7 +53,7 @@
 					<div class="panel-heading whatsspy-contact-head" data-ng-class="::{'whatsspy-account-highlight': number.id == hightLightAccount}">
 						<div class="col-md-1 col-xs-5">
 							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" title="Indexed image at {{number.profilepic_updated | staticDatetime}}" data-ng-show="number.profilepic != null" data-ng-src="{{(number.profilepic != null) && getImageURL(number.profilepic) || ''}}" />
-							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" data-ng-show="number.profilepic == null" src="https://placehold.it/150x150" />
+							<img data-ng-cloak class="img-responsive img-rounded whatsspy-profile-pic" data-ng-show="number.profilepic == null" src="images/no-profile-pic.jpg" />
 						</div>
 						<div class="col-md-11">
 							<div class="row">
