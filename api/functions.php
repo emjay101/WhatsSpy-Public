@@ -387,6 +387,10 @@ function isAuth() {
 function sendNotification($DBH, $wa, $whatsspyNotificatons, $type, $data) {
 	global $application_name;
 
+	if($whatsspyNotificatons == null) {
+		return;
+	}
+	
 	foreach ($whatsspyNotificatons as $name => $notificationAgent) {
 		if($notificationAgent['enabled'] == true) {
 			if($type == 'tracker' && @$notificationAgent['notify-tracker'] == true) {
