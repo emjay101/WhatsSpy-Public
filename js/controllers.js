@@ -875,18 +875,22 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.isStatusPresentAndUpdateEnd = function($status) {
-		for (var i = $scope.timelineData.userstatus.length - 1; i >= 0; i--) {
-			if($scope.timelineData.userstatus[i].sid == $status.sid) {
-				// make sure the end record is set
-				if($scope.timelineData.userstatus[i].end == null && $status.end != null) {
-					$scope.timelineData.userstatus[i].new = true;
-					$scope.setStatusTimeout($scope.timelineData.userstatus[i]);
-					$scope.timelineData.userstatus[i].end = $status.end;
+		if($scope.timelineData == null) {
+			return false;
+		} else {
+			for (var i = $scope.timelineData.userstatus.length - 1; i >= 0; i--) {
+				if($scope.timelineData.userstatus[i].sid == $status.sid) {
+					// make sure the end record is set
+					if($scope.timelineData.userstatus[i].end == null && $status.end != null) {
+						$scope.timelineData.userstatus[i].new = true;
+						$scope.setStatusTimeout($scope.timelineData.userstatus[i]);
+						$scope.timelineData.userstatus[i].end = $status.end;
+					}
+					return true;
 				}
-				return true;
-			}
-		};
-		return false;
+			};
+			return false;
+		}
 	}
 
 	$scope.findLastRequiredSid = function($data) {
@@ -993,6 +997,7 @@ angular.module('whatsspyControllers', [])
 				if($scope.timelineData == null) {
 					$scope.timelineData = data;
 					$scope.lastRequiredSid = $scope.findLastRequiredSid($scope.timelineData.userstatus);
+					$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 				// update or history load
 				} else {
 					// Load to the end of activities
@@ -1034,8 +1039,6 @@ angular.module('whatsspyControllers', [])
 		$scope.refreshContent('&activities_since='+$scope.timelineData.till+'&sid_status='+$scope.lastRequiredSid);
 		$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 	}
-
-	$rootScope.liveFeed = $timeout($scope.liveTimeline, 5000);
 })
 .controller('StatisticsController', function($rootScope, $q, $scope, $http, $filter, $routeParams) {
 	$scope.stats = null;
