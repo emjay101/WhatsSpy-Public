@@ -163,6 +163,22 @@ switch($_GET['whatsspy']) {
 		}
 		break;
 	/**
+	  *		Update whatsspy config.
+	  */
+	case 'updateConfig':
+		requireAuth();
+
+		$account_show_timeline_length = (is_numeric($_GET['account_show_timeline_length']) ? $_GET['account_show_timeline_length'] : 14);
+		$account_show_timeline_tracker = ($_GET['account_show_timeline_tracker'] == 'true' ? true : false);
+
+		$update = $DBH->prepare('UPDATE whatsspy_config
+										SET account_show_timeline_length = :account_show_timeline_length, account_show_timeline_tracker = :account_show_timeline_tracker;');
+		$update->execute(array(':account_show_timeline_length' => $account_show_timeline_length, 
+							   ':account_show_timeline_tracker' => (int)$account_show_timeline_tracker));
+
+		echo json_encode(['success' => true]);
+		break;
+	/**
 	  *		Generate a new user read-only token
 	  */
 	case 'generateToken':
@@ -297,6 +313,12 @@ switch($_GET['whatsspy']) {
 
 		if($token_auth == false) {
 			// Normal information available for the admin of WhatsSpy
+
+			$select_config = $DBH->prepare('SELECT account_show_timeline_length, account_show_timeline_tracker FROM whatsspy_config');
+			$select_config -> execute();
+			$result_config = $select_config->fetch(PDO::FETCH_ASSOC);
+			
+
 			$select = $DBH->prepare('SELECT n.id, n.name, n."read_only_token", n."notify_status", n."notify_statusmsg", n."notify_profilepic", n."notify_privacy", n."notify_timeline", n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
 											smh.status as "last_statusmessage",
 											pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
@@ -323,9 +345,14 @@ switch($_GET['whatsspy']) {
 			$select_pending -> execute();
 			$result_pending = $select_pending->fetchAll(PDO::FETCH_ASSOC);
 
-			$tracker_select = $DBH->prepare('SELECT "start", "end" FROM tracker_history WHERE "start" >= NOW() - \'14 day\'::INTERVAL ORDER BY "start" DESC LIMIT 50');
-			$tracker_select -> execute();
-			$tracker = $tracker_select->fetchAll(PDO::FETCH_ASSOC);
+			$tracker_select = $DBH->prepare('SELECT "start", "end" FROM tracker_history WHERE "start" >= NOW() - :timespan::INTERVAL ORDER BY "start" DESC LIMIT :limit');
+			$tracker_select -> execute(array(':timespan' => $result_config['account_show_timeline_length'].' day', ':limit' => $result_config['account_show_timeline_length']*5));
+			$tracker = array();
+			foreach ($tracker_select->fetchAll(PDO::FETCH_ASSOC) as $session) {
+				$session['start'] = fixTimezone($session['start']);
+				$session['end'] = fixTimezone($session['end']);			
+				array_push($tracker, $session);
+			}
 
 			$groups_select = $DBH->prepare('SELECT * FROM groups ORDER BY gid ASC');
 			$groups_select -> execute();
@@ -334,13 +361,16 @@ switch($_GET['whatsspy']) {
 			$null_group['name'] = 'All groups';
 			array_unshift($groups, $null_group);
 
+			
+
 			$tracker_start_select = $DBH->prepare('SELECT start FROM tracker_history ORDER BY start ASC LIMIT 1');
 			$tracker_start_select -> execute();
 			$tracker_start = $tracker_start_select -> fetch();
-			$start_tracker = $tracker_start['start'];
+			$start_tracker = fixTimezone($tracker_start['start']);
 
 			$whatsspyNotifcationSettingsProxy = $whatsspyNotificatons;
 		} else {
+			// PUBLIC UI
 			$select = $DBH->prepare('SELECT n.id, n.name, n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
 											smh.status as "last_statusmessage",
 											pph.hash as "profilepic", pph.changed_at as "profilepic_updated",
@@ -370,7 +400,7 @@ switch($_GET['whatsspy']) {
 		}
 
 
-		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'groups' => $groups, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'notificationSettings' => $whatsspyNotifcationSettingsProxy]);
+		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'groups' => $groups, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'notificationSettings' => $whatsspyNotifcationSettingsProxy, 'config' => $result_config]);
 
 		break;
 	/**
@@ -388,6 +418,10 @@ switch($_GET['whatsspy']) {
 		if (isset($_GET['number'])) {
 			$numbers = explode(',', $_GET['number']);
 			$accounts = array();
+
+			$select_config = $DBH->prepare('SELECT account_show_timeline_length as timespan FROM whatsspy_config');
+			$select_config -> execute();
+			$result_config = $select_config->fetch(PDO::FETCH_ASSOC);
 
 			foreach($numbers as $number) {
 				//
@@ -485,15 +519,17 @@ switch($_GET['whatsspy']) {
 				//
 				//	User statuses (status)
 				//
-				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - \'14 day\'::INTERVAL ORDER BY start DESC');
-				$select->execute(array(':number'=> $number));
+				$select = $DBH->prepare('SELECT status, start, "end", sid FROM status_history WHERE status=true AND number = :number AND start >= NOW() - :timespan::INTERVAL ORDER BY start DESC');
+				$select->execute(array(':number'=> $number, ':timespan' => $result_config['timespan'].' day'));
 				$result_status = array();
+				$result_status_length = $result_config['timespan'];
 
 				foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $status) {
 					$status['start'] = fixTimezone($status['start']);			
 					$status['end'] = fixTimezone($status['end']);			
 					array_push($result_status, $status);
 				}
+
 
 				//
 				//	Profile picture history (pictures)
@@ -520,7 +556,7 @@ switch($_GET['whatsspy']) {
 				}
 
 				// It might not be an existing number but just add this because of the 14-day limit.
-				array_push($accounts, array('id' => $number, 'user' => $result_user, 'status' => $result_status, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture, 'advanced_analytics' => $result_advanced_analytics));
+				array_push($accounts, array('id' => $number, 'user' => $result_user, 'status' => $result_status, 'status_length' => $result_status_length, 'statusmessages' => $result_statusmsg, 'pictures' => $result_picture, 'advanced_analytics' => $result_advanced_analytics));
 			}
 			echo json_encode($accounts);
 		} else {

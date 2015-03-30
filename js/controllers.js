@@ -227,6 +227,22 @@ angular.module('whatsspyControllers', [])
 		return $filter('noGroupFilter')($rootScope.groups);
 	}
 
+	$scope.submitConfigEdit = function() {
+		$http({method: 'GET', url: 'api/?whatsspy=updateConfig&account_show_timeline_length=' + $rootScope.config.account_show_timeline_length + '&account_show_timeline_tracker=' + $rootScope.config.account_show_timeline_tracker}).
+			success(function(data, status, headers, config) {
+				if(data.success == true) {
+					alertify.success("Configuration updated");
+					$('#managePerformance').modal('hide');
+					$scope.refreshContent(false);
+				} else {
+					alertify.error(data.error);
+				}
+			}).
+			error(function(data, status, headers, config) {
+				alertify.error("Could not contact the server.");
+			});
+	}
+
 	$scope.$on('statusForNumberLoaded', function (event, $number) {
 	  	$scope.setupTimelineDataForNumber($number);
 	});
@@ -418,7 +434,7 @@ angular.module('whatsspyControllers', [])
 		// Get the items in place
 		var items = new VisDataSet();
 
-		groups.add({id: 0, content: 'Status'});
+		groups.add({id: 0, content: 'History view: <br />' + $rootScope.accountData[$number.id].status_length + ' day(s)'});
 		// Ignore empty sets
 		if($rootScope.accountData[$number.id].status != null) {
 			for(var y = 0; y < $rootScope.accountData[$number.id].status.length; y++) {
@@ -439,7 +455,7 @@ angular.module('whatsspyControllers', [])
 				});
 			}
 			// Add tracker online status as background
-			if($rootScope.tracker != null && $rootScope.tracker.length != 0) {
+			if($rootScope.tracker != null && $rootScope.tracker.length != 0 && $rootScope.config.account_show_timeline_tracker == true) {
 				for(var z = 0; z < $rootScope.tracker.length; z++) {
 					var startDate = moment($rootScope.tracker[z].start);
 					var endDate = moment();
@@ -767,19 +783,21 @@ angular.module('whatsspyControllers', [])
 				}
 			}
 			// Add tracker online status as background
-			for(var z = 0; z < $rootScope.tracker.length; z++) {
-				var startDate = moment($rootScope.tracker[z].start);
-				var endDate = moment();
-				if($rootScope.tracker[z].end != null) {
-					endDate = moment($rootScope.tracker[z].end);
+			if($rootScope.config.account_show_timeline_tracker == true) {
+				for(var z = 0; z < $rootScope.tracker.length; z++) {
+					var startDate = moment($rootScope.tracker[z].start);
+					var endDate = moment();
+					if($rootScope.tracker[z].end != null) {
+						endDate = moment($rootScope.tracker[z].end);
+					}
+					items.add({
+						id: 'tracker-'+$number.id+'-'+z,
+						group: x,
+						start: startDate.valueOf(),
+						end: endDate.valueOf(),
+						type: 'background'
+					});
 				}
-				items.add({
-					id: 'tracker-'+$number.id+'-'+z,
-					group: x,
-					start: startDate.valueOf(),
-					end: endDate.valueOf(),
-					type: 'background'
-				});
 			}
 		}
 
@@ -797,19 +815,21 @@ angular.module('whatsspyControllers', [])
 		var items = new VisDataSet();
 
 		// Add tracker online status as background
-		for(var z = 0; z < $rootScope.tracker.length; z++) {
-			var startDate = moment($rootScope.tracker[z].start);
-			var endDate = moment();
-			if($rootScope.tracker[z].end != null) {
-				endDate = moment($rootScope.tracker[z].end);
+		if($rootScope.config.account_show_timeline_tracker == true) {
+			for(var z = 0; z < $rootScope.tracker.length; z++) {
+				var startDate = moment($rootScope.tracker[z].start);
+				var endDate = moment();
+				if($rootScope.tracker[z].end != null) {
+					endDate = moment($rootScope.tracker[z].end);
+				}
+				items.add({
+					id: 'tracker-'+z,
+					group: 0,
+					start: startDate.valueOf(),
+					end: endDate.valueOf(),
+					type: 'background'
+				});
 			}
-			items.add({
-				id: 'tracker-'+z,
-				group: 0,
-				start: startDate.valueOf(),
-				end: endDate.valueOf(),
-				type: 'background'
-			});
 		}
 
 		$scope.startTime = moment().valueOf() - 36460000;

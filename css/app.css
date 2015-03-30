@@ -384,6 +384,15 @@ header {
 	padding: 5px !important;
 }
 
+.whatsspy-header-options {
+	padding-top: 10px;
+}
+
+.whatsspy-inline-form {
+	display: inline !important;
+	width: auto !important;
+}
+
 
 /**
   *  Whatsspy Compare page

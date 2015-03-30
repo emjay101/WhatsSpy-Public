@@ -267,11 +267,13 @@ ALTER TABLE public.tracker_history OWNER TO whatsspy;
 
 CREATE TABLE whatsspy_config (
     db_version integer,
-    last_login_attempt timestamp with time zone
+    last_login_attempt timestamp with time zone,
+    account_show_timeline_length integer NOT NULL DEFAULT 14,
+    account_show_timeline_tracker boolean NOT NULL DEFAULT true
 );
 
 INSERT INTO whatsspy_config (db_version)
-    VALUES (7);
+    VALUES (8);
 
 
 ALTER TABLE public.whatsspy_config OWNER TO whatsspy;

@@ -4,7 +4,7 @@
 			<div class="alert alert-danger" role="alert"><strong>Invalid token:</strong> You are not allowed to view this user because the token is or became invalid.</div>
 		</span>
 		<span data-ng-show="tokenAuth != null">
-			<div class="alert alert-warning" role="alert"><strong>Shared user profile:</strong> This is a shared user profile created by the hoster of this WhatsSpy Public instance. The timeline contains a maximum of 14 days of history and all other data is since the user is tracked.</div>
+			<div class="alert alert-warning" role="alert"><strong>Shared user profile:</strong> This is a shared user profile created by the hoster of this WhatsSpy Public instance. The timeline contains just a snapshot of the last statusess.</div>
 		</span>
 		<div class="row" data-ng-hide="tokenAuth != null">
 			<div class="col-md-3">
@@ -32,7 +32,7 @@
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Contacts that have "last seen" set to "nobody" will be <a href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/" target="_blank">tracked anyway</a>.
 					</p>
 					<p>
-						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The timeline contains data from now to 14 days ago. You can update this information by clicking the time in "status".
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> The information on this page is not live, you can refresh this page by clicking the gray timestamp in the "status" panel.
 					</p>
 					<p>
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Beside the timeline, all information is from since you started tracking this contact (unless noted otherwise).
@@ -40,10 +40,11 @@
 					<p data-ng-show="pendingAccounts.length > 0">
 						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> {{pendingAccounts.length}} contacts will be verified within 5-10 minutes, <a data-ng-click="refreshContent()">reload data</a> to check again.
 					</p>
-					<p>
-						<span class="btn btn-default" data-toggle="modal" data-target="#addNumber"><span class="glyphicon glyphicon-plus"></span> Add contact by phone number</span> 
+					<p class="whatsspy-header-options">
+						<span class="btn btn-default" data-toggle="modal" data-target="#addNumber"><span class="glyphicon glyphicon-plus"></span> Add Contact</span> 
 						<a class="btn btn-default" href="https://maikel.pro/service/whatsspy/?importGoogleContacts&warning" target="_blank"><span class="glyphicon glyphicon-refresh"></span> Import Google Contacts</a> 
 						<span class="btn btn-default" data-toggle="modal" data-target="#manageGroups"><span class="glyphicon glyphicon-pencil"></span> Manage groups</span> 
+						<span class="btn btn-default" data-toggle="modal" data-target="#managePerformance"><span class="glyphicon glyphicon-wrench"></span> Performance options</span> 
 					</p>
 				</div>
 			</div>
@@ -631,6 +632,60 @@
 		</form>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="managePerformance" tabindex="-1" role="dialog" aria-labelledby="managePerformanceLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="managePerformanceLabel">Manage User Interface Performance</h4>
+      </div>
+      <div class="modal-body">
+		<form class="form-horizontal">
+			<h4><span class="glyphicon glyphicon-user" aria-hidden="true"></span> Account timeline</h4>
+		  <div class="form-group">
+		    <label for="phoneNumber" class="col-sm-2 control-label">Display history: </label>
+		    <div class="col-sm-8 col-sm-offset-1 col-xs-10 col-xs-offset-1">
+		    	<div class="row">
+		    		<div class="col-sm-6">
+		    			<select class="form-control whatsspy-inline-form" data-ng-model="config.account_show_timeline_length" data-ng-options="option.value as option.name for option in timelineLengthOptions" ></select>
+		    		</div>
+		    		<div class="col-sm-6">
+		    			<small><span class="glyphicon glyphicon-flash" aria-hidden="true"></span> This setting has a <strong>big</strong> performance impact when you (re)load a users timeline. This affects the overview, compare and shared profile page.</small>
+		    		</div>
+		    	</div>
+		    </div>
+		  </div>
+		</form>
+		<form class="form-horizontal">
+		  <div class="form-group">
+		    <label for="phoneNumber" class="col-sm-2 control-label">Tracker sessions</label>
+		    <div class="col-sm-8 col-sm-offset-1 col-xs-10 col-xs-offset-1">
+		    	<div class="row">
+		    		<div class="col-sm-6">
+		    			<button type="button" class="btn btn-primary" data-ng-click="config.account_show_timeline_tracker = getOpposite(config.account_show_timeline_tracker);">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="config.account_show_timeline_tracker == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="config.account_show_timeline_tracker == false"></span>
+	    					 Display in timeline
+	    				</button>
+		    		</div>
+		    		<div class="col-sm-6">
+		    			<small><span class="glyphicon glyphicon-flash" aria-hidden="true"></span> This setting has a <strong>small</strong> performance impact when you (re)load a users timeline. This affects both the overview and compare page.</small>
+		    		</div>
+		    	</div>
+		    </div>
+		  </div>
+		</form>
+      </div>
+      <div class="modal-footer">
+      	<div class="whatsspy-contact-options">
+	      	<button type="submit" data-ng-click="submitConfigEdit();" class="btn btn-success"><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> Save settings</button> 
+		</div>
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>

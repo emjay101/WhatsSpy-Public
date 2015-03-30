@@ -44,7 +44,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.5.0';
+  $rootScope.version = '1.5.1';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -65,6 +65,12 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     }
   }
 
+  $rootScope.timelineLengthOptions = [{name: '24 hours (best performance)', value: 1},
+                                      {name: '7  days', value: 7},
+                                      {name: '14 days', value: 14},
+                                      {name: '31 days (slow)', value: 31},
+                                      {name: '90 days (very slow)', value: 90}];
+
   $rootScope.constructor = function() {
     // This data is required for this whole Angularjs Application
     $rootScope.accounts = [];
@@ -75,8 +81,10 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     $rootScope.trackerStart = null;
     $rootScope.loadedTime = null;
     $rootScope.newestVersion = null;
+    $rootScope.timelineLength = 14;
     $rootScope.help = null;
     $rootScope.news = null;
+    $rootScope.config = null;
     $rootScope.authenticated = false;
     // Information that might be lazy loaded.
     $rootScope.accountData = {};
@@ -116,6 +124,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
             $rootScope.accounts = data.accounts;
             $rootScope.pendingAccounts = data.pendingAccounts;
             $rootScope.groups = data.groups;
+            $rootScope.config = data.config;
             $rootScope.tracker = data.tracker;
             $rootScope.trackerStart = data.trackerStart;
             $rootScope.profilePicPath = data.profilePicPath;
@@ -207,6 +216,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
           $rootScope.accountData[$number.id].id = data[0].id;
           $rootScope.accountData[$number.id].user = data[0].user;
           $rootScope.accountData[$number.id].status = data[0].status;
+          $rootScope.accountData[$number.id].status_length = data[0].status_length;
           $rootScope.accountData[$number.id].statusmessages = data[0].statusmessages;
           $rootScope.accountData[$number.id].pictures = data[0].pictures;
           // Setup data structures for the GUI
