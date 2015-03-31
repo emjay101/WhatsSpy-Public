@@ -29,6 +29,7 @@ $whatsappAuth = 	['number' => '',
 				 	 'debug' => false];
 
 // Password to use in the WhatsSpy Public application
+// NOTE: You can disable the password by setting it to false ($whatsspyPublicAuth = false;). This is not advised for installations that are accesable from the internet!
 $whatsspyPublicAuth = 'whatsspypublic';
 
 // Set your timezone

@@ -11,6 +11,9 @@ if($_GET['whatsspy'] != 'getProfilePic') {
 	header("Content-type: application/json; charset=utf-8");
 }
 
+ini_set('session.cookie_lifetime', 25920000); // 300 days
+ini_set('session.gc_maxlifetime', 25920000);
+
 
 require_once 'config.php';
 require_once 'db-functions.php';
@@ -36,7 +39,7 @@ switch($_GET['whatsspy']) {
 			$select = $DBH->prepare('SELECT 1 FROM whatsspy_config WHERE "last_login_attempt" >= NOW() - \'7 second\'::INTERVAL;');
 			$select -> execute();
 			if($select -> rowCount() == 0) {
-				if($_GET['password'] == $whatsspyPublicAuth) {
+				if($_GET['password'] == $whatsspyPublicAuth || $whatsspyPublicAuth === false) {
 					setAuth(true);
 					echo json_encode(['success' => true]);
 				} else {
