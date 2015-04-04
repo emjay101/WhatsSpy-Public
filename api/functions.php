@@ -37,7 +37,11 @@ function fixTimezone($timestamp) {
 	if($timestamp != null) {
 		// Set global setter to improve performance
 		if($global_timezone_digits == null) {
-			$split = explode('+', $timestamp);
+			if(strpos($timestamp, '+') !== false) {
+				$split = explode('+', $timestamp); 
+			} else {
+				$split = explode('-', $timestamp); 
+			}
 			if(strlen($split[1]) == 2) {
 				// contains format +05
 				$global_timezone_digits = 2;
