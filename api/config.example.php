@@ -30,6 +30,7 @@ $whatsappAuth = 	['number' => '',
 
 // Password to use in the WhatsSpy Public application
 // NOTE: You can disable the password by setting it to false ($whatsspyPublicAuth = false;). This is not advised for installations that are accesable from the internet!
+// NOTE 2: Do not use your primary password for this setting.			 	 
 $whatsspyPublicAuth = 'whatsspypublic';
 
 // Set your timezone
@@ -42,8 +43,8 @@ date_default_timezone_set('Europe/Amsterdam');
 
 // Location to store the profile pictures.
 // This path has to be absolute and the user running the tracker needs write access.
-// If you installed whatsspy in /var/www/whatsspy you do not need to change this.
-// include the last / in the path!
+// NOTE: If you installed whatsspy in /var/www/whatsspy you do not need to change this.
+// NOTE 2: Include the last / in the path!
 $whatsspyProfilePath = '/var/www/whatsspy/images/profilepicture/';
 
 //	Notifications about tracker and users.

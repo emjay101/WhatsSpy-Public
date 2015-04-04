@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Update script for WhatsSpy Public
+# Check gitlab.maikel.pro for more information.
+#
+# Make sure you have git installed and configured for this repository.
+# This script will overwrite any changes you made to the existing files!
+#
+# Start this script from the root directory of WhatsSpy Public!
+
+echo "[update] Checking for updates."
+# Force pull
+git fetch --all
+git reset --hard origin/master

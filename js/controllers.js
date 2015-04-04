@@ -926,9 +926,77 @@ angular.module('whatsspyControllers', [])
 		return result;
 	}
 
+	$scope.showDesktopNotification = function($obj) {
+		// Create icon
+		var profile = $rootScope.getAccountById($obj.id);
+		var icon = 'images/profile_pic_placeholder.png';
+		if(profile != null) {
+			icon = $rootScope.getImageURL(profile.profilepic);
+		}
+		// Create body
+		var body = '';
+		if($obj.type == undefined) {
+			body = $obj.name + ' is now online.';
+		} else if($obj.type == 'statusmsg') {
+			body = $obj.name + ' has a new status message: ' + $obj['msg_status'] + '.';
+		} else if($obj.type == 'profilepic') {
+			body = $obj.name + ' has a new profile picture.';
+			icon = $rootScope.getImageURL($obj.hash);
+		} else if($obj.type == 'lastseen_privacy') {
+			var privacy_setting = 'everybody';
+			if($obj.lastseen_privacy == true) {
+				privacy_setting = 'contacts or nobody';
+			}
+			body = $obj.name + ' has changed his last seen privacy setting to ' + privacy_setting + '.';
+		} else if($obj.type == 'profilepic_privacy') {
+			var privacy_setting = 'everybody';
+			if($obj.profilepic_privacy == true) {
+				privacy_setting = 'contacts or nobody';
+			}
+			body = $obj.name + ' has changed his profile picture privacy setting to ' + privacy_setting + '.';
+		} else if($obj.type == 'statusmsg_privacy') {
+			var privacy_setting = 'everybody';
+			if($obj.statusmsg_privacy == true) {
+				privacy_setting = 'contacts or nobody';
+			}
+			body = $obj.name + ' has changed his status message privacy setting to ' + privacy_setting + '.';
+		} else if($obj.type == 'tracker_start') {
+			body = 'Tracker has started tracking.';
+			icon = 'app-icon-big.png';
+		} else if($obj.type == 'tracker_end') {
+			body = 'Tracker has stopped tracking with reason: ' + $obj.name + '.';
+			icon = 'app-icon-big.png';
+		}
+
+		var notificationObj = { body: body,
+						        icon: icon,
+						        dir : "ltr" };
+
+		if (Notification.permission === "granted") {
+		  var notification = new Notification('WhatsSpy Public', notificationObj);
+		  setTimeout(function(){
+				notification.close();
+			},8000);
+		} else if (Notification.permission !== 'denied') {
+			Notification.requestPermission(function (permission) {
+				if (!('permission' in Notification)) {
+				Notification.permission = permission;
+				}
+
+				if (permission === "granted") {
+					var notification = new Notification('WhatsSpy Public', notificationObj);
+					setTimeout(function(){
+						notification.close();
+					},8000);
+				}
+			});
+		}
+	}
+
 	$scope.notifyForObj = function($obj) {
 		if(($scope.notifyAnySound == true || $obj.notify_timeline == true) && $filter('numberFilter')([$obj], $scope.filterPhonenumber, $scope.filterName, $scope.filterGroup).length  != 0) {
 			try {
+				$scope.showDesktopNotification($obj);
 				$scope.notificationPlayer.play();
 			} catch(e) {
 				console.log(e);

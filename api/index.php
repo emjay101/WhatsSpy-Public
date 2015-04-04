@@ -39,7 +39,7 @@ switch($_GET['whatsspy']) {
 			$select = $DBH->prepare('SELECT 1 FROM whatsspy_config WHERE "last_login_attempt" >= NOW() - \'7 second\'::INTERVAL;');
 			$select -> execute();
 			if($select -> rowCount() == 0) {
-				if($_GET['password'] == $whatsspyPublicAuth || $whatsspyPublicAuth === false) {
+				if($_GET['password'] == $whatsspyPublicAuth) {
 					setAuth(true);
 					echo json_encode(['success' => true]);
 				} else {

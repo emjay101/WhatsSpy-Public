@@ -323,9 +323,14 @@ function getGroupsFromNumber($number) {
 }
 
 function requireAuth() {
-	if(isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
-		$_SESSION['auth'] = true;
+	global $whatsspyPublicAuth;
+	if((isset($_SESSION['auth']) && $_SESSION['auth'] == $whatsspyPublicAuth) || $whatsspyPublicAuth == false) {
+		$_SESSION['auth'] = $whatsspyPublicAuth;
 		return;
+	} else if(isset($_SESSION['auth']) && $_SESSION['auth'] != $whatsspyPublicAuth) {
+		unset($_SESSION['auth']);
+		echo json_encode(['error' => 'No longer authenticated!', 'code' => 403]);
+		exit();
 	} else {
 		echo json_encode(['error' => 'Not authenticated!', 'code' => 403]);
 		exit();
