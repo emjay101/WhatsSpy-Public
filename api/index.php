@@ -286,14 +286,18 @@ switch($_GET['whatsspy']) {
 				requireAuth();
 				$token_auth = false;
 			}
-			// Send image
-			$seconds_to_cache = 2592000;
-			$ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
-			header("Expires: $ts");
-			header("Pragma: cache");
-			header("Cache-Control: max-age=$seconds_to_cache");
-			header('Content-Type: image/jpeg');
-			readfile($whatsspyProfilePath.$hash.'.jpg');
+			if(file_exists($whatsspyProfilePath.$hash.'.jpg')) {
+				$seconds_to_cache = 2592000;
+				$ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
+				header("Expires: $ts");
+				header("Pragma: cache");
+				header("Cache-Control: max-age=$seconds_to_cache");
+				header('Content-Type: image/jpeg');
+				readfile($whatsspyProfilePath.$hash.'.jpg');
+			} else {
+				header('Content-Type: image/png');
+				readfile('../images/profile_pic_placeholder.png');
+			}
 		} else {
 			echo json_encode(['error' => 'Invalid hash!', 'code' => 400]);
 		}

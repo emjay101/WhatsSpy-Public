@@ -69,6 +69,7 @@ function signal_handler($signal) {
 // Set Sigterm handlers
 pcntl_signal(SIGTERM, "signal_handler");
 pcntl_signal(SIGINT, "signal_handler");
+pcntl_signal(SIGTSTP, "signal_handler");
 
 
 /** 	------------------------------------------------------------------------------
@@ -444,12 +445,13 @@ function verifyTrackingUsers() {
 }
 
 function resetSocket() {
-	global $wa;
+	global $wa, $tracking_numbers;
 	// End any running record where an user is online
 	tracker_log('[refresh] Resetting socket to ensure a working connection.');
 	// Kill current conecction and login.
 	$wa -> disconnect();
 	$wa = null;
+	$tracking_numbers = [];
 	setupWhatsappHandler();
 }
 
