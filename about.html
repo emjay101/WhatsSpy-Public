@@ -57,6 +57,14 @@
 												<button type="submit" class="btn btn-danger" data-ng-click="doLogout(true)">Logout WebUI</button>
 											</td>
 										</tr>
+										<tr data-ng-show="advancedControls.enabled == true">
+											<td><strong>Advanced options:</strong></td>
+											<td>
+												<button type="submit" class="btn btn-warning" data-ng-click="executeServerCmd('doShutdown')">Stop tracker</button>
+												<button type="submit" class="btn btn-success" data-ng-click="executeServerCmd('doStartup')">Start tracker</button>
+												<button type="submit" class="btn btn-info" data-ng-click="executeServerCmd('doUpdate')">Auto update</button>
+											</td>
+										</tr>
 									</tbody>
 								</table>
 								<br />

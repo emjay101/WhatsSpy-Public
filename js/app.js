@@ -44,7 +44,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
 })
 .controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
   // Version of the application
-  $rootScope.version = '1.5.2';
+  $rootScope.version = '1.5.3';
 
   $('[data-toggle="tooltip"]').tooltip();
 
@@ -85,6 +85,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     $rootScope.help = null;
     $rootScope.news = null;
     $rootScope.config = null;
+    $rootScope.advancedControls = null;
     $rootScope.authenticated = false;
     // Information that might be lazy loaded.
     $rootScope.accountData = {};
@@ -125,6 +126,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
             $rootScope.pendingAccounts = data.pendingAccounts;
             $rootScope.groups = data.groups;
             $rootScope.config = data.config;
+            $rootScope.advancedControls = data.advancedControls;
             $rootScope.tracker = data.tracker;
             $rootScope.trackerStart = data.trackerStart;
             $rootScope.profilePicPath = data.profilePicPath;

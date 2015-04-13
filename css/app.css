@@ -393,6 +393,11 @@ header {
 	width: auto !important;
 }
 
+.timeline-profilepic {
+	width: 70px;
+	margin-top: 3px;
+}
+
 
 /**
   *  Whatsspy Compare page

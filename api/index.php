@@ -376,6 +376,7 @@ switch($_GET['whatsspy']) {
 			$start_tracker = fixTimezone($tracker_start['start']);
 
 			$whatsspyNotifcationSettingsProxy = $whatsspyNotificatons;
+			$whatsspyAdvControlsProxy = $whatsspyAdvControls;
 		} else {
 			// PUBLIC UI
 			$select = $DBH->prepare('SELECT n.id, n.name, n."lastseen_privacy", n."profilepic_privacy", n."statusmessage_privacy", n.verified, 
@@ -407,7 +408,7 @@ switch($_GET['whatsspy']) {
 		}
 
 
-		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'groups' => $groups, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'notificationSettings' => $whatsspyNotifcationSettingsProxy, 'config' => $result_config]);
+		echo json_encode(['accounts' => $result, 'pendingAccounts' => $result_pending, 'groups' => $groups, 'tracker' => $tracker, 'trackerStart' => $start_tracker, 'notificationSettings' => $whatsspyNotifcationSettingsProxy, 'advancedControls' => $whatsspyAdvControlsProxy, 'config' => $result_config]);
 
 		break;
 	/**
@@ -643,7 +644,7 @@ switch($_GET['whatsspy']) {
 
 		if($return_statuses){
 			// Get user stats
-			$select = $DBH->prepare('SELECT  x.sid, x.start, x."end", a.id, a.name, x.status, x.start, a.notify_timeline
+			$select = $DBH->prepare('SELECT  x.sid, x.start, x."end", (CASE WHEN (x."end" IS NULL) THEN NULL ELSE ROUND(EXTRACT(\'epoch\' FROM (x."end" - x.start))) END) as "timediff", a.id, a.name, x.status, x.start, a.notify_timeline
 										FROM status_history x 
 										LEFT JOIN accounts a ON a.id = x.number
 										WHERE x.status = true 
@@ -953,6 +954,42 @@ switch($_GET['whatsspy']) {
 			default:
 				echo json_encode(['error' => 'Unknown action!', 'code' => 400]);
 				break;
+		}
+		break;
+	/**
+	  *		Start the tracker
+	  */
+	case 'doStartup':
+		requireAuth();
+		if($whatsspyAdvControls['enabled'] == true) {
+			exec($whatsspyAdvControls['startup'], $cmd_result, $cmd_code);
+			echo json_encode(['result' => $cmd_result, 'result-code' => $cmd_code]);
+		} else {
+			echo json_encode(['error' => 'Commands not enabled.', 'code' => 400]);
+		}
+		break;
+	/**
+	  *		Stop the tracker
+	  */
+	case 'doShutdown':
+		requireAuth();
+		if($whatsspyAdvControls['enabled'] == true) {
+			exec($whatsspyAdvControls['shutdown'], $cmd_result, $cmd_code);
+			echo json_encode(['result' => $cmd_result, 'result-code' => $cmd_code]);
+		} else {
+			echo json_encode(['error' => 'Commands not enabled.', 'code' => 400]);
+		}
+		break;
+	/**
+	  *		Update the tracker
+	  */
+	case 'doUpdate':
+		requireAuth();
+		if($whatsspyAdvControls['enabled'] == true) {
+			exec($whatsspyAdvControls['update'], $cmd_result, $cmd_code);
+			echo json_encode(['result' => $cmd_result, 'result-code' => $cmd_code]);
+		} else {
+			echo json_encode(['error' => 'Commands not enabled.', 'code' => 400]);
 		}
 		break;
 	/**

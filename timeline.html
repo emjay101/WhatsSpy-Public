@@ -170,8 +170,8 @@
 				<!-- userstatus -->
 				<div data-ng-repeat="item in filteredUserstatus = (timelineData.userstatus | numberFilter:filterPhonenumber:filterName:filterGroup)">
 					<div class="whatsspy-timeline-animate-status whatsspy-timeline-animate" data-ng-class="{'whatsspy-timeline-new': item.new == true}">
-						<h4><a data-ng-href="#/overview#{{item.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" data-ng-class="" aria-hidden="true"></span> {{item.name | emptyName}}</a> <small>({{item.id}})</small></h4> 
-						Online from <span class="label label-success">{{item.start | staticTime}}</span> <span data-ng-show="item.end != null">till <span class="label label-success">{{item.end | staticTime}}</span></span>
+						<h4 data-ng-hide="filteredUserstatus[$index - 1].id == item.id"><a data-ng-href="#/overview#{{item.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" data-ng-class="" aria-hidden="true"></span> {{item.name | emptyName}}</a> <small>({{item.id}})</small></h4> 
+						Online from <span class="label label-success">{{item.start | staticTime}}</span> <span data-ng-show="item.end != null">till <span class="label label-success">{{item.end | staticTime}}</span></span> <small class="float-right" data-ng-show="item.timediff != null">({{item.timediff | timeFormat}})</small>
 					</div>
 				</div>
 				<div data-ng-show="timelineData.userstatus.length == 0">

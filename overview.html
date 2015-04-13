@@ -379,7 +379,7 @@
 										      </tbody>
 										    </table>
 										    <small>
-										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Checked every 2 hours.
+										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Checked every 2 hours. First privacy change is the tracker detecting a stricter privacy seting.
 										    	<br />
 										    	<span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> Assuming this user does not have the tracker number in his contact list. If this is the case 'contacts only' will be interpreted as 'everyone' in this view.
 										    </small>
@@ -598,11 +598,11 @@
 						</div>
 						<div class="panel-body whatsspy-group-body">
 							<span class="label label-default whatsspy-label-notifications">Users: {{getGroupUsers(group.gid)}}</span>
-							<span class="label label-success whatsspy-label-notifications" data-ng-show="group.read_only_token != null" data-ng-click="closeGroupModalAndOpen(getTokenUrl('group', group.read_only_token))">Sharing enabled</span>
-							<span class="label label-warning whatsspy-label-notifications" data-ng-show="group.read_only_token == null">Sharing disabled</span>
+							<span class="label label-success whatsspy-label-notifications" data-ng-show="group.read_only_token != null">Statistics sharing enabled</span>
+							<span class="label label-warning whatsspy-label-notifications" data-ng-show="group.read_only_token == null">Sharing disabled*</span>
 							<br />
 							<br />
-							<a class="btn btn-danger whatsspy-label-notifications" title="Deleting the group will not delete the users in this group." data-ng-click="deleteGroup(group.gid);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete group*</a>   		
+							<a class="btn btn-danger whatsspy-label-notifications" title="Deleting the group will not delete the users in this group." data-ng-click="deleteGroup(group.gid);"><span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Delete group**</a>   		
 						</div>
 					</div>
 				</div>
@@ -611,9 +611,9 @@
 				No groups defined yet...
 			</span>
 		</div>
-		<small data-ng-show="groups.length > 1">* Deleting the group will not delete the users in this group.</small>
+		<small>* You can share group statistics in the "Statistics" page.</small>
 		<br />
-		<small>You can share group statistics in the "Statistics" page.</small>
+		<small data-ng-show="groups.length > 1">** Deleting the group will not delete the users in this group.</small>
 		<br />
 		<h4>Create group</h4>
 		<form class="form-horizontal">

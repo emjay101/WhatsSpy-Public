@@ -434,9 +434,12 @@ angular.module('whatsspyControllers', [])
 		// Get the items in place
 		var items = new VisDataSet();
 
+		//var fromDate = moment().subtract($rootScope.accountData[$number.id].status_length, 'days');
+
 		groups.add({id: 0, content: 'History view: <br />' + $rootScope.accountData[$number.id].status_length + ' day(s)'});
 		// Ignore empty sets
 		if($rootScope.accountData[$number.id].status != null) {
+			// Add user statusses
 			for(var y = 0; y < $rootScope.accountData[$number.id].status.length; y++) {
 				var startDate = moment($rootScope.accountData[$number.id].status[y].start);
 				var endDate = moment();
@@ -454,21 +457,20 @@ angular.module('whatsspyControllers', [])
 					type: 'box'
 				});
 			}
-			// Add tracker online status as background
-			if($rootScope.tracker != null && $rootScope.tracker.length != 0 && $rootScope.config.account_show_timeline_tracker == true) {
-				for(var z = 0; z < $rootScope.tracker.length; z++) {
-					var startDate = moment($rootScope.tracker[z].start);
-					var endDate = moment();
-					if($rootScope.tracker[z].end != null) {
-						endDate = moment($rootScope.tracker[z].end);
-					}
-					items.add({
-						id: 'tracker-'+z,
-						group: 0,
-						start: startDate.valueOf(),
-						end: endDate.valueOf(),
-						type: 'background'
-					});
+			// Add profile picture changes (for the given period)
+			for(var y = 0; y < $rootScope.accountData[$number.id].pictures.length; y++) {
+				var $picture = $rootScope.accountData[$number.id].pictures[y];
+				var date = moment($picture.changed_at);
+				if(date > fromDate) {
+				items.add({
+					id: 'pic-'+y,
+					group: 0,
+					content: '<strong>Profilepic</strong><br /><img class="timeline-profilepic" src="' + $scope.getImageURL($picture.hash) + '" />',
+					style: 'font-size:11px; line-height: 1; background-color: darkgrey;',
+					start: date.valueOf(),
+					title: 'Changed profile picture at: ' + $filter('staticDatetime')(date.valueOf()) + '.',
+					type: 'box'
+				});
 				}
 			}
 
@@ -1270,7 +1272,29 @@ angular.module('whatsspyControllers', [])
 	//$scope.refreshContent();
 })
 .controller('AboutController', function($rootScope, $q, $scope, $http, $location) {
-
+	$scope.executeServerCmd = function(query) {
+		var deferred = $q.defer();
+		$http({method: 'GET', url: 'api/?whatsspy=' + query}).
+		success(function(data, status, headers, config) {
+			if(data.error != null) {
+				if(data.code == 403) {
+		            $location.path('/login');
+		            $rootScope.constructor();
+		            $rootScope.refreshContent();
+				} else {
+					alertify.error(data.error);
+				}
+			} else {
+				alertify.log('CMD: '+query+' resulted in code: ' + data['result-code'] + ' with output: ' + data.result.join());
+				$rootScope.refreshContent();
+			}
+			deferred.resolve(null);
+		}).
+		error(function(data, status, headers, config) {
+			deferred.reject(null);
+		});
+		return deferred.promise;
+	}
 })
 .controller('LoginController', function($rootScope, $q, $scope, $http, $location) {
 

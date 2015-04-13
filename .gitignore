@@ -1,3 +1,5 @@
 *.jpg
 *.dat
+*.log
+*.lock
 config.php

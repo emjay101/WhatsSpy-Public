@@ -84,6 +84,13 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
   *		- In case of 'user' the next parameters will be a [title, description, user notification type (status, statusmsg, profilepic, privacy), name of user, number of user].
   */
 
+// Enable/disable advanced controls to start/shutdown and update the tracker from within the GUI.
+// EXPERIMENTAL
+$whatsspyAdvControls = 	['enabled' => false,
+				 	 	 'startup' => 'controls/startup.sh',
+				 	 	 'shutdown' => 'controls/shutdown.sh',
+				 	 	 'update' => 'controls/update.sh'];
+
 // -------------------------------------------------
 // You don't need to edit beyond this point
 // -------------------------------------------------

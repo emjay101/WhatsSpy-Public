@@ -148,7 +148,7 @@ function tracker_log($msg, $date = true, $newline = true) {
   *		Check if the user's config is up to standards and attempt to (temp) fix this.
   */
 function checkConfig() {
-	global $whatsappAuth, $whatsspyNotificatons;
+	global $whatsappAuth, $whatsspyNotificatons, $whatsspyAdvControls;
 
 	$notice = false;
 
@@ -168,6 +168,10 @@ function checkConfig() {
 		tracker_log('[config] $whatsspyNotificatons missing (notifications disabled).');
 		$notice = true;
 		$whatsspyNotificatons = [];
+	}
+
+	if($whatsspyAdvControls === null) {
+		$whatsspyAdvControls = ['enabled' => false];
 	}
 
 	if($notice) {
@@ -515,7 +519,7 @@ function sendLNMessage($LNKey, $title, $message, $imgurl) {
   *
   *		First parameter is either 'user' or 'tracker':
   *		- In case of 'tracker' the next parameters will be a [title, description, event-type (start, error)].
-  *		- In case of 'user' the next parameters will be a [title, description, user notification type (status, statusmsg, profilepic, privacy), name of user, number of user].
+  *		- In case of 'user' the next parameters will be a [title, description, user notification type (status, statusmsg, profilepic, privacy, verify), name of user, number of user].
   */
 function sendCustomScriptMessage($cmd, $type, $data, $user = null) {
 	$safe_cmd = $cmd.' "'.escapeshellcmd($type).'" ';

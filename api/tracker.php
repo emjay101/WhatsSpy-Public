@@ -46,6 +46,7 @@ function signal_handler($signal) {
         case SIGTERM:
         case SIGKILL:
         case SIGINT:
+        case SIGTSTP:
         	// Kill any event listeners
 	        foreach ($tracking_numbers as $number) {
 				$wa->sendPresenceUnsubscription($number);
@@ -339,6 +340,10 @@ function onSyncResultNumberCheck($result) {
 		// Add call for event listener
 		$wa->SendPresenceSubscription($number);
 		tracker_log('  -[verified] Added verified '.$number.' to the tracking system.');
+		sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name is verified', 
+																			'description' => ':name is verified as a WA user.',
+																			'number' => $number,
+																			'notify_type' => 'verify']);
 		checkLastSeen($number);
 		checkProfilePicture($number);
 		checkStatusMessage($number);
@@ -350,6 +355,10 @@ function onSyncResultNumberCheck($result) {
 										SET "active" = false WHERE "id" = :number;');
 		checkDatabaseInsert($update->execute(array(':number' => $number)));
 		tracker_log('  -[verified] Number '.$number.' is NOT a WhatsApp user.');
+		sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name is verified', 
+																			'description' => ':name is not a WA user.',
+																			'number' => $number,
+																			'notify_type' => 'verify']);
 	}
 }
 
@@ -469,9 +478,9 @@ function retrieveTrackingUsers($clear = false) {
 	$select = $DBH->prepare('SELECT id FROM accounts WHERE active = true AND verified = true');
 	$select -> execute();
 	foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $number) {
-		// Request for all new numbers
+		// Force subscription, even for old users
+		$wa->SendPresenceSubscription($number['id']);
 		if(!in_array($number['id'], $tracking_numbers)) {
-			$wa->SendPresenceSubscription($number['id']);
 			array_push($tracking_numbers, $number['id']);
 		}
 	}
