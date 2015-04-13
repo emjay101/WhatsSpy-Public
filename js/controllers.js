@@ -457,23 +457,23 @@ angular.module('whatsspyControllers', [])
 					type: 'box'
 				});
 			}
-			// Add profile picture changes (for the given period)
-			for(var y = 0; y < $rootScope.accountData[$number.id].pictures.length; y++) {
-				var $picture = $rootScope.accountData[$number.id].pictures[y];
-				var date = moment($picture.changed_at);
-				if(date > fromDate) {
-				items.add({
-					id: 'pic-'+y,
-					group: 0,
-					content: '<strong>Profilepic</strong><br /><img class="timeline-profilepic" src="' + $scope.getImageURL($picture.hash) + '" />',
-					style: 'font-size:11px; line-height: 1; background-color: darkgrey;',
-					start: date.valueOf(),
-					title: 'Changed profile picture at: ' + $filter('staticDatetime')(date.valueOf()) + '.',
-					type: 'box'
-				});
+			// Add tracker online status as background
+			if($rootScope.tracker != null && $rootScope.tracker.length != 0 && $rootScope.config.account_show_timeline_tracker == true) {
+				for(var z = 0; z < $rootScope.tracker.length; z++) {
+					var startDate = moment($rootScope.tracker[z].start);
+					var endDate = moment();
+					if($rootScope.tracker[z].end != null) {
+						endDate = moment($rootScope.tracker[z].end);
+					}
+					items.add({
+					id: 'tracker-'+z,
+						group: 0,
+						start: startDate.valueOf(),
+						end: endDate.valueOf(),
+						type: 'background'
+					});
 				}
 			}
-
 
 			$scope.startTime = moment().valueOf() - 36460000;
 			$scope.stopTime = moment().valueOf();
