@@ -88,9 +88,9 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
 // You must first shutdown your tracker before using these start/stop controls (because of the changed uid)
 // EXPERIMENTAL
 $whatsspyAdvControls = 	['enabled' => false,
-				 	 	 'startup' => 'controls/startup.sh',
-				 	 	 'shutdown' => 'controls/shutdown.sh',
-				 	 	 'update' => 'controls/update.sh'];
+				 	 	 'startup' => 'tools/controls/startup.sh',
+				 	 	 'shutdown' => 'tools/controls/shutdown.sh',
+				 	 	 'update' => 'tools/controls/update.sh'];
 
 // -------------------------------------------------
 // You don't need to edit beyond this point
