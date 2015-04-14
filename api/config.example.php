@@ -85,6 +85,7 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
   */
 
 // Enable/disable advanced controls to start/shutdown and update the tracker from within the GUI.
+// You must first shutdown your tracker before using these start/stop controls (because of the changed uid)
 // EXPERIMENTAL
 $whatsspyAdvControls = 	['enabled' => false,
 				 	 	 'startup' => 'controls/startup.sh',

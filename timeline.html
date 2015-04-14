@@ -87,6 +87,9 @@
 					    <br />
 					    <br />
 					    Reason: <strong>{{item.name | trackerReason}}</strong>
+					    <br />
+					    <br />
+					    <small data-ng-show="item.name == 'Error: Connection Closed!'">There can be various reasons for a "connection closed" error. One of the most common problems is a unreliable internet connection, bad hardware or a busy network. There is no support for this problem so fix it yourself!</small>
 					  </div>
 					</div>	
 					<!-- ACTIVITY: STATUS MSG CHANGE -->

@@ -42,7 +42,6 @@ class WhatsProt
     const TIMEOUT_USEC = 0;
     const WHATSAPP_CHECK_HOST = 'v.whatsapp.net/v2/exist';                                   // The check credentials host.
     const WHATSAPP_GROUP_SERVER = 'g.us';                                                    // The Group server hostname
-    const WHATSAPP_HOST = 'c.whatsapp.net';                                                  // The hostname of the WhatsApp server.
     const WHATSAPP_REGISTER_HOST = 'v.whatsapp.net/v2/register';                             // The register code host.
     const WHATSAPP_REQUEST_HOST = 'v.whatsapp.net/v2/code';                                  // The request code host.
     const WHATSAPP_SERVER = 's.whatsapp.net';                                                // The hostname used to login/send messages.
@@ -50,6 +49,7 @@ class WhatsProt
     const WHATSAPP_DEVICE = 'iPhone';                                                        // The device name.
     const WHATSAPP_VER = '2.11.16';                                                          // The WhatsApp version.
     const WHATSAPP_USER_AGENT = 'WhatsApp/2.12.68 S40Version/14.26 Device/Nokia302';         // User agent used in request/registration code.
+    const WHATSAPP_AUTH_USER_AGENT = 'WhatsApp/2.11.16 iPhone_OS/8.1.3 Device/iPhone_5';
     const WHATSAPP_VER_CHECKER = 'https://coderus.openrepos.net/whitesoft/whatsapp_version'; // Check WhatsApp version
 
     /**
@@ -179,7 +179,7 @@ class WhatsProt
             'id' => $this->identity,
             'lg' => $langCode,
             'lc' => $countryCode,
-            'network_radio_type' => "1"
+        //  'network_radio_type' => "1"
         );
 
         $response = $this->getResponse($host, $query);
@@ -443,7 +443,7 @@ class WhatsProt
         /* Create a TCP/IP socket. */
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($socket !== false) {
-            $result = socket_connect($socket, static::WHATSAPP_HOST, static::PORT);
+            $result = socket_connect($socket, "e" . rand(1, 16) . ".whatsapp.net", static::PORT);
             if ($result === false) {
                 $socket = false;
             }
@@ -2102,7 +2102,7 @@ class WhatsProt
             $this->reader->setKey($this->inputKey);
             //$this->writer->setKey($this->outputKey);
             $phone = $this->dissectPhone();
-            $array = "\0\0\0\0" . $this->phoneNumber . $this->challengeData . time() . static::WHATSAPP_USER_AGENT . " MccMnc/" . str_pad($phone["mcc"], 3, "0", STR_PAD_LEFT) . $phone["mnc"];
+            $array = "\0\0\0\0" . $this->phoneNumber . $this->challengeData . time() . static::WHATSAPP_AUTH_USER_AGENT . " MccMnc/" . str_pad($phone["mcc"], 3, "0", STR_PAD_LEFT) . $phone["mnc"];
             $this->challengeData = null;
             return $this->outputKey->EncodeMessage($array, 0, strlen($array), false);
         }
@@ -2301,7 +2301,7 @@ class WhatsProt
         }
 
         if ($this->loginStatus === static::DISCONNECTED_STATUS) {
-            throw new Exception('Login Failure');
+            throw new LoginFailureException();
         }
 
         $this->eventManager()->fire("onLogin",
@@ -2617,6 +2617,11 @@ class WhatsProt
             $this->processChallenge($node);
         } elseif ($node->getTag() == "failure") {
             $this->loginStatus = static::DISCONNECTED_STATUS;
+            $this->eventManager()->fire("onLoginFailed",
+                array(
+                    $this->phoneNumber,
+                    $node->getChild(0)->getTag()
+                ));
         } elseif ($node->getTag() == "success") {
             if ($node->getAttribute("status") == "active") {
                 $this->loginStatus = static::CONNECTED_STATUS;
@@ -2642,12 +2647,6 @@ class WhatsProt
                         $node->getAttribute("expiration")
                     ));
             }
-        } elseif ($node->getTag() == "failure") {
-            $this->eventManager()->fire("onLoginFailed",
-                array(
-                    $this->phoneNumber,
-                    $node->getChild(0)->getTag()
-                ));
         } elseif ($node->getTag() == 'ack' && $node->getAttribute("class") == "message") {
             $this->eventManager()->fire("onMessageReceivedServer",
                 array(
@@ -2666,7 +2665,8 @@ class WhatsProt
                             $node->getAttribute('from'),
                             $child->getAttribute('id'),
                             $node->getAttribute('type'),
-                            $node->getAttribute('t')
+                            $node->getAttribute('t'),
+                            $node->getAttribute('participant')
                         ));
                 }
             }
@@ -3085,9 +3085,11 @@ class WhatsProt
                 //There are multiple types of Group reponses. Also a valid group response can have NO children.
                 //Events fired depend on text in the ID field.
                 $groupList = array();
+                $groupNodes = array();
                 if ($node->getChild(0) != null && $node->getChild(0)->getChildren() != null) {
                     foreach ($node->getChild(0)->getChildren() as $child) {
                         $groupList[] = $child->getAttributes();
+                        $groupNodes[] = $child;
                     }
                 }
                 if ($node->nodeIdContains('creategroup')) {
@@ -3112,6 +3114,13 @@ class WhatsProt
                             $this->phoneNumber,
                             $groupList
                         ));
+                    //getGroups returns a array of nodes which are exactly the same as from getGroupV2Info
+                    //so lets call this event, we have all data at hand, no need to call getGroupV2Info for every
+                    //group we are interested
+                    foreach ($groupNodes AS $groupNode) {
+                        $this->handleGroupV2InfoResponse($groupNode, true);
+                    }
+
                 }
                 if ($node->nodeIdContains('getgroupinfo')) {
                     $this->eventManager()->fire("onGetGroupsInfo",
@@ -3131,33 +3140,10 @@ class WhatsProt
                 }
             }
             if ($node->nodeIdContains('get_groupv2_info')) {
-                $groupId = self::parseJID($node->getAttribute('from'));
-
-                $groupList = array();
                 $groupChild = $node->getChild(0);
                 if ($groupChild != null) {
-                    $creator = $groupChild->getAttribute('creator');
-                    $creation = $groupChild->getAttribute('creation');
-                    $subject = $groupChild->getAttribute('subject');
-                    if ($groupChild->getChild(0) != null) {
-                        foreach ($groupChild->getChildren() as $child) {
-                            $participants[] = $child->getAttribute('jid');
-                            if ($child->getAttribute('type') != null) {
-                                $admin = $child->getAttribute('jid');
-                            }
-                        }
-                    }
+                    $this->handleGroupV2InfoResponse($groupChild);
                 }
-
-                $this->eventManager()->fire("onGetGroupV2Info",
-                    array(
-                        $this->phoneNumber,
-                        $creator,
-                        $creation,
-                        $subject,
-                        $participants,
-                        $admin
-                    ));
             }
             if ($node->nodeIdContains("get_lists")) {
                 $broadcastLists = array();
@@ -3367,6 +3353,22 @@ class WhatsProt
                                 $node->getAttribute('notify'),
                                 $node->getChild(0)->getAttribute('subject')
                             ));
+                    }
+                    else if ($node->hasChild('promote')) {
+                        $promotedJIDs = array();
+                        foreach ($node->getChild(0)->getChildren() AS $cn) {
+                            $promotedJIDs[] = $cn->getAttribute('jid');
+                        }
+                        $this->eventManager()->fire("onGroupsParticipantsPromote",
+                            array(
+                                $this->phoneNumber,
+                                $node->getAttribute('from'),        //Group-JID
+                                $node->getAttribute('t'),           //Time
+                                $node->getAttribute('participant'), //Issuer-JID
+                                $node->getAttribute('notify'),      //Issuer-Name
+                                $promotedJIDs,
+                            )
+                        );
                     }
                     break;
                 case "account":
@@ -4056,5 +4058,39 @@ class WhatsProt
         $parts = explode('@', $jid);
         $parts = reset($parts);
         return $parts;
+    }
+
+
+
+    /**
+     * @param ProtocolNode $groupNode
+     */
+    protected function handleGroupV2InfoResponse(ProtocolNode $groupNode, $fromGetGroups = false)
+    {
+        $creator = $groupNode->getAttribute('creator');
+        $creation = $groupNode->getAttribute('creation');
+        $subject = $groupNode->getAttribute('subject');
+        $groupID = $groupNode->getAttribute('id');
+        $participants = array();
+        $admins = array();
+        if ($groupNode->getChild(0) != null) {
+            foreach ($groupNode->getChildren() as $child) {
+                $participants[] = $child->getAttribute('jid');
+                if ($child->getAttribute('type') == "admin")
+                    $admins[] = $child->getAttribute('jid');
+            }
+        }
+        $this->eventManager()->fire("onGetGroupV2Info",
+            array(
+                $this->phoneNumber,
+                $groupID,
+                $creator,
+                $creation,
+                $subject,
+                $participants,
+                $admins,
+                $fromGetGroups
+            )
+        );
     }
 }
