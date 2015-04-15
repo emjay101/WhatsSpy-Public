@@ -907,6 +907,7 @@ angular.module('whatsspyControllers', [])
 						$scope.timelineData.userstatus[i].new = true;
 						$scope.setStatusTimeout($scope.timelineData.userstatus[i]);
 						$scope.timelineData.userstatus[i].end = $status.end;
+						$scope.timelineData.userstatus[i].timediff = $status.timediff;
 					}
 					return true;
 				}
