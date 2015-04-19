@@ -24,7 +24,7 @@ $application_name = 'WhatsSpy Public';
 // Timing for the tracker
 // 		DEFAULT CONFIGURATION:
 //		- Online/Offline status in realtime.
-// 		- Status messages in realtime.
+// 		- Status messages every 2 hours but with the real changed_at time.
 //		- Privacy settings for status message / last seen every 2 hours.
 //		- Profile picture and privacy setting every 4 hours.	 
 //		

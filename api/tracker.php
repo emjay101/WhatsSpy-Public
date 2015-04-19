@@ -49,7 +49,7 @@ function signal_handler($signal) {
         case SIGTSTP:
         	// Kill any event listeners
 	        foreach ($tracking_numbers as $number) {
-				$wa->sendPresenceUnsubscription($number);
+				@$wa->sendPresenceUnsubscription($number);
 			}
 
         	// Update tracker session
@@ -328,7 +328,7 @@ function onGetStatus($mynumber, $from, $requested, $id, $time, $data) {
   *		Callback Function to check if user actually exists
   */
 function onSyncResultNumberCheck($result) {
-	global $DBH, $tracking_numbers, $wa;
+	global $DBH, $tracking_numbers, $wa, $whatsspyNotificatons;
 	// Set whatsapp users verified=true
 	foreach ($result->existing as $number) {
 		$number = explode("@", $number)[0];
@@ -363,7 +363,7 @@ function onSyncResultNumberCheck($result) {
 }
 
 function onGetError($mynumber, $from, $id, $data ) {
-	global $DBH, $wa, $pollCount;
+	global $DBH, $wa, $pollCount, $whatsspyNotificatons;
 	if (preg_match("/^lastseen-/", $id)) {
         if ($data->getAttribute("code") == '405' || 
         	$data->getAttribute("code") == '403' || 

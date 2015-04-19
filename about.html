@@ -67,12 +67,12 @@
 										</tr>
 									</tbody>
 								</table>
-								<br />
 								<p>
-									<h4>Literature for this project:</h4>
+									<h4>Literature/news for this project:</h4>
 									<ul>
-										<li><a target ="_blank" href="https://maikel.pro/blog/en-whatsapp-privacy-options-are-illusions/">General introduction to WhatsSpy Public.</a></li>
-										<li><a target ="_blank" href="https://maikel.pro/blog/en-whatsapp-privacy-problem-explained-in-detail/">In-depth about the WhatsApp privacy problem.</a></li>
+										<li data-ng-repeat="newsitem in news">
+											<a target ="_blank" data-ng-href="{{newsitem.url}}"> {{newsitem.title}} <small>({{newsitem.date}})</small></a>
+										</li>
 									</ul>
 								</p>
 							</div>
@@ -135,9 +135,8 @@
 						</div>
 						<div class="panel-body">
 							<div data-ng-repeat="qa in help">
-								<h4>{{qa.question}}</h4>
-								<div class="awnser">
-									{{qa.awnser}}
+								<h4>{{::qa.question}}</h4>
+								<div class="awnser" data-ng-bind-html="::qa.awnser">
 								</div>
 							</div>
 						</div>

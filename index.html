@@ -78,6 +78,7 @@
                                 <a href="#/about" data-ng-class="getActivePageClass('about')">
                                     <span class="setting-icon glyphicon glyphicon-blackboard"></span><br />
                                     About / Help
+                                    <span class="label label-danger label-notification" data-ng-show="aboutNotifications > 0">{{aboutNotifications}}</span>
                                 </a>
                             </li>
                             <li data-ng-show="isInPage('public/user')">

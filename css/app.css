@@ -102,6 +102,16 @@ header {
 	margin-top: 2px;
 }
 
+.menu-button {
+	position: relative;
+}
+
+.label-notification {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+}
+
 /**
   * Menu Small
   */

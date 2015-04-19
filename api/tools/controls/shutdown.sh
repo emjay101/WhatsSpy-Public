@@ -1,5 +1,5 @@
 #!/bin/sh
-LOCKFILE="tracker.lock"
+LOCKFILE="/var/lock/tracker.lock"
 
 if [ -e "$LOCKFILE" ]; then
   	# Kill tracker if running

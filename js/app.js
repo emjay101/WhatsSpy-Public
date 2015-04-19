@@ -42,18 +42,18 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   })
   .otherwise({redirectTo: '/overview'});;
 })
-.controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter) {
+.controller('MainController', function($scope, $rootScope, $location, $http, $q, $filter, $sce) {
   // Version of the application
-  $rootScope.version = '1.5.3';
+  $rootScope.version = '1.5.4';
 
   $('[data-toggle="tooltip"]').tooltip();
 
   // Set active buttons according to the current page
   $scope.getActivePageClass = function(path) {
     if ($location.path().substr(1, path.length) == path) {
-      return "active-option";
+      return "menu-button active-option";
     } else {
-      return "";
+      return "menu-button";
     }
   }
 
@@ -84,9 +84,11 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
     $rootScope.timelineLength = 14;
     $rootScope.help = null;
     $rootScope.news = null;
+    $rootScope.headline = null;
     $rootScope.config = null;
     $rootScope.advancedControls = null;
     $rootScope.authenticated = false;
+    $rootScope.aboutNotifications = 0;
     // Information that might be lazy loaded.
     $rootScope.accountData = {};
 
@@ -160,8 +162,15 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
   $http({method: 'GET', url: 'api/?whatsspy=getAbout&v='+ $rootScope.version}).
     success(function(data, status, headers, config) {
       $rootScope.newestVersion = data.version;
+      if($rootScope.version != $rootScope.newestVersion) {
+        $rootScope.aboutNotifications = 1;
+      }
       $rootScope.help = data.help;
+      for (var i = $rootScope.help.length - 1; i >= 0; i--) {
+        $rootScope.help[i].awnser = $sce.trustAsHtml($rootScope.help[i].awnser);
+      };
       $rootScope.news = data.news;
+      $rootScope.headline = $sce.trustAsHtml(data.headline);
       deferred.resolve(null);
     }).
     error(function(data, status, headers, config) {

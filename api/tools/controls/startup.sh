@@ -1,5 +1,5 @@
 #!/bin/sh
-LOCKFILE="tracker.lock"
+LOCKFILE="/var/lock/tracker.lock"
 
 if ( set -o noclobber; echo "locked" > "$LOCKFILE") 2> /dev/null; then
   	# Start tracker session
