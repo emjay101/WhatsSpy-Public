@@ -690,7 +690,7 @@ do {
 		$DBH = setupDB($dbAuth);
 		// Update tracker session
 		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW(), "reason" = :error WHERE "end" IS NULL;');
-		checkDatabaseInsert($end_tracker_session->execute(array(':error' => 'Error: '.$e->getMessage())));
+		checkDatabaseInsert($end_tracker_session->execute(array(':error' => get_class($e).': '.$e->getMessage())));
 		// End any running record where an user is online
 		$end_user_session = $DBH->prepare('UPDATE status_history
 											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
@@ -698,7 +698,7 @@ do {
 
 		$last_error = $e->getMessage();
 
-		tracker_log('[error] Tracker exception! '.$e->getMessage());
+		tracker_log('[error] Tracker exception! '.get_class($e).': '.$e->getMessage());
 		if($whatsappAuth['debug']) {
 			print_r($e);
 		}
