@@ -176,7 +176,7 @@ function checkConfig() {
 
 	if($whatsspyErrorHandling === null) {
 		$notice = true;
-		$whatsspyErrorHandling = ['ignoreConnectionClosed' => true];
+		$whatsspyErrorHandling = ['ignoreConnectionClosed' => false];
 	}
 
 	if($notice) {
