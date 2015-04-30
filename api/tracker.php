@@ -565,15 +565,18 @@ function calculateTick($time) {
   *     - User status message (and changes)
   */
 function track() {
-	global $DBH, $wa, $tracking_ticks, $tracking_numbers, $whatsspyNotificatons, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue;
+	global $DBH, $wa, $tracking_ticks, $tracking_numbers, $whatsspyNotificatons, $crawl_time, $whatsappAuth, $pollCount, $lastseenCount, $statusMsgCount, $picCount, $request_error_queue, $continue_tracker_session;
 
 	$crawl_time = time();
 	setupWhatsappHandler();
 	retrieveTrackingUsers();
 	tracker_log('[init] Started tracking with phonenumber ' . $whatsappAuth['number']);
-	startTrackerHistory();
-	sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'WhatsSpy Public has started tracking!', 'description' => 'tracker has started tracking '.count($tracking_numbers). ' users.', 'event-type' => 'start']);
-
+	if($continue_tracker_session == false) {
+		startTrackerHistory();
+		sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'WhatsSpy Public has started tracking!', 'description' => 'tracker has started tracking '.count($tracking_numbers). ' users.', 'event-type' => 'start']);
+	} else {
+		$continue_tracker_session = false;
+	}
 	while(true){
 		$crawl_time = time();
 		// Socket read
@@ -655,6 +658,10 @@ function track() {
 	}
 }
 
+// Selective error handling
+$last_error = null;
+$continue_tracker_session = false;
+
 // Starting the tracker
 tracker_log('------------------------------------------------------------------', false);
 tracker_log('|                    WhatsSpy Public Tracker                     |', false);
@@ -672,9 +679,6 @@ do {
 	checkDBMigration($DBH);
 	// Nag about config.php if it's old
 	checkConfig();
-
-	// Selective error handling
-	$last_error = null;
 	try {
 		// Start the tracker
 		track();
@@ -685,37 +689,40 @@ do {
 		} catch(Exception $e) {
 			// Connection closed, nevermind
 		}
-		// Reset DB connection
-		$DBH = null;
-		$DBH = setupDB($dbAuth);
-		// Update tracker session
-		$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW(), "reason" = :error WHERE "end" IS NULL;');
-		checkDatabaseInsert($end_tracker_session->execute(array(':error' => get_class($e).': '.$e->getMessage())));
-		// End any running record where an user is online
-		$end_user_session = $DBH->prepare('UPDATE status_history
-											SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
-		checkDatabaseInsert($end_user_session->execute());
-
 		$last_error = $e->getMessage();
+		// Check for ignore settings
+		if($whatsspyErrorHandling['ignoreConnectionClosed'] == true && $last_error == 'Connection Closed!') {
+			tracker_log('[error] Connection to WhatsApp is closed. Attempting direct re-connect.');
+			$continue_tracker_session = true;
+		} else {
+			// Reset DB connection
+			$DBH = null;
+			$DBH = setupDB($dbAuth);
+			// Update tracker session
+			$end_tracker_session = $DBH->prepare('UPDATE tracker_history SET "end" = NOW(), "reason" = :error WHERE "end" IS NULL;');
+			checkDatabaseInsert($end_tracker_session->execute(array(':error' => get_class($e).': '.$e->getMessage())));
+			// End any running record where an user is online
+			$end_user_session = $DBH->prepare('UPDATE status_history
+												SET "end" = NOW() WHERE "end" IS NULL AND "status" = true;');
+			checkDatabaseInsert($end_user_session->execute());
 
-		tracker_log('[error] Tracker exception! '.get_class($e).': '.$e->getMessage());
-		if($whatsappAuth['debug']) {
-			print_r($e);
+			tracker_log('[error] Tracker exception! '.get_class($e).': '.$e->getMessage());
+			if($whatsappAuth['debug']) {
+				print_r($e);
+			}
+			sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => get_class($e).': '.$e->getMessage(), 'event-type' => 'error']);
+			if($last_error == 'Connection Closed!') {
+				// Wait 30 seconds before reconnecting.
+				tracker_log('[retry] Reconnecting to WhatsApp in 30 seconds.');
+				sleep(30);
+			} else {
+				// Wait 120 seconds before reconnecting.
+				tracker_log('[retry] Reconnecting to WhatsApp in 120 seconds.');
+				sleep(120);
+			}
 		}
-		sendNotification($DBH, null, $whatsspyNotificatons, 'tracker', ['title' => 'Tracker Exception!', 'description' => $e->getMessage(), 'event-type' => 'error']);
+		$last_error = null;
 	}
-
-	if($last_error == 'Connection Closed!') {
-		// Wait 360 seconds before reconnecting.
-		tracker_log('[retry] Reconnecting to WhatsApp in 360 seconds.');
-		sleep(360);
-	} else {
-		// Wait 120 seconds before reconnecting.
-		tracker_log('[retry] Reconnecting to WhatsApp in 120 seconds.');
-		sleep(120);
-	}
-	$last_error = null;
-
 } while(true);
 
 

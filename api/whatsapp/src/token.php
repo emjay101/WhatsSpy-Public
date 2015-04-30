@@ -19,8 +19,9 @@ function generateRequestToken($country, $phone)
     //  $output = hash("sha1", $opad . hash("sha1", $ipad . $data, true), true);
 
     //  return base64_encode($output);
-
-    $token = md5("PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk1425519315543".$phone);
+    $const = 'PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk';
+    $releaseTime = '1425519315543';
+    $token = md5($const . $releaseTime . $phone);
 
     return $token;
 }

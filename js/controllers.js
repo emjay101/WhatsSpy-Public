@@ -873,6 +873,13 @@ angular.module('whatsspyControllers', [])
 
 	$scope.notificationPlayer = document.getElementById("notification");
 	$scope.notifyAnySound = false;
+	$scope.showTrackerInfo = true;
+
+	$scope.$watch('showTrackerInfo', function() {
+		$scope.timelineData = null;
+		$scope.lastRequiredSid = 0;
+		$scope.refreshContent(null);
+	});
 
 	$scope.showActivityTimeline = true;
 	$scope.showStatusTimeline = true;
@@ -1073,6 +1080,9 @@ angular.module('whatsspyControllers', [])
 		if(query === null) {
 			query = '';
 		}
+		if($scope.showTrackerInfo == false) {
+			query += '&showTrackerInfo=false';
+		}
 		$http({method: 'GET', url: 'api/?whatsspy=getTimelineStats' + query}).
 		success(function(data, status, headers, config) {
 			if(data.error != null) {
@@ -1124,7 +1134,7 @@ angular.module('whatsspyControllers', [])
 	}
 
 	// Call the setup
-	$scope.refreshContent(null);
+	//$scope.refreshContent(null);
 
 	$scope.liveTimeline = function() {
 		$scope.refreshContent('&activities_since='+$scope.timelineData.till+'&sid_status='+$scope.lastRequiredSid);

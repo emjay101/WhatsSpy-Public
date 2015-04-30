@@ -34,7 +34,12 @@
 						<button type="button" class="btn btn-default" data-ng-click="notifyAnySound = getOpposite(notifyAnySound);">
 	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="notifyAnySound == true"></span>
 	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="notifyAnySound == false"></span>
-	    					Notify for any event (that is being filtered on)
+	    					Notify for any event (with filter)
+	    				</button> 
+	    				<button type="button" class="btn btn-default" data-ng-click="showTrackerInfo = getOpposite(showTrackerInfo);">
+	    					<span class="glyphicon glyphicon-ok green" aria-hidden="true" data-ng-show="showTrackerInfo == true"></span>
+	    					<span class="glyphicon glyphicon-remove red" aria-hidden="true" data-ng-show="showTrackerInfo == false"></span>
+	    					Show tracker events
 	    				</button>
 	    			</p>
 				</div>

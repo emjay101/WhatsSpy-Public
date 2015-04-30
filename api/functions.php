@@ -148,7 +148,7 @@ function tracker_log($msg, $date = true, $newline = true) {
   *		Check if the user's config is up to standards and attempt to (temp) fix this.
   */
 function checkConfig() {
-	global $whatsappAuth, $whatsspyNotificatons, $whatsspyAdvControls;
+	global $whatsappAuth, $whatsspyNotificatons, $whatsspyAdvControls, $whatsspyErrorHandling;
 
 	$notice = false;
 
@@ -174,9 +174,14 @@ function checkConfig() {
 		$whatsspyAdvControls = ['enabled' => false];
 	}
 
+	if($whatsspyErrorHandling === null) {
+		$notice = true;
+		$whatsspyErrorHandling = ['ignoreConnectionClosed' => true];
+	}
+
 	if($notice) {
-		tracker_log('[config] Please copy over the missing variables from config.example.php (starting in 10s).');
-		sleep(10);
+		tracker_log('[config] Please copy over the missing variables from config.example.php (starting in 2s).');
+		sleep(2);
 	}
 }
 

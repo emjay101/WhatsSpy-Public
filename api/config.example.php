@@ -84,6 +84,10 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
   *		- In case of 'user' the next parameters will be a [title, description, user notification type (status, statusmsg, profilepic, privacy), name of user, number of user].
   */
 
+// Error handling for the tracker
+// ignoreConnectionClosed: Ignore the Connection Closed error and try to connect again without notifying the UI. This error will be shown in the tracker log.
+$whatsspyErrorHandling = ['ignoreConnectionClosed' => true];
+
 // Enable/disable advanced controls to start/shutdown and update the tracker from within the GUI.
 // You must first shutdown your tracker before using these start/stop controls (because of the changed uid)
 // EXPERIMENTAL

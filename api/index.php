@@ -588,6 +588,12 @@ switch($_GET['whatsspy']) {
 		$return_statuses = true;
 		$type = 'init';
 
+		$return_tracker_info = true;
+
+		if(isset($_GET['showTrackerInfo']) && $_GET['showTrackerInfo'] == 'false') {
+			$return_tracker_info = false;
+		}
+
 		// Set a since if given
 		if(isset($_GET['activities_since']) && is_numeric($_GET['activities_since']) &&
 		   isset($_GET['sid_status']) && is_numeric($_GET['sid_status']) ) {
@@ -606,13 +612,15 @@ switch($_GET['whatsspy']) {
 		}
 
 		// Get activity records
-		$select = $DBH->prepare('(
-									(SELECT null as "type", null as "start", null as "end", null as "id", null as "name", true as "notify_timeline", null as "msg_status", null as "hash", false as "lastseen_privacy", false as "profilepic_privacy", false as "statusmsg_privacy", null as "changed_at")
-									UNION ALL
+		$timeline_query = '(
+									(SELECT null as "type", null as "start", null as "end", null as "id", null as "name", true as "notify_timeline", null as "msg_status", null as "hash", false as "lastseen_privacy", false as "profilepic_privacy", false as "statusmsg_privacy", null as "changed_at")';
+		if($return_tracker_info) {
+			$timeline_query .= '	UNION ALL
 									(SELECT \'tracker_start\', x.start, x."end", null, null, null, null, null, null, null, null, x.start FROM tracker_history x WHERE start > :since AND start <= :till)
 									UNION ALL
-									(SELECT \'tracker_end\', x.start, x."end", null, x.reason, null, null, null, null, null, null, x."end" FROM tracker_history x WHERE "end" IS NOT NULL AND "end" > :since AND "end" <= :till)
-									UNION ALL
+									(SELECT \'tracker_end\', x.start, x."end", null, x.reason, null, null, null, null, null, null, x."end" FROM tracker_history x WHERE "end" IS NOT NULL AND "end" > :since AND "end" <= :till)';
+		}
+		$timeline_query .= '		UNION ALL
 									(SELECT  \'statusmsg\', null, null, x.number, a.name, a.notify_timeline, x.status, null, null, null, null, x.changed_at FROM statusmessage_history x LEFT JOIN accounts a ON a.id = x.number WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 									UNION ALL
 									(SELECT  \'profilepic\', null, null, x.number, a.name, a.notify_timeline, null, x.hash, null, null, null, x.changed_at FROM profilepicture_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
@@ -621,8 +629,10 @@ switch($_GET['whatsspy']) {
 									UNION ALL
 									(SELECT  \'profilepic_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, x.privacy, null, x.changed_at FROM profilepic_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
 									UNION ALL
-									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)
-								 ) ORDER BY changed_at DESC;');
+									(SELECT  \'statusmsg_privacy\', null, null, x.number, a.name, a.notify_timeline, null, null, null, null, x.privacy, x.changed_at FROM statusmessage_privacy_history x LEFT JOIN accounts a ON a.id = x.number  WHERE a.active = true AND changed_at > :since AND changed_at <= :till)) ORDER BY changed_at DESC;';
+
+
+		$select = $DBH->prepare($timeline_query);
 		$select->execute(array(':since'=> date('c', $since_activity), ':till'=> date('c', $till)));
 		
 		$result_activity = array();
