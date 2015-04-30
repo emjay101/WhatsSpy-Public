@@ -86,7 +86,7 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
 
 // Error handling for the tracker
 // ignoreConnectionClosed: Ignore the Connection Closed error and try to connect again without notifying the UI. This error will be shown in the tracker log.
-$whatsspyErrorHandling = ['ignoreConnectionClosed' => true];
+$whatsspyErrorHandling = ['ignoreConnectionClosed' => false];
 
 // Enable/disable advanced controls to start/shutdown and update the tracker from within the GUI.
 // You must first shutdown your tracker before using these start/stop controls (because of the changed uid)
