@@ -144,6 +144,13 @@ function tracker_log($msg, $date = true, $newline = true) {
 	}
 }
 
+
+function tracker_debug($msg, $date = true, $newline = true) {
+	global $whatsappAuth;
+	if($whatsappAuth['debug'] == true) {
+		tracker_log($msg, $date, $newline);
+	}
+}
 /**
   *		Check if the user's config is up to standards and attempt to (temp) fix this.
   */

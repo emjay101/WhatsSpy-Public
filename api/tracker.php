@@ -105,6 +105,7 @@ function handPresenceChange($number, $type, $DBH, $wa, $crawl_time, $whatsspyNot
 
 	$real_time = $crawl_time;
 	if($latest_status -> rowCount() == 0) {
+		tracker_debug('No status records found for '.$number.'. Inserting first one.');
 		// Insert new record
 		if($status == true) {
 			// Once a user comes online, you will be notified by WhatsApp within 2-3 seconds.
@@ -116,25 +117,31 @@ function handPresenceChange($number, $type, $DBH, $wa, $crawl_time, $whatsspyNot
 												   ':number' => $number,
 												   ':start' => date('c', $real_time))))) {
 			tracker_log('  -[poll] '.$number.' is now '.$type.'.');
-			sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
-																		'description' => ':name is now '.$type.'.',
-																		'number' => $number,
-																		'notify_type' => 'status']);
+			if($type == 'available') {
+				sendNotification($DBH, $wa, $whatsspyNotificatons, 'user', ['title' => ':name status change', 
+																			'description' => ':name is now '.$type.'.',
+																			'number' => $number,
+																			'notify_type' => 'status']);
+			}
 		}
 	} else {
+		tracker_debug('Status records found for '.$number.'.');
 		$row  = $latest_status -> fetch();
 		# Latest status is the same as the current status       : Do nothing
 		# Latest status is different from the current status    : End record and start new one
 		if($row['status'] != $status) {
+			tracker_debug('Latest status ('.$row['status'].') is different from this one ('.$status.'). Processing update.');
 			# End current record
 			if($row['status'] == true) {
-				// Once a user goes offline, you will be notified by WhatsApp within 8-12 seconds.
+				// Once a user goes offline, you will be notified by WhatsApp within 5-12 seconds.
 				// Only adjust if the starting time allows this.
 				// You can fiddle around with these settings
-				if($row['start'] < ($real_time - 12)) {
+				if($row['start'] < ($real_time - 14)) {
 					$real_time = $real_time - 12;
-				} elseif($row['start'] < ($real_time - 8)) {
+				} elseif($row['start'] < ($real_time - 10)) {
 					$real_time = $real_time - 8;
+				} elseif($row['start'] < ($real_time - 6)) {
+					$real_time = $real_time - 5;
 				} else {
 					// It seems like the timing is off, assume small session of 10 seconds.
 					$real_time = $row['start'] + 10;
