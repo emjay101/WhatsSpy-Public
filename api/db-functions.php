@@ -29,6 +29,8 @@ function checkDatabaseInsert($query) {
 		// Database constraint
 		if($e_code != 7) {
 			tracker_log('[error] Database exception: code: '.$e_code.', message: '.$e_msg);
+		} else {
+			tracker_debug('[assumed safe error] Database exception: code: '.$e_code.', message: '.$e_msg);
 		}
 	}	
 	return $query;
