@@ -743,9 +743,16 @@ switch($_GET['whatsspy']) {
 
 				echo json_encode($result_global);
 				break;
-			case 'top10_users':
+			case 'top_usage_users':
 				// Top 10 setup
-				$result_top10 = array();
+				$result_topusers = array();
+
+				// Add metadata: the amount of users (in this group)
+				$select_meta = $DBH->prepare('SELECT COUNT(1) FROM accounts a '.$group_query_acc_join);
+				$select_meta -> execute();
+				$result_topusers['meta'] = $select_meta -> fetch(PDO::FETCH_ASSOC);
+
+				$top_limit = (is_numeric($_GET['users']) ? round($_GET['users']) : 10);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -757,9 +764,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['today'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['today'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -772,9 +779,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['yesterday'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['yesterday'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -787,9 +794,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['2days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['2days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -802,9 +809,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['3days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['3days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -817,9 +824,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['4days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['4days_ago'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -831,9 +838,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['24hours'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['24hours'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -845,9 +852,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['7days'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['7days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -859,9 +866,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['14days'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['14days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -873,9 +880,9 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['31days'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['31days'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
 				$select = $DBH->prepare('SELECT '.$select_top.' a.name, ROUND(EXTRACT(\'epoch\' FROM SUM(sh."end" - sh."start"))) "online", COUNT(sh.status) "count"
 									        FROM accounts a
@@ -886,11 +893,11 @@ switch($_GET['whatsspy']) {
 									        	AND "end" IS NOT NULL
 									        GROUP BY a.id, a.name 
 									        ORDER BY online DESC, count DESC
-									        LIMIT 10');
-				$select -> execute();
-				$result_top10['alltime'] = $select->fetchAll(PDO::FETCH_ASSOC);
+									        LIMIT :limit');
+				$select -> execute(array(':limit' => $top_limit));
+				$result_topusers['alltime'] = $select->fetchAll(PDO::FETCH_ASSOC);
 
-				echo json_encode($result_top10);
+				echo json_encode($result_topusers);
 				break;
 			case 'user_status_analytics_user':
 				// user data for pie charts

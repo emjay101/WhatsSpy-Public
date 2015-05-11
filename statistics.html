@@ -432,17 +432,27 @@
 				</div>
 			</div>
 		</span>
-		<span data-ng-show="stats.top10_users != null">
+		<span data-ng-show="stats.top_usage_users != null">
 			<div class="row">
 				<div class="col-md-12">
 					<div class="panel panel-default">
 						<div class="panel-heading">
-							<h3 class="panel-title"><span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Top 10 tracked users</h3>
+							<h3 class="panel-title"><span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Top {{showTopUsers}} tracked users</h3>
 						</div>
 						<div class="panel-body">
 							<div class="row">
+								<div class="col-md-12">
+									<button data-ng-show="stats.top_usage_users.meta.count <= 20" data-ng-disabled="showTopUsers == 5" data-ng-click="showTopUsers = 5;" type="button" class="btn btn-primary">Top 5</button> 
+									<button data-ng-disabled="showTopUsers == 10" data-ng-click="showTopUsers = 10;" type="button" class="btn btn-primary">Top 10</button> 
+									<button data-ng-show="stats.top_usage_users.meta.count >= 20" data-ng-disabled="showTopUsers == 20" data-ng-click="showTopUsers = 20;" type="button" class="btn btn-primary">Top 20</button> 
+									<button data-ng-show="stats.top_usage_users.meta.count >= 30" data-ng-disabled="showTopUsers == 30" data-ng-click="showTopUsers = 30;" type="button" class="btn btn-primary">Top 30</button> 
+									<button data-ng-show="stats.top_usage_users.meta.count >= 50" data-ng-disabled="showTopUsers == 50" data-ng-click="showTopUsers = 50;" type="button" class="btn btn-primary">Top 50</button> 
+									<button data-ng-show="stats.top_usage_users.meta.count >= 100" data-ng-disabled="showTopUsers == 100" data-ng-click="showTopUsers = 100;" type="button" class="btn btn-primary">Top 100</button> 
+								</div>
+							</div>
+							<div class="row">
 								<div class="col-md-6">
-									<h4>Top 10 most active users per day - {{stats.generated.top10DayChoice}}</h4>
+									<h4>Top {{showTopUsers}} most active users per day - {{stats.generated.top10DayChoice}}</h4>
 									<button data-ng-disabled="stats.generated.top10DayChoice == 'today'" data-ng-click="stats.generated.top10DayChoice = 'today';" type="button" class="btn btn-info">Today</button>
 									<button data-ng-disabled="stats.generated.top10DayChoice == 'yesterday'" data-ng-click="stats.generated.top10DayChoice = 'yesterday';" type="button" class="btn btn-info">Yesterday</button>
 									<button data-ng-disabled="stats.generated.top10DayChoice == '2days_ago'" data-ng-click="stats.generated.top10DayChoice = '2days_ago';" type="button" class="btn btn-info">2 days ago</button>
@@ -457,7 +467,7 @@
 										  <th>Time online</th>
 										  <th>Opened WA</th>
 										</tr>
-										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10DayChoice]">
+										<tr data-ng-repeat="user in stats.top_usage_users[stats.generated.top10DayChoice]">
 										  <td>
 										  	<a data-ng-show="tokenAuth == null" data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a>
 
@@ -471,7 +481,7 @@
 									</table>
 								</div>
 								<div class="col-md-6">
-									<h4>Top 10 most active users in total - {{stats.generated.top10TimeChoice}}</h4>
+									<h4>Top {{showTopUsers}} most active users in total - {{stats.generated.top10TimeChoice}}</h4>
 									<button data-ng-disabled="stats.generated.top10TimeChoice == 'alltime'" data-ng-click="stats.generated.top10TimeChoice = 'alltime';" type="button" class="btn btn-info">All</button>
 									<button data-ng-disabled="stats.generated.top10TimeChoice == '31days'" data-ng-click="stats.generated.top10TimeChoice = '31days';" type="button" class="btn btn-info">31 days</button>
 									<button data-ng-disabled="stats.generated.top10TimeChoice == '14days'" data-ng-click="stats.generated.top10TimeChoice = '14days';" type="button" class="btn btn-info">14 days</button>
@@ -486,7 +496,7 @@
 										  <th>Time online</th>
 										  <th>Opened WA</th>
 										</tr>
-										<tr data-ng-repeat="user in stats.top10_users[stats.generated.top10TimeChoice]">
+										<tr data-ng-repeat="user in stats.top_usage_users[stats.generated.top10TimeChoice]">
 										  <td>
 										  	<a data-ng-show="tokenAuth == null" data-ng-href="#/overview#{{user.id}}" class="whatsspy-clean-link"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {{user.name | emptyName}}</a>
 

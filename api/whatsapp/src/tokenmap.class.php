@@ -489,7 +489,7 @@ class TokenMap
         if (!$subdict && $token >= 236 && $token < (236 + count(self::$secondaryStrings))) {
             $subdict = true;
         }
-        $tokenMap = array();
+
         if ($subdict) {
             $tokenMap = self::$secondaryStrings;
         } else {
@@ -499,6 +499,7 @@ class TokenMap
         if ($token < 0 || $token > count($tokenMap)) {
             return;//fail
         }
+
         $string = $tokenMap[$token];
         if (!$string) {
             throw new Exception("Invalid token/length in GetToken");

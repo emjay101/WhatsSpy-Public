@@ -653,7 +653,7 @@ function track() {
 		//
 		// Keep connection alive (<300s)
 		if($pollCount % calculateTick($tracking_ticks['keep-alive']) == 0) {
-			tracker_log('[keep-alive] Ping sent to WhatsApp server.');
+			tracker_log('[keep-alive] Ping sent.'."\r", true, false);
 			$wa->sendPing();
 		}
 		// usage of 39512f5ea29c597f25483697471ac0b00cbb8088359c219e98fa8bdaf7e079fa

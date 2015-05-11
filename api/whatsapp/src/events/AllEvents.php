@@ -37,6 +37,7 @@ abstract class AllEvents
     }
 
     //Adding to this list? Please put them in alphabetical order!
+    public function onCallReceived($mynumber, $from, $id, $notify, $time, $callId) {}
     public function onClose($mynumber, $error) {}
     public function onCodeRegister($mynumber, $login, $password, $type, $expiration, $kind, $price, $cost, $currency, $price_expiration) {}
     public function onCodeRegisterFailed($mynumber, $status, $reason, $retry_after) {}
@@ -94,6 +95,9 @@ abstract class AllEvents
     public function onMessagePaused($mynumber, $from, $id, $type, $time) {}
     public function onMessageReceivedClient($mynumber, $from, $id, $type, $time, $participant) {}
     public function onMessageReceivedServer($mynumber, $from, $id, $type, $time) {}
+    public function onNumberWasAdded($mynumber, $jid) {}
+    public function onNumberWasRemoved($mynumber, $jid) {}
+    public function onNumberWasUpdated($mynumber, $jid) {}
     public function onPaidAccount($mynumber, $author, $kind, $status, $creation, $expiration) {}
     public function onPaymentRecieved($mynumber, $kind, $status, $creation, $expiration) {}
     public function onPing($mynumber, $id) {}
@@ -107,4 +111,5 @@ abstract class AllEvents
     public function onSendPresence($mynumber, $type, $name ) {}
     public function onSendStatusUpdate($mynumber, $txt ) {}
     public function onStreamError($data) {}
+    public function onWebSync($mynumber, $from, $id, $syncData, $code, $name) {}
 }

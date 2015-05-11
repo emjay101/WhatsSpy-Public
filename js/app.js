@@ -491,7 +491,7 @@ angular.module('whatsspy', ['ngRoute', 'ngVis', 'whatsspyFilters', 'whatsspyCont
       promises[2] = $rootScope.loadGlobalStats('global_stats');
       promises[3] = $rootScope.loadGlobalStats('user_status_analytics_user');
       promises[4] = $rootScope.loadGlobalStats('user_status_analytics_time');
-      promises[5] = $rootScope.loadGlobalStats('top10_users');
+      promises[5] = $rootScope.loadGlobalStats('top_usage_users');
     }
     // Load any new status
     if(Object.keys($rootScope.accountData).length > 0 && slack == false) {

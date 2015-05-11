@@ -1146,6 +1146,8 @@ angular.module('whatsspyControllers', [])
 	$scope.filterGroup = null;
 	$rootScope.tokenAuth = null;
 
+	$scope.showTopUsers = 10;
+
 	if($routeParams.token != null) {
 		if($rootScope.authenticated == true) {
 			// logout
@@ -1161,6 +1163,14 @@ angular.module('whatsspyControllers', [])
 	});
 
 	$scope.$watch('filterGroup', function() {
+		if($scope.showTopUsers != 10) {
+			$scope.showTopUsers = 10;
+		} else {
+			$scope.refreshContent();
+		}
+	});
+
+	$scope.$watch('showTopUsers', function() {
 		$scope.refreshContent();
 	});
 
@@ -1200,6 +1210,9 @@ angular.module('whatsspyControllers', [])
 		if($rootScope.tokenAuth != null) {
 			query = '&token='+$rootScope.tokenAuth;
 		}
+		if(component == 'top_usage_users') {
+			query = query + '&users='+$scope.showTopUsers;
+		}
 		var deferred = $q.defer();
 		$http({method: 'GET', url: 'api/?whatsspy=getGlobalStats&component='+component+'&group='+$scope.filterGroup + query}).
 		success(function(data, status, headers, config) {
@@ -1215,7 +1228,7 @@ angular.module('whatsspyControllers', [])
 				}
 				$scope.stats[component] = data;
 
-				if(component == 'top10_users') {
+				if(component == 'top_usage_users') {
 		        	if($scope.stats.generated == null) {
 			        	$scope.stats.generated = {};
 			    	}
@@ -1268,7 +1281,7 @@ angular.module('whatsspyControllers', [])
 		promises[0] = $rootScope.loadGlobalStats('global_stats');
 		promises[1] = $rootScope.loadGlobalStats('user_status_analytics_user');
 		promises[2] = $rootScope.loadGlobalStats('user_status_analytics_time');
-		promises[3] = $rootScope.loadGlobalStats('top10_users');
+		promises[3] = $rootScope.loadGlobalStats('top_usage_users');
 
 		$q.all(promises).then(function(greeting) {
 		$rootScope.showLoader = false;
