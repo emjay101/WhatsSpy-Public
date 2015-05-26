@@ -248,7 +248,7 @@ function onGetProfilePicture($mynumber, $from, $type, $data) {
 			}
 		}
 	} else {
-		tracker_log('  -[profile-pic] Previews not implemented.');
+		tracker_log('  -[profile-pic] Image type not implemented.');
 	}
 }
 
@@ -369,9 +369,9 @@ function onSyncResultNumberCheck($result) {
 	}
 }
 
-function onGetError($mynumber, $from, $id, $data ) {
+function onGetError($mynumber, $from, $id, $data, $errorType = null) {
 	global $DBH, $wa, $pollCount, $whatsspyNotificatons;
-	if (preg_match("/^lastseen-/", $id)) {
+	if ($errorType == 'getlastseen') {
         if ($data->getAttribute("code") == '405' || 
         	$data->getAttribute("code") == '403' || 
         	$data->getAttribute("code") == '401') {
@@ -397,7 +397,7 @@ function onGetError($mynumber, $from, $id, $data ) {
         	tracker_log('  -[lastseen] unknown error for '.$number.'. ');
         	print_r($data);
         }
-    } else if (preg_match("/^getpicture-/", $id)) {
+    } else if ($errorType == 'getprofilepic') {
     	if ($data->getAttribute("code") == '405' || 
         	$data->getAttribute("code") == '403' || 
         	$data->getAttribute("code") == '401') {
@@ -423,6 +423,11 @@ function onGetError($mynumber, $from, $id, $data ) {
         	tracker_log('  -[profile-pic] unknown error for '.$number.'. ');
         	print_r($data);
         }
+    } else {
+    	tracker_log('Unknown error back from WhatsApp:');
+    	tracker_log('ID:'.$id.', from:'.$from.', type:'.$errorType);
+    	print_r($data);
+    	exit();
     }
 	// Statusses dont give error messages	
 }

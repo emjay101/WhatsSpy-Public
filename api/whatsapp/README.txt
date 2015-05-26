@@ -1,0 +1,1 @@
+This is a stripped down version of the WhatsAPI (or Chat-API). Check https://github.com/mgp25/Chat-API for more information.
