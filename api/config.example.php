@@ -88,6 +88,18 @@ $whatsspyNotificatons = [// NotifyMyAndroid (notifymyandroid.com)
 // ignoreConnectionClosed: Ignore the Connection Closed error and try to connect again without notifying the UI. This error will be shown in the tracker log.
 $whatsspyErrorHandling = ['ignoreConnectionClosed' => false];
 
+// Heuristic options for start/end time.
+// It takes time to capture a user "online" event. In general these times are very consistent.
+// On average there is a lag of 2-3 seconds if a user comes online and 8-12 seconds if a user goes offline (the client will timeout in this timespan).
+// NOTE: To disable heuristic options just set all these properties to 0.
+// NOTE2: All values here are seconds. For example: The online time stored is: time of recieving the "online" message of WhatsApp - 2 seconds (hence the -2).
+// NOTE3: There are 3 Unavailable fases. In each fase there will be checked if the ending time of the user session is after the start of the user session.
+//        If for example endtime - 12 seconds is before the starttime of the session, fase 2 will be checked and used.
+$whatsspyHeuristicOptions = ['onPresenceAvailableLag' => -2,
+							 'onPresenceUnavailableLagFase1' => -12,
+							 'onPresenceUnavailableLagFase2' => -8,
+							 'onPresenceUnavailableLagFase3' => -5];
+
 // Enable/disable advanced controls to start/shutdown and update the tracker from within the GUI.
 // You must first shutdown your tracker before using these start/stop controls (because of the changed uid)
 // EXPERIMENTAL

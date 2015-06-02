@@ -99,6 +99,7 @@ function onGetRequestLastSeen($mynumber, $from, $id, $seconds) {
 }
 
 function handPresenceChange($number, $type, $DBH, $wa, $crawl_time, $whatsspyNotificatons) {
+	global $whatsspyHeuristicOptions;
 	$status = ($type == 'available' ? true : false);
 	$latest_status = $DBH->prepare('SELECT "sid", "status", ROUND(EXTRACT(\'epoch\' FROM "start")) as "start" FROM status_history WHERE "number"=:number AND "end" IS NULL');
 	$latest_status -> execute(array(':number' => $number));
@@ -109,7 +110,7 @@ function handPresenceChange($number, $type, $DBH, $wa, $crawl_time, $whatsspyNot
 		// Insert new record
 		if($status == true) {
 			// Once a user comes online, you will be notified by WhatsApp within 2-3 seconds.
-			$real_time = $real_time - 3;
+			$real_time = $real_time + $whatsspyHeuristicOptions['onPresenceAvailableLag'];
 		}
 	  	$insert = $DBH->prepare('INSERT INTO status_history ("status", "start", "number", "end")
 			   						 VALUES (:status, :start, :number, NULL);');
@@ -131,21 +132,25 @@ function handPresenceChange($number, $type, $DBH, $wa, $crawl_time, $whatsspyNot
 		# Latest status is different from the current status    : End record and start new one
 		if($row['status'] != $status) {
 			tracker_debug('Latest status ('.$row['status'].') is different from this one ('.$status.'). Processing update.');
-			# End current record
 			if($row['status'] == true) {
-				// Once a user goes offline, you will be notified by WhatsApp within 5-12 seconds.
-				// Only adjust if the starting time allows this.
-				// You can fiddle around with these settings
-				if($row['start'] < ($real_time - 14)) {
-					$real_time = $real_time - 12;
-				} elseif($row['start'] < ($real_time - 10)) {
-					$real_time = $real_time - 8;
-				} elseif($row['start'] < ($real_time - 6)) {
-					$real_time = $real_time - 5;
+				// Correct ending time of this online status
+				if($row['start'] < ($real_time + $whatsspyHeuristicOptions['onPresenceUnavailableLagFase1'])) {
+					$real_time = $real_time + $whatsspyHeuristicOptions['onPresenceUnavailableLagFase1'];
+				} elseif($row['start'] < ($real_time + $whatsspyHeuristicOptions['onPresenceUnavailableLagFase2'])) {
+					$real_time = $real_time + $whatsspyHeuristicOptions['onPresenceUnavailableLagFase2'];
+				} elseif($row['start'] < ($real_time + $whatsspyHeuristicOptions['onPresenceUnavailableLagFase3'])) {
+					$real_time = $real_time + $whatsspyHeuristicOptions['onPresenceUnavailableLagFase3'];
 				} else {
-					// It seems like the timing is off, assume small session of 10 seconds.
-					$real_time = $row['start'] + 10;
+					if($row['start'] < $real_time) {
+						// End time is after before time, seems ok
+					} else {
+						// It seems like the timing is off, assume small session of 10 seconds.
+						$real_time = $row['start'] + 10;
+					}
 				}
+			} else {
+				// Correct starting time of this online status
+				$real_time = $real_time + $whatsspyHeuristicOptions['onPresenceAvailableLag'];
 			}
 			$update = $DBH->prepare('UPDATE status_history
 									SET "end" = :end WHERE number = :number
@@ -427,7 +432,6 @@ function onGetError($mynumber, $from, $id, $data, $errorType = null) {
     	tracker_log('Unknown error back from WhatsApp:');
     	tracker_log('ID:'.$id.', from:'.$from.', type:'.$errorType);
     	print_r($data);
-    	exit();
     }
 	// Statusses dont give error messages	
 }

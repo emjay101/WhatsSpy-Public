@@ -155,7 +155,7 @@ function tracker_debug($msg, $date = true, $newline = true) {
   *		Check if the user's config is up to standards and attempt to (temp) fix this.
   */
 function checkConfig() {
-	global $whatsappAuth, $whatsspyNotificatons, $whatsspyAdvControls, $whatsspyErrorHandling;
+	global $whatsappAuth, $whatsspyNotificatons, $whatsspyAdvControls, $whatsspyErrorHandling, $whatsspyHeuristicOptions;
 
 	$notice = false;
 
@@ -184,6 +184,14 @@ function checkConfig() {
 	if($whatsspyErrorHandling === null) {
 		$notice = true;
 		$whatsspyErrorHandling = ['ignoreConnectionClosed' => false];
+	}
+
+	if($whatsspyHeuristicOptions === null) {
+		$notice = true;
+		$whatsspyHeuristicOptions = ['onPresenceAvailableLag' => -2,
+							 'onPresenceUnavailableLagFase1' => -12,
+							 'onPresenceUnavailableLagFase2' => -8,
+							 'onPresenceUnavailableLagFase3' => -5];
 	}
 
 	if($notice) {
