@@ -1268,7 +1268,7 @@ class WhatsProt
             ), null);
 
         $this->sendNode($node);
-        $this->waitForServer($iqId);
+        //$this->waitForServer($iqId);
     }
 
     /**
@@ -1877,15 +1877,17 @@ class WhatsProt
     public function sendStatusUpdate($txt)
     {
         $child = new ProtocolNode("status", null, null, $txt);
+        $nodeID = $this->createIqId();
         $node = new ProtocolNode("iq",
             array(
                 "to" => Constants::WHATSAPP_SERVER,
                 "type" => "set",
-                "id" => $this->createIqId(),
+                "id" => $nodeID,
                 "xmlns" => "status"
             ), array($child), null);
 
         $this->sendNode($node);
+        $this->waitForServer($nodeID);
         $this->eventManager()->fire("onSendStatusUpdate",
             array(
                 $this->phoneNumber,
@@ -2067,12 +2069,12 @@ class WhatsProt
      * @return string
      *   A message id string.
      */
-    protected function createMsgId($prefix = '')
+    protected function createMsgId()
     {
         $msgid = $this->messageCounter;
         $this->messageCounter++;
 
-        return $prefix . "-" . $this->loginTime . "-" . $msgid;
+        return $this->loginTime . "-" . $msgid;
     }
 
     /**
@@ -2236,7 +2238,7 @@ class WhatsProt
             $this->sendNode($data);
             $this->reader->setKey($this->inputKey);
             $this->writer->setKey($this->outputKey);
-            $this->pollMessage();
+            while (!$this->pollMessage()) {};
         }
 
         if ($this->loginStatus === Constants::DISCONNECTED_STATUS) {
@@ -2418,20 +2420,14 @@ class WhatsProt
             $this->mediaFileInfo = array();
             $this->mediaFileInfo['url'] = $filepath;
 
-            $image      = file_get_contents($filepath);
-            $this->mediaFileInfo['filesize'] = strlen($image);
-
-            $file_info = new finfo(FILEINFO_MIME_TYPE);
-            $mime_type = $file_info->buffer($image);
-
-            $this->mediaFileInfo['filemimetype']  = $mime_type;
+            $media = file_get_contents($filepath);
+            $this->mediaFileInfo['filesize'] = strlen($media);
 
             if ($this->mediaFileInfo['filesize'] < $maxsizebytes) {
                 $this->mediaFileInfo['filepath'] = tempnam(__DIR__ . DIRECTORY_SEPARATOR . Constants::DATA_FOLDER . DIRECTORY_SEPARATOR . Constants::MEDIA_FOLDER, 'WHA');
-                file_put_contents($this->mediaFileInfo['filepath'], $image);
-                $size       = getimagesize($this->mediaFileInfo['filepath']);
-                $extension  = ltrim (image_type_to_extension($size[2]), '.');
-                $this->mediaFileInfo['fileextension'] = $extension;
+                file_put_contents($this->mediaFileInfo['filepath'], $media);
+                $this->mediaFileInfo['filemimetype']  = get_mime($this->mediaFileInfo['filepath']);
+                $this->mediaFileInfo['fileextension'] = getExtensionFromMime($this->mediaFileInfo['filemimetype']);
                 return true;
             } else {
                 return false;

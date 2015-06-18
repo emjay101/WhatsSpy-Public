@@ -182,11 +182,13 @@ function checkConfig() {
 	}
 
 	if($whatsspyErrorHandling === null) {
+		tracker_log('[config] $whatsspyErrorHandling missing (using default options).');
 		$notice = true;
 		$whatsspyErrorHandling = ['ignoreConnectionClosed' => false];
 	}
 
 	if($whatsspyHeuristicOptions === null) {
+		tracker_log('[config] $whatsspyHeuristicOptions missing (using default options).');
 		$notice = true;
 		$whatsspyHeuristicOptions = ['onPresenceAvailableLag' => -2,
 							 'onPresenceUnavailableLagFase1' => -12,

@@ -605,7 +605,7 @@ function track() {
 		//
 		// Check lastseen
 		if($pollCount % calculateTick($tracking_ticks['lastseen']) == 0) {
-			tracker_log('[lastseen #'.$lastseenCount.'] Checking '. count($tracking_numbers) . ' users.');
+			tracker_log('[lastseen #'.$lastseenCount.'] Checking '. count($tracking_numbers) . ' users.               ');
 			foreach ($tracking_numbers as $number) {
 				$wa->sendGetRequestLastSeen($number);
 			}

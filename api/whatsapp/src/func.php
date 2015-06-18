@@ -211,3 +211,32 @@ function get_mime($file)
 
     return false;
 }
+
+function getExtensionFromMime($mime)
+{
+    $extensions = array(
+      'audio/3gpp'      => '3gp',
+      'audio/x-caf'     => 'caf',
+      'audio/wav'       => 'wav',
+      'audio/mpeg'      => 'mp3',
+      'audio/mpeg3'     => 'mp3',
+      'audio/x-mpeg-3'  => 'mp3',
+      'audio/x-ms-wma'  => 'wma',
+      'audio/ogg'       => 'ogg',
+      'audio/aiff'      => 'aif',
+      'audio/x-aiff'    => 'aif',
+      'audio/aac'       => 'aac',
+      'audio/mp4'       => 'm4a',
+      'image/jpeg'      => 'jpg',
+      'image/gif'       => 'gif',
+      'image/png'       => 'png',
+      'video/3gpp'      => '3gp',
+      'video/mp4'       => 'mp4',
+      'video/quicktime' => 'mov',
+      'video/avi'       => 'avi',
+      'video/msvideo'   => 'avi',
+      'video/x-msvideo' => 'avi'
+  );
+
+  return $extensions[$mime];
+}
