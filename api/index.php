@@ -121,7 +121,7 @@ switch($_GET['whatsspy']) {
 	  */
 	case 'updateAccount':
 		requireAuth();
-		if(isset($_GET['number']) && isset($_GET['name'])) {
+		if(isset($_GET['number'])) {
 			$number = preg_replace('/\D/', '', $_GET['number']);
 
 			$notify_status = ($_GET['notify_status'] == 'true' ? true : false);
@@ -133,7 +133,7 @@ switch($_GET['whatsspy']) {
 			$groups = explode(',', ($_GET['groups'] == '' ? null : $_GET['groups']));
 
 
-			$name = $_GET['name']; // do not use htmlentities, AngularJS will protect us
+			$name = ($_GET['name'] != '' ? $_GET['name'] : null); // do not use htmlentities, AngularJS will protect us
 			$update = $DBH->prepare('UPDATE accounts
 										SET name = :name, notify_status = :notify_status, notify_statusmsg = :notify_statusmsg, notify_profilepic = :notify_profilepic, notify_privacy = :notify_privacy, notify_timeline = :notify_timeline WHERE id = :id;');
 			$update->execute(array(':id' => $number, 
