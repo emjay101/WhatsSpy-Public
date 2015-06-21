@@ -438,6 +438,15 @@
 		      <input type="text" class="form-control" id="name" data-ng-model="newContact.name" placeholder="(optional) name of contact">
 		    </div>
 		  </div>
+		  <div class="form-group">
+		    <label for="name" class="col-sm-2 control-label">Groups</label>
+		    <div class="col-sm-8">
+    			<div class="input-group"> 
+    				<div class="input-group-addon"><span class="glyphicon glyphicon-tag" aria-hidden="true"></span></div>
+			      	<multiselect class="whatsspy-group-select" data-ng-model="newContact.groups" data-options="group.gid as group.name for group in getRealGroups()" data-multiple="true" data-compare-by="gid" scroll-after-rows="10"></multiselect>
+			    </div>
+		    </div>
+		  </div>
 		</form>
 		<small>The new contact will be verified as an WhatsApp user and added to the tracker within 5-10 minutes. After this you can find the contact in the overview list.</small>
       </div>

@@ -163,7 +163,13 @@ angular.module('whatsspyControllers', [])
 	}
 
 	$scope.submitNewAccount = function() {
-		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + encodeURIComponent($scope.newContact.name)}).
+		var groupArray = '';
+		for (var i = $scope.newContact.groups.length - 1; i >= 0; i--) {
+				groupArray= groupArray+$scope.newContact.groups[i].gid+',';
+			};
+		groupArray = groupArray.substring(0, groupArray.length - 1);
+
+		$http({method: 'GET', url: 'api/?whatsspy=addContact&number=' + $scope.newContact.number + '&countrycode=' + $scope.newContact.countryCode + '&name=' + encodeURIComponent($scope.newContact.name) + '&groups=' + groupArray}).
 			success(function(data, status, headers, config) {
 				if(data.success == true) {
 					alertify.success("Contact added to WhatsSpy. Tracking will start in 5-10 minutes.");

@@ -213,7 +213,7 @@ function checkConfig() {
   *		Add a new account to the database. 
   *		Give a name, a phonenumber (id) and request if you a true/false or a array for JSON syntax (for any errors).
   */
-function addAccount($name, $account_id, $array_result = false) {
+function addAccount($name, $account_id, $groups, $array_result = false) {
 	global $DBH;
 	$number = $account_id;
 
@@ -225,6 +225,12 @@ function addAccount($name, $account_id, $array_result = false) {
    						 			VALUES (:id, true, :name);');
 		$insert->execute(array(':id' => $number,
 								':name' => $name));
+		// Add any new groups
+		foreach ($groups as $group) {
+			if($group != '') {
+				insertUserInGroup($group, $number);
+			}
+		}
 		if($array_result) {
 			return ['success' => true];
 		} else {
@@ -243,6 +249,21 @@ function addAccount($name, $account_id, $array_result = false) {
 			$update = $DBH->prepare('UPDATE accounts
 									SET "active" = true WHERE id = :number;');
 			$update->execute(array(':number' => $number));
+			// Remove groups if they are not listed anymore
+			$processed_groups = [];
+			foreach ($select_group->fetchAll(PDO::FETCH_ASSOC) as $group_in_db) {
+				if(!in_array($group_in_db['gid'], $groups)) {
+					removeUserInGroup($group_in_db['gid'], $number);
+				} else {
+					array_push($processed_groups, $group_in_db['gid']);
+				}
+			}
+			// Add any new groups
+			foreach ($groups as $group) {
+				if(!in_array($group, $processed_groups) && $group != '') {
+					insertUserInGroup($group, $number);
+				}
+			}
 			if($array_result) {
 				return ['success' => true];
 			} else {
