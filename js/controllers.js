@@ -166,7 +166,7 @@ angular.module('whatsspyControllers', [])
 
 	$scope.submitNewAccount = function() {
 		var groupArray = '';
-		if($scope.editContact.groups != undefined) {
+		if($scope.newContact.groups != undefined) {
 		    for (var i = $scope.newContact.groups.length - 1; i >= 0; i--) {
 				groupArray= groupArray+$scope.newContact.groups[i].gid+',';
 			};

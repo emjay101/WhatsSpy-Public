@@ -250,6 +250,8 @@ function addAccount($name, $account_id, $groups, $array_result = false) {
 									SET "active" = true WHERE id = :number;');
 			$update->execute(array(':number' => $number));
 			// Remove groups if they are not listed anymore
+			$select_group = $DBH->prepare('SELECT gid FROM accounts_to_groups WHERE number = :number');
+			$select_group -> execute(array(':number' => $number));
 			$processed_groups = [];
 			foreach ($select_group->fetchAll(PDO::FETCH_ASSOC) as $group_in_db) {
 				if(!in_array($group_in_db['gid'], $groups)) {
