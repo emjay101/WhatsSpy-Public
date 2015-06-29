@@ -304,6 +304,10 @@ function removeAccount($number) {
 	$delete = $DBH->prepare('DELETE FROM statusmessage_privacy_history
 								WHERE "number" = :id;');
 	$delete->execute(array(':id' => $number));
+
+	$delete = $DBH->prepare('DELETE FROM accounts_to_groups
+								WHERE "number" = :id;');
+	$delete->execute(array(':id' => $number));
 	// Delete final record of accounts
 	$delete = $DBH->prepare('DELETE FROM accounts
 								WHERE id = :id;');
