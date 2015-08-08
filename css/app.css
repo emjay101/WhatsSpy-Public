@@ -318,6 +318,7 @@ header {
 .whatsspy-contact-options {
 	float: left;
 	display: inline-block;
+	z-index: 200;
 }
 
 

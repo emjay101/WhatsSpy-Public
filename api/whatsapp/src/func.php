@@ -205,8 +205,8 @@ function get_mime($file)
 
     if (!strncasecmp(PHP_OS, 'WIN', 3) == 0 && !stristr(ini_get("disable_functions"), "shell_exec")) {
         $file = escapeshellarg($file);
-        $mime = shell_exec("file -bi " . $file);
-        return $mime;
+        $mime = shell_exec("file -b --mime-type " . $file);
+        return trim($mime);
     }
 
     return false;
